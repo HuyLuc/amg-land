@@ -116,6 +116,15 @@ MINIO_ROOT_PASSWORD=amgminio123
 MINIO_BUCKET=amg-land-media
 ```
 
+Tai khoan admin local mac dinh duoc seed khi backend startup neu chua ton tai:
+
+```text
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
+```
+
+Doi cac gia tri `ADMIN_*` va `JWT_SECRET_KEY` trong `.env` truoc khi dung moi truong that.
+
 ## Lenh Docker Thuong Dung
 
 Start hoac rebuild stack:
@@ -265,6 +274,32 @@ Neu doi port hoac credential, sua `.env`, sau do restart:
 ```powershell
 docker compose up -d --build
 ```
+
+Bien auth quan trong:
+
+```text
+JWT_SECRET_KEY=change-this-local-secret
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+MAX_FAILED_LOGIN_ATTEMPTS=5
+ACCOUNT_LOCK_MINUTES=15
+```
+
+Trong `APP_ENV=production`, backend yeu cau `JWT_SECRET_KEY` phai duoc cau hinh ro rang.
+
+## API Contract Notes
+
+Cac endpoint list chinh tra ve pagination metadata:
+
+```json
+{
+  "items": [],
+  "total": 0,
+  "page": 1,
+  "limit": 20
+}
+```
+
+Ap dung cho `GET /api/v1/users`, `/projects`, `/projects/{project_id}/apartments`, `/posts`, `/contacts`.
 
 ## Backend Development
 

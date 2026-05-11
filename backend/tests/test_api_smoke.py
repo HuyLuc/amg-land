@@ -41,9 +41,33 @@ def auth_headers() -> dict[str, str]:
 
 def test_public_health_and_empty_lists() -> None:
     assert client.get("/health").json() == {"status": "ok"}
-    assert client.get("/api/v1/projects").status_code == 200
+    projects_response = client.get("/api/v1/projects")
+    assert projects_response.status_code == 200
+    assert {"items", "total", "page", "limit"} <= projects_response.json().keys()
     assert client.get("/api/v1/amenities").status_code == 200
-    assert client.get("/api/v1/posts").status_code == 200
+    posts_response = client.get("/api/v1/posts")
+    assert posts_response.status_code == 200
+    assert {"items", "total", "page", "limit"} <= posts_response.json().keys()
+
+
+def test_auth_locks_after_repeated_failed_attempts() -> None:
+    email, password = ensure_admin()
+    for _ in range(5):
+        response = client.post("/api/v1/auth/login", json={"email": email, "password": "wrong-password"})
+        assert response.status_code == 401
+
+    locked_response = client.post("/api/v1/auth/login", json={"email": email, "password": password})
+    assert locked_response.status_code == 423
+
+
+def test_query_validation_and_dashboard_period() -> None:
+    headers = auth_headers()
+
+    invalid_direction = client.get("/api/v1/search", params={"direction": "BAD"})
+    assert invalid_direction.status_code == 422
+
+    invalid_period = client.get("/api/v1/stats/dashboard", params={"period": "year"}, headers=headers)
+    assert invalid_period.status_code == 400
 
 
 def test_full_api_smoke_flow() -> None:

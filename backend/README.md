@@ -5,6 +5,9 @@ Backend FastAPI cho AMG News.
 ## Layers
 
 - `api`: HTTP routing va versioning.
+- `api/v1/router.py`: router tong, include cac router con theo domain.
+- `api/v1/endpoints`: endpoint modules theo domain nhu auth, projects, apartments, posts, contacts.
+- `api/v1/common.py`: helper/dependency dung chung cho API v1.
 - `modules`: nghiep vu theo domain.
 - `services`: business logic dung chung.
 - `repositories`: data access.

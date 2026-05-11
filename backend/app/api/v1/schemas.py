@@ -5,6 +5,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from app.models.amenity import AmenityCategory
+from app.models.apartment import ApartmentStatus, Direction
+from app.models.contact_request import ContactStatus
+from app.models.post import PostStatus
+from app.models.project import ProjectStatus
+from app.models.user import UserRole
+
 
 class ORMModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -15,6 +22,47 @@ class TokenResponse(BaseModel):
     refresh_token: str | None = None
     token_type: str = "bearer"
     user_info: dict[str, Any]
+
+
+class PageMeta(BaseModel):
+    total: int
+    page: int
+    limit: int
+
+
+class UserPage(BaseModel):
+    items: list["UserOut"]
+    total: int
+    page: int
+    limit: int
+
+
+class ProjectPage(BaseModel):
+    items: list["ProjectOut"]
+    total: int
+    page: int
+    limit: int
+
+
+class ApartmentPage(BaseModel):
+    items: list["ApartmentOut"]
+    total: int
+    page: int
+    limit: int
+
+
+class PostPage(BaseModel):
+    items: list["PostOut"]
+    total: int
+    page: int
+    limit: int
+
+
+class ContactPage(BaseModel):
+    items: list["ContactOut"]
+    total: int
+    page: int
+    limit: int
 
 
 class LoginRequest(BaseModel):
@@ -43,12 +91,12 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
     full_name: str
-    role: str = "editor"
+    role: UserRole = UserRole.editor
 
 
 class UserUpdate(BaseModel):
     full_name: str | None = None
-    role: str | None = None
+    role: UserRole | None = None
     is_active: bool | None = None
 
 
@@ -56,7 +104,7 @@ class UserOut(ORMModel):
     id: UUID
     email: EmailStr
     full_name: str
-    role: str
+    role: UserRole
     is_active: bool
     created_at: datetime
     last_login: datetime | None = None
@@ -69,7 +117,7 @@ class ProjectCreate(BaseModel):
     district: str
     city: str
     price_from: int = Field(gt=0)
-    status: str = "draft"
+    status: ProjectStatus = ProjectStatus.draft
 
 
 class ProjectUpdate(BaseModel):
@@ -79,7 +127,7 @@ class ProjectUpdate(BaseModel):
     district: str | None = None
     city: str | None = None
     price_from: int | None = Field(default=None, gt=0)
-    status: str | None = None
+    status: ProjectStatus | None = None
 
 
 class ProjectOut(ORMModel):
@@ -91,7 +139,7 @@ class ProjectOut(ORMModel):
     district: str
     city: str
     price_from: int
-    status: str
+    status: ProjectStatus
 
 
 class ApartmentCreate(BaseModel):
@@ -101,9 +149,9 @@ class ApartmentCreate(BaseModel):
     area: Decimal = Field(gt=0)
     bedrooms: int = Field(ge=0)
     bathrooms: int = Field(ge=1)
-    direction: str
+    direction: Direction
     price: int = Field(gt=0)
-    status: str = "available"
+    status: ApartmentStatus = ApartmentStatus.available
     feng_shui_element: str | None = None
 
 
@@ -113,9 +161,9 @@ class ApartmentUpdate(BaseModel):
     area: Decimal | None = Field(default=None, gt=0)
     bedrooms: int | None = Field(default=None, ge=0)
     bathrooms: int | None = Field(default=None, ge=1)
-    direction: str | None = None
+    direction: Direction | None = None
     price: int | None = Field(default=None, gt=0)
-    status: str | None = None
+    status: ApartmentStatus | None = None
     feng_shui_element: str | None = None
 
 
@@ -127,16 +175,16 @@ class ApartmentOut(ORMModel):
     area: Decimal
     bedrooms: int
     bathrooms: int
-    direction: str
+    direction: Direction
     price: int
-    status: str
+    status: ApartmentStatus
     feng_shui_element: str | None = None
 
 
 class AmenityCreate(BaseModel):
     name: str
     icon: str | None = None
-    category: str
+    category: AmenityCategory
     description: str | None = None
 
 
@@ -144,7 +192,7 @@ class AmenityOut(ORMModel):
     id: UUID
     name: str
     icon: str | None = None
-    category: str
+    category: AmenityCategory
     description: str | None = None
 
 
@@ -184,7 +232,7 @@ class PostCreate(BaseModel):
     content: str
     category_id: UUID
     thumbnail: str | None = None
-    status: str = "draft"
+    status: PostStatus = PostStatus.draft
     scheduled_at: datetime | None = None
 
 
@@ -193,7 +241,7 @@ class PostUpdate(BaseModel):
     content: str | None = None
     category_id: UUID | None = None
     thumbnail: str | None = None
-    status: str | None = None
+    status: PostStatus | None = None
     published_at: datetime | None = None
 
 
@@ -205,21 +253,21 @@ class PostOut(ORMModel):
     thumbnail: str | None = None
     category_id: UUID
     author_id: UUID
-    status: str
+    status: PostStatus
     published_at: datetime | None = None
     created_at: datetime
 
 
 class ContactCreate(BaseModel):
     full_name: str
-    phone: str = Field(min_length=8, max_length=15)
+    phone: str = Field(min_length=8, max_length=15, pattern=r"^[0-9+()\-\s]+$")
     email: EmailStr | None = None
     project_id: UUID | None = None
     message: str | None = None
 
 
 class ContactUpdate(BaseModel):
-    status: str | None = None
+    status: ContactStatus | None = None
     note: str | None = None
     assigned_to: UUID | None = None
 

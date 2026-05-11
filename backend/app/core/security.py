@@ -1,4 +1,3 @@
-import os
 import secrets
 import hashlib
 from datetime import datetime, timedelta, timezone
@@ -7,13 +6,10 @@ from typing import Any
 import jwt
 from passlib.context import CryptContext
 
+from app.core.config import settings
+
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "change-me-in-local-env")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
 
 def hash_password(password: str) -> str:
@@ -29,15 +25,15 @@ def create_access_token(subject: str, claims: dict[str, Any] | None = None) -> s
     payload: dict[str, Any] = {
         "sub": subject,
         "iat": now,
-        "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+        "exp": now + timedelta(minutes=settings.access_token_expire_minutes),
     }
     if claims:
         payload.update(claims)
-    return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
+    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
-    return jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+    return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
 
 
 def generate_opaque_token() -> str:

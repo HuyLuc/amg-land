@@ -9,6 +9,8 @@ services:
     container_name: amg-land-migrate
     command: alembic upgrade head
     environment:
+      APP_ENV: ${APP_ENV:-development}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-local-secret}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-amg_land}:${POSTGRES_PASSWORD:-amg_land_password}@postgres:5432/${POSTGRES_DB:-amg_land}
     depends_on:
       postgres:
@@ -23,6 +25,13 @@ services:
     container_name: amg-land-backend
     environment:
       APP_ENV: ${APP_ENV:-development}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-local-secret}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      MAX_FAILED_LOGIN_ATTEMPTS: ${MAX_FAILED_LOGIN_ATTEMPTS:-5}
+      ACCOUNT_LOCK_MINUTES: ${ACCOUNT_LOCK_MINUTES:-15}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      ADMIN_FULL_NAME: ${ADMIN_FULL_NAME:-AMG Admin}
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-amg_land}:${POSTGRES_PASSWORD:-amg_land_password}@postgres:5432/${POSTGRES_DB:-amg_land}
       MINIO_ENDPOINT: http://minio:9000
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000/amg-land-media}
