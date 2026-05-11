@@ -21,6 +21,23 @@ Stack local hien co:
 - Migration: Alembic, service `migrate`
 - Object storage: MinIO, API port `9000`, console port `9001`
 
+## API Da Co
+
+Backend expose API tai prefix `http://localhost:8000/api/v1`.
+
+- Auth: login, refresh, logout, forgot/reset password token flow.
+- Users: list/create/update/deactivate.
+- Projects: list/detail/create/update/delete, upload image len MinIO, floor plans, assign/unassign amenities.
+- Apartments: list by project/detail/create/update/delete.
+- Amenities: list/create.
+- Categories: list/create/update/delete.
+- Search: search da tieu chi, search phong thuy.
+- Chat: message fallback, history, feng-shui suggestion.
+- Posts: list/detail/create/update/delete.
+- Contacts: create/list/update.
+- Analytics: create event.
+- Stats: dashboard tu contact va analytics events.
+
 ## Yeu Cau Moi Truong
 
 Can cai san:
@@ -123,6 +140,12 @@ Xem log backend:
 
 ```powershell
 docker compose logs -f backend
+```
+
+Chay API smoke test:
+
+```powershell
+docker compose run --rm backend pytest -q -p no:cacheprovider
 ```
 
 Xem log migration:
