@@ -1,4 +1,4 @@
-export type ProjectStatus = "Dang mo ban" | "Sap mo ban" | "Da ban giao";
+export type ProjectStatus = "Đang mở bán" | "Sắp mở bán" | "Đã bàn giao";
 export type ApartmentStatus = "available" | "reserved" | "sold";
 
 export type Apartment = {

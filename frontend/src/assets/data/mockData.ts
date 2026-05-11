@@ -1,17 +1,17 @@
-import type { Post, Project } from "../types/domain";
+import type { Post, Project } from "../../types/domain";
 
 export const projects: Project[] = [
   {
     id: "p1",
     slug: "the-aurora-riverside",
     name: "The Aurora Riverside",
-    district: "Tay Ho",
-    city: "Ha Noi",
-    location: "Vo Chi Cong, Tay Ho, Ha Noi",
+    district: "Tây Hồ",
+    city: "Hà Nội",
+    location: "Võ Chí Công, Tây Hồ, Hà Nội",
     priceFrom: 4200000000,
-    status: "Dang mo ban",
+    status: "Đang mở bán",
     summary:
-      "Cum can ho ven song voi mat do xay dung thap, tam nhin mo va he tien ich noi khu gan nhu khep kin.",
+      "Cụm căn hộ ven sông với mật độ xây dựng thấp, tầm nhìn mở và hệ tiện ích nội khu gần như khép kín.",
     image:
       "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1400&q=85",
     gallery: [
@@ -19,7 +19,7 @@ export const projects: Project[] = [
       "https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?auto=format&fit=crop&w=1200&q=85"
     ],
-    amenities: ["Ho boi vo cuc", "Sky lounge", "Phong gym", "Vuon noi khu", "Truong mam non"],
+    amenities: ["Hồ bơi vô cực", "Sky lounge", "Phòng gym", "Vườn nội khu", "Trường mầm non"],
     apartments: [
       {
         id: "a101",
@@ -28,10 +28,10 @@ export const projects: Project[] = [
         area: 78,
         bedrooms: 2,
         bathrooms: 2,
-        direction: "Dong Nam",
+        direction: "Đông Nam",
         price: 4680000000,
         status: "available",
-        fengShui: ["Moc", "Thuy", "Hoa"]
+        fengShui: ["Mộc", "Thủy", "Hỏa"]
       },
       {
         id: "a102",
@@ -40,10 +40,10 @@ export const projects: Project[] = [
         area: 96,
         bedrooms: 3,
         bathrooms: 2,
-        direction: "Tay Bac",
+        direction: "Tây Bắc",
         price: 6250000000,
         status: "reserved",
-        fengShui: ["Kim", "Tho"]
+        fengShui: ["Kim", "Thổ"]
       }
     ]
   },
@@ -51,13 +51,13 @@ export const projects: Project[] = [
     id: "p2",
     slug: "amg-sky-garden",
     name: "AMG Sky Garden",
-    district: "Nam Tu Liem",
-    city: "Ha Noi",
-    location: "Dai lo Thang Long, Nam Tu Liem, Ha Noi",
+    district: "Nam Từ Liêm",
+    city: "Hà Nội",
+    location: "Đại lộ Thăng Long, Nam Từ Liêm, Hà Nội",
     priceFrom: 3100000000,
-    status: "Sap mo ban",
+    status: "Sắp mở bán",
     summary:
-      "Toa thap can ho hien dai gan trung tam hanh chinh moi, phu hop gia dinh tre va nha dau tu dai han.",
+      "Tòa tháp căn hộ hiện đại gần trung tâm hành chính mới, phù hợp gia đình trẻ và nhà đầu tư dài hạn.",
     image:
       "https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?auto=format&fit=crop&w=1400&q=85",
     gallery: [
@@ -65,7 +65,7 @@ export const projects: Project[] = [
       "https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1600607688066-890987f18a86?auto=format&fit=crop&w=1200&q=85"
     ],
-    amenities: ["Cong vien noi khu", "Khu BBQ", "Thu vien", "Co-working", "San choi tre em"],
+    amenities: ["Công viên nội khu", "Khu BBQ", "Thư viện", "Co-working", "Sân chơi trẻ em"],
     apartments: [
       {
         id: "b201",
@@ -77,7 +77,7 @@ export const projects: Project[] = [
         direction: "Nam",
         price: 3350000000,
         status: "available",
-        fengShui: ["Moc", "Hoa"]
+        fengShui: ["Mộc", "Hỏa"]
       },
       {
         id: "b202",
@@ -86,10 +86,10 @@ export const projects: Project[] = [
         area: 112,
         bedrooms: 3,
         bathrooms: 2,
-        direction: "Tay Nam",
+        direction: "Tây Nam",
         price: 5980000000,
         status: "available",
-        fengShui: ["Kim", "Tho"]
+        fengShui: ["Kim", "Thổ"]
       }
     ]
   },
@@ -97,13 +97,13 @@ export const projects: Project[] = [
     id: "p3",
     slug: "lotus-residence",
     name: "Lotus Residence",
-    district: "Long Bien",
-    city: "Ha Noi",
-    location: "Ngoc Thuy, Long Bien, Ha Noi",
+    district: "Long Biên",
+    city: "Hà Nội",
+    location: "Ngọc Thụy, Long Biên, Hà Nội",
     priceFrom: 2800000000,
-    status: "Dang mo ban",
+    status: "Đang mở bán",
     summary:
-      "Khu can ho xanh tai cua ngo phia Dong, ket noi nhanh vao pho co va cac tuyen cau lon.",
+      "Khu căn hộ xanh tại cửa ngõ phía Đông, kết nối nhanh vào phố cổ và các tuyến cầu lớn.",
     image:
       "https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=1400&q=85",
     gallery: [
@@ -111,7 +111,7 @@ export const projects: Project[] = [
       "https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?auto=format&fit=crop&w=1200&q=85",
       "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85"
     ],
-    amenities: ["Duong dao bo", "Ho dieu hoa", "Shophouse", "Phong sinh hoat", "An ninh 24/7"],
+    amenities: ["Đường dạo bộ", "Hồ điều hòa", "Shophouse", "Phòng sinh hoạt", "An ninh 24/7"],
     apartments: [
       {
         id: "c301",
@@ -120,10 +120,10 @@ export const projects: Project[] = [
         area: 71,
         bedrooms: 2,
         bathrooms: 2,
-        direction: "Bac",
+        direction: "Bắc",
         price: 2980000000,
         status: "sold",
-        fengShui: ["Thuy"]
+        fengShui: ["Thủy"]
       },
       {
         id: "c302",
@@ -132,10 +132,10 @@ export const projects: Project[] = [
         area: 88,
         bedrooms: 3,
         bathrooms: 2,
-        direction: "Dong",
+        direction: "Đông",
         price: 3860000000,
         status: "available",
-        fengShui: ["Moc", "Thuy", "Hoa"]
+        fengShui: ["Mộc", "Thủy", "Hỏa"]
       }
     ]
   }
@@ -144,29 +144,30 @@ export const projects: Project[] = [
 export const posts: Post[] = [
   {
     id: "n1",
-    title: "Can ho ven song tiep tuc hut nhu cau o thuc tai Ha Noi",
-    category: "Thi truong",
-    excerpt: "Nguoi mua uu tien khong gian song thoang, ket noi giao thong va tien ich gan nha.",
+    title: "Căn hộ ven sông tiếp tục hút nhu cầu ở thực tại Hà Nội",
+    category: "Thị trường",
+    excerpt: "Người mua ưu tiên không gian sống thoáng, kết nối giao thông và tiện ích gần nhà.",
     image:
       "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80",
     date: "18/03/2026"
   },
   {
     id: "n2",
-    title: "Cach doc bang gia can ho de tranh bo sot chi phi",
-    category: "Huong dan",
-    excerpt: "Ngoai gia niem yet, khach hang can quan tam phi bao tri, noi that va tien do thanh toan.",
+    title: "Cách đọc bảng giá căn hộ để tránh bỏ sót chi phí",
+    category: "Hướng dẫn",
+    excerpt: "Ngoài giá niêm yết, khách hàng cần quan tâm phí bảo trì, nội thất và tiến độ thanh toán.",
     image:
       "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80",
     date: "16/03/2026"
   },
   {
     id: "n3",
-    title: "Huong nha va yeu to phong thuy trong quyet dinh mua can ho",
-    category: "Phong thuy",
-    excerpt: "Huong can ho nen duoc xem cung ngan sach, nhu cau su dung va kha nang thanh khoan.",
+    title: "Hướng nhà và yếu tố phong thủy trong quyết định mua căn hộ",
+    category: "Phong thủy",
+    excerpt: "Hướng căn hộ nên được xem cùng ngân sách, nhu cầu sử dụng và khả năng thanh khoản.",
     image:
       "https://images.unsplash.com/photo-1604014237800-1c9102c219da?auto=format&fit=crop&w=900&q=80",
     date: "12/03/2026"
   }
 ];
+

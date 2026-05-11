@@ -40,11 +40,14 @@ amg-land-web/
   frontend/
     src/
       app/
-        public/
-        admin/
+        App.tsx
+        navigation.ts
+        types.ts
       assets/
+        data/
       components/
         layout/
+        sections/
         ui/
       config/
       features/
@@ -56,6 +59,7 @@ amg-land-web/
         contacts/
         chat/
         stats/
+      pages/
       hooks/
       lib/
       services/
@@ -110,9 +114,12 @@ amg-land-web/
 
 | Thu muc | Muc dich |
 | --- | --- |
-| `src/app` | Route/page layer cho React frontend |
+| `src/app` | App shell, navigation config va route state cho React frontend |
+| `src/pages` | Cac page public: Home, Projects, News, Contact |
+| `src/assets/data` | Mock data va sau nay co the thay bang API/service layer |
 | `src/components/ui` | Component UI dung chung |
 | `src/components/layout` | Header, footer, sidebar, shell layout |
+| `src/components/sections` | Cac section dung lai tren public website |
 | `src/features` | Module UI theo nghiep vu |
 | `src/services` | API clients |
 | `src/lib` | Helper/framework adapters |
