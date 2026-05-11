@@ -21,7 +21,7 @@ export function ProjectDetail({ project, onContact }: ProjectDetailProps) {
               ))}
             </div>
           </div>
-          <h2 className="mt-7 text-3xl font-semibold text-brand-900">{project.name}</h2>
+          <h2 className="font-display mt-7 text-4xl font-bold leading-tight text-brand-900">{project.name}</h2>
           <p className="mt-3 flex items-start gap-2 text-slate-600">
             <MapPin className="mt-1 shrink-0 text-brand-900" size={18} />
             {project.location}
@@ -62,4 +62,3 @@ export function ProjectDetail({ project, onContact }: ProjectDetailProps) {
     </section>
   );
 }
-

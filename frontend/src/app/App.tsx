@@ -3,11 +3,14 @@ import { projects } from "../assets/data/mockData";
 import { Chatbot } from "../features/chat/components/Chatbot";
 import { useProjectFilters } from "../features/projects/hooks/useProjectFilters";
 import { ContactPage } from "../pages/ContactPage";
+import { CommunityPage } from "../pages/CommunityPage";
 import { HomePage } from "../pages/HomePage";
 import { NewsPage } from "../pages/NewsPage";
+import { ProjectDetailPage } from "../pages/ProjectDetailPage";
 import { ProjectsPage } from "../pages/ProjectsPage";
 import type { Project } from "../types/domain";
 import { AppLayout } from "../components/layout/AppLayout";
+import { PageTransition } from "../components/layout/PageTransition";
 import type { Page } from "./types";
 
 export function App() {
@@ -24,36 +27,45 @@ export function App() {
 
   const openProject = (project: Project) => {
     setSelectedProject(project);
-    setPage("projects");
-    setTimeout(() => document.getElementById("project-detail")?.scrollIntoView({ behavior: "smooth" }), 50);
+    setPage("projectDetail");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <AppLayout currentPage={page} onNavigate={navigate}>
-      {page === "home" && (
-        <HomePage
-          filters={projectFilters}
-          onContact={() => navigate("contact")}
-          onExploreProjects={() => navigate("projects")}
-          onNavigateNews={() => navigate("news")}
-          onOpenProject={openProject}
-        />
-      )}
+      <PageTransition key={page} page={page}>
+        {page === "home" && (
+          <HomePage
+            filters={projectFilters}
+            onContact={() => navigate("contact")}
+            onExploreProjects={() => navigate("projects")}
+            onNavigateNews={() => navigate("news")}
+            onOpenProject={openProject}
+          />
+        )}
 
-      {page === "projects" && (
-        <ProjectsPage
-          filters={projectFilters}
-          selectedProject={selectedProject}
-          onContact={() => navigate("contact")}
-          onSelectProject={setSelectedProject}
-        />
-      )}
+        {page === "projects" && (
+          <ProjectsPage
+            filters={projectFilters}
+            onOpenProject={openProject}
+          />
+        )}
 
-      {page === "news" && <NewsPage />}
-      {page === "contact" && <ContactPage />}
+        {page === "projectDetail" && (
+          <ProjectDetailPage
+            project={selectedProject}
+            onBack={() => navigate("projects")}
+            onContact={() => navigate("contact")}
+            onOpenProject={openProject}
+          />
+        )}
+
+        {page === "news" && <NewsPage />}
+        {page === "community" && <CommunityPage />}
+        {page === "contact" && <ContactPage />}
+      </PageTransition>
 
       <Chatbot open={chatOpen} onToggle={() => setChatOpen((current) => !current)} />
     </AppLayout>
   );
 }
-

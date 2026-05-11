@@ -26,6 +26,7 @@ amg-land-web/
         apartments/
         amenities/
         posts/
+        community/
         contacts/
         chat/
         stats/
@@ -115,7 +116,7 @@ amg-land-web/
 | Thu muc | Muc dich |
 | --- | --- |
 | `src/app` | App shell, navigation config va route state cho React frontend |
-| `src/pages` | Cac page public: Home, Projects, News, Contact |
+| `src/pages` | Cac page public: Home, Projects, News, Community, Contact |
 | `src/assets/data` | Mock data va sau nay co the thay bang API/service layer |
 | `src/components/ui` | Component UI dung chung |
 | `src/components/layout` | Header, footer, sidebar, shell layout |

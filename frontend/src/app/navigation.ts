@@ -4,6 +4,6 @@ export const navItems: { label: string; page: Page }[] = [
   { label: "Trang chủ", page: "home" },
   { label: "Dự án", page: "projects" },
   { label: "Tin tức", page: "news" },
+  { label: "Cộng đồng", page: "community" },
   { label: "Liên hệ", page: "contact" }
 ];
-

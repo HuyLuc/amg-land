@@ -1,19 +1,16 @@
 import { Home, MapPin, SlidersHorizontal } from "lucide-react";
 import { SelectField } from "../components/ui/SelectField";
 import { ProjectCard } from "../features/projects/components/ProjectCard";
-import { ProjectDetail } from "../features/projects/components/ProjectDetail";
 import type { ProjectFilters } from "../features/projects/hooks/useProjectFilters";
 import { bedroomOptions, budgetOptions } from "../features/projects/utils/projectFormatters";
 import type { Project } from "../types/domain";
 
 type ProjectsPageProps = {
   filters: ProjectFilters;
-  selectedProject: Project;
-  onContact: () => void;
-  onSelectProject: (project: Project) => void;
+  onOpenProject: (project: Project) => void;
 };
 
-export function ProjectsPage({ filters, selectedProject, onContact, onSelectProject }: ProjectsPageProps) {
+export function ProjectsPage({ filters, onOpenProject }: ProjectsPageProps) {
   return (
     <section className="section-wrap">
       <div className="section-heading">
@@ -39,14 +36,11 @@ export function ProjectsPage({ filters, selectedProject, onContact, onSelectProj
           </div>
           <div className="grid gap-6 md:grid-cols-2">
             {filters.filteredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} onOpen={() => onSelectProject(project)} />
+              <ProjectCard key={project.id} project={project} onOpen={() => onOpenProject(project)} />
             ))}
           </div>
         </div>
       </div>
-
-      <ProjectDetail project={selectedProject} onContact={onContact} />
     </section>
   );
 }
-

@@ -7,7 +7,7 @@ export function ContactPage() {
     <section className="section-wrap">
       <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
-          <h1 className="text-5xl font-semibold leading-tight text-brand-900">Đăng ký tư vấn</h1>
+          <h1 className="font-display text-5xl font-bold leading-tight text-brand-900">Đăng ký tư vấn</h1>
           <p className="mt-5 text-lg leading-8 text-slate-600">
             Chia sẻ nhu cầu của bạn, AMG Land sẽ liên hệ với bảng hàng và thông tin dự án phù hợp.
           </p>

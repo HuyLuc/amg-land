@@ -1,2 +1,1 @@
-export type Page = "home" | "projects" | "news" | "contact";
-
+export type Page = "home" | "projects" | "projectDetail" | "news" | "community" | "contact";
