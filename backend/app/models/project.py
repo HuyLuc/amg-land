@@ -36,6 +36,7 @@ class Project(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     floor_plans = relationship("FloorPlan", back_populates="project", cascade="all, delete-orphan")
     amenities = relationship("ProjectAmenity", back_populates="project", cascade="all, delete-orphan")
     contact_requests = relationship("ContactRequest", back_populates="project")
+    analytics_events = relationship("AnalyticsEvent", back_populates="project")
 
 
 class ProjectImage(UUIDPrimaryKeyMixin, Base):

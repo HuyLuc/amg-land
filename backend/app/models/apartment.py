@@ -41,3 +41,4 @@ class Apartment(UUIDPrimaryKeyMixin, Base):
     feng_shui_element: Mapped[str | None] = mapped_column(String(20), nullable=True)
 
     project = relationship("Project", back_populates="apartments")
+    analytics_events = relationship("AnalyticsEvent", back_populates="apartment")

@@ -28,3 +28,6 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     projects = relationship("Project", back_populates="creator")
     posts = relationship("Post", back_populates="author")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
+    activity_logs = relationship("ActivityLog", back_populates="actor")
