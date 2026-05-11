@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Frontend build output
+dist/
+frontend/dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Tooling / OS
+.DS_Store
+Thumbs.db
