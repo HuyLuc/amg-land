@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.example
+infra/docker/.env
+infra/docker/.env.*
+!infra/docker/.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
