@@ -7,6 +7,7 @@ AMG News la ung dung web bat dong san cho AMG Land. Repo nay duoc to chuc theo m
 ```text
 amg-land/
   backend/        FastAPI API, SQLAlchemy models, Alembic migrations
+  admin/          React CMS cho admin va nhan su
   frontend/       React frontend scaffold
   packages/       Shared contracts/types scaffold
   infra/          Docker/nginx/scripts phu tro
@@ -17,6 +18,7 @@ amg-land/
 Stack local hien co:
 
 - Backend: FastAPI + Uvicorn, port `8000`
+- Admin CMS: React + Vite, port `5174`
 - Database: PostgreSQL 16, port `5432`
 - Migration: Alembic, service `migrate`
 - Object storage: MinIO, API port `9000`, console port `9001`
@@ -105,6 +107,7 @@ Cac URL dev:
 
 - Backend health: `http://localhost:8000/health`
 - Backend OpenAPI: `http://localhost:8000/docs`
+- Admin CMS: `http://localhost:5174`
 - MinIO API: `http://localhost:9000`
 - MinIO Console: `http://localhost:9001`
 
@@ -155,6 +158,21 @@ Chay API smoke test:
 
 ```powershell
 docker compose run --rm backend pytest -q -p no:cacheprovider
+```
+
+Chay admin CMS:
+
+```powershell
+cd admin
+npm install
+npm run dev
+```
+
+Tai khoan local mac dinh:
+
+```text
+admin@example.com
+admin123
 ```
 
 Xem log migration:

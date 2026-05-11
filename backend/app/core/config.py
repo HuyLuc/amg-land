@@ -14,6 +14,7 @@ class Settings:
     admin_full_name: str
     max_failed_login_attempts: int
     account_lock_minutes: int
+    cors_origins: list[str]
 
 
 def get_settings() -> Settings:
@@ -35,6 +36,11 @@ def get_settings() -> Settings:
         admin_full_name=os.getenv("ADMIN_FULL_NAME", "AMG Admin"),
         max_failed_login_attempts=int(os.getenv("MAX_FAILED_LOGIN_ATTEMPTS", "5")),
         account_lock_minutes=int(os.getenv("ACCOUNT_LOCK_MINUTES", "15")),
+        cors_origins=[
+            origin.strip()
+            for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174").split(",")
+            if origin.strip()
+        ],
     )
 
 
