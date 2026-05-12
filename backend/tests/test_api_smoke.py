@@ -151,6 +151,7 @@ def test_full_api_smoke_flow() -> None:
 
     project_payload = {
         "name": f"Project {uuid.uuid4().hex[:8]}",
+        "short_description": "Smoke project short",
         "description": "Smoke project",
         "location": "Ha Noi",
         "district": "Cau Giay",
@@ -161,6 +162,14 @@ def test_full_api_smoke_flow() -> None:
     project_response = client.post("/api/v1/projects", json=project_payload, headers=headers)
     assert project_response.status_code == 201, project_response.text
     project = project_response.json()
+    assert project["short_description"] == "Smoke project short"
+    update_project_response = client.put(
+        f"/api/v1/projects/{project['id']}",
+        json={"name": project_payload["name"], "description": "Updated smoke project"},
+        headers=headers,
+    )
+    assert update_project_response.status_code == 200, update_project_response.text
+    assert update_project_response.json()["slug"] == project["slug"]
     assert client.get(f"/api/v1/projects/{project['slug']}").status_code == 200
 
     category_response = client.post(

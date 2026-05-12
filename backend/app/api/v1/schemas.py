@@ -112,6 +112,7 @@ class UserOut(ORMModel):
 
 class ProjectCreate(BaseModel):
     name: str
+    short_description: str | None = None
     description: str | None = None
     location: str
     district: str
@@ -122,6 +123,7 @@ class ProjectCreate(BaseModel):
 
 class ProjectUpdate(BaseModel):
     name: str | None = None
+    short_description: str | None = None
     description: str | None = None
     location: str | None = None
     district: str | None = None
@@ -134,6 +136,7 @@ class ProjectOut(ORMModel):
     id: UUID
     name: str
     slug: str
+    short_description: str | None = None
     description: str | None = None
     location: str
     district: str

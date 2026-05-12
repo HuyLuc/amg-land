@@ -78,13 +78,19 @@ def slugify(value: str) -> str:
     return value.strip("-") or str(uuid.uuid4())
 
 
-def unique_slug(db: Session, model, value: str) -> str:
+def unique_slug(db: Session, model, value: str, exclude_id: uuid.UUID | None = None) -> str:
     base = slugify(value)
     slug = base
     suffix = 1
-    while db.scalar(select(model).where(model.slug == slug)) is not None:
+    query = select(model).where(model.slug == slug)
+    if exclude_id is not None:
+        query = query.where(model.id != exclude_id)
+    while db.scalar(query) is not None:
         suffix += 1
         slug = f"{base}-{suffix}"
+        query = select(model).where(model.slug == slug)
+        if exclude_id is not None:
+            query = query.where(model.id != exclude_id)
     return slug
 
 

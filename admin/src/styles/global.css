@@ -1573,11 +1573,14 @@ td select {
   border-bottom: 0;
 }
 
-.project-overview-list > .project-overview-description-row {
+.project-overview-list > .project-overview-text-row {
   grid-column: 1 / -1;
   align-items: start;
   margin-top: 2px;
   padding-top: 16px;
+}
+
+.project-overview-list > .project-overview-text-row:last-child {
   border-bottom: 0;
 }
 
@@ -1860,7 +1863,7 @@ td select {
     border-bottom: 1px solid var(--line);
   }
 
-  .project-overview-list > .project-overview-description-row {
+  .project-overview-list > .project-overview-text-row {
     border-top: 0;
   }
 

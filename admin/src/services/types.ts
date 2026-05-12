@@ -46,6 +46,7 @@ export interface Project {
   id: string;
   name: string;
   slug: string;
+  short_description: string | null;
   description: string | null;
   location: string;
   district: string;

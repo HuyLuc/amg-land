@@ -11,6 +11,7 @@ export interface ProjectFilters {
 
 export interface ProjectPayload {
   name: string;
+  short_description?: string | null;
   description?: string | null;
   location: string;
   district: string;

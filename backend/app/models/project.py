@@ -21,6 +21,7 @@ class Project(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     name: Mapped[str] = mapped_column(String(200))
     slug: Mapped[str] = mapped_column(String(220), unique=True, index=True)
+    short_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     location: Mapped[str] = mapped_column(String(300))
     district: Mapped[str] = mapped_column(String(100), index=True)

@@ -14,6 +14,7 @@ const projectStatusOptions = [
 
 const initialForm: ProjectPayload = {
   name: "",
+  short_description: "",
   description: "",
   location: "",
   district: "",
@@ -43,6 +44,7 @@ export function ProjectFormModal({ open, project, onClose, onSaved }: ProjectFor
       project
         ? {
             name: project.name,
+            short_description: project.short_description ?? "",
             description: project.description ?? "",
             location: project.location,
             district: project.district,
@@ -91,7 +93,11 @@ export function ProjectFormModal({ open, project, onClose, onSaved }: ProjectFor
             <input value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} required />
           </label>
           <label>
-            <span>Mô tả</span>
+            <span>Mô tả ngắn</span>
+            <textarea value={form.short_description ?? ""} onChange={(event) => setForm((current) => ({ ...current, short_description: event.target.value }))} placeholder="Dùng cho danh sách dự án và các phần tóm tắt." />
+          </label>
+          <label>
+            <span>Mô tả chi tiết</span>
             <textarea value={form.description ?? ""} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
           </label>
           <label>

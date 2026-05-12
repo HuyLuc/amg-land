@@ -18,7 +18,14 @@ def list_projects(
     if district:
         query = query.where(Project.district.ilike(f"%{district}%"))
     if keyword:
-        query = query.where(Project.name.ilike(f"%{keyword}%"))
+        keyword_pattern = f"%{keyword}%"
+        query = query.where(
+            or_(
+                Project.name.ilike(keyword_pattern),
+                Project.short_description.ilike(keyword_pattern),
+                Project.description.ilike(keyword_pattern),
+            )
+        )
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = list(db.scalars(query.order_by(Project.created_at.desc()).offset((page - 1) * limit).limit(limit)))
     return page_response(items, total, page, limit)
@@ -69,8 +76,8 @@ def create_project(payload: ProjectCreate, current_user: StaffUser, db: Session 
 def update_project(project_id: uuid.UUID, payload: ProjectUpdate, _: StaffUser, db: Session = Depends(get_db)) -> Project:
     project = get_project_or_404(db, project_id)
     values = payload.model_dump(exclude_unset=True)
-    if "name" in values:
-        project.slug = unique_slug(db, Project, values["name"])
+    if "name" in values and values["name"] != project.name:
+        project.slug = unique_slug(db, Project, values["name"], exclude_id=project.id)
     for key, value in values.items():
         setattr(project, key, value)
     log_activity(db, _, "projects.update", "project", project.id)

@@ -267,8 +267,14 @@ export function ProjectDetailPage(): JSX.Element {
                 <dt>Căn hộ</dt>
                 <dd>{apartmentsQuery.data?.total ?? apartments.length} căn</dd>
               </div>
-              <div className="project-overview-description-row">
-                <dt>Mô tả</dt>
+              <div className="project-overview-text-row">
+                <dt>Mô tả ngắn</dt>
+                <dd>
+                  <p>{project.short_description ?? "Chưa có mô tả ngắn."}</p>
+                </dd>
+              </div>
+              <div className="project-overview-text-row">
+                <dt>Mô tả chi tiết</dt>
                 <dd>
                   <p>{project.description ?? "Chưa có mô tả."}</p>
                 </dd>
@@ -432,7 +438,17 @@ export function ProjectDetailPage(): JSX.Element {
         ) : null}
       </section>
 
-      <ProjectFormModal open={formOpen} project={project} onClose={() => setFormOpen(false)} onSaved={(_, message) => showToast(message)} />
+      <ProjectFormModal
+        open={formOpen}
+        project={project}
+        onClose={() => setFormOpen(false)}
+        onSaved={(savedProject, message) => {
+          showToast(message);
+          if (savedProject.slug !== slug) {
+            navigate(`/projects/${savedProject.slug}`, { replace: true });
+          }
+        }}
+      />
 
       {toast ? <div className="toast-message">{toast}</div> : null}
     </section>

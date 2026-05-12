@@ -178,6 +178,7 @@ def seed_projects(db: Session, users: dict[str, User], amenities: dict[str, Amen
 
     projects: list[Project] = []
     for spec in project_specs:
+        spec["short_description"] = spec.get("short_description") or spec.get("description")
         amenity_keys = spec.pop("amenities")
         project = Project(**spec, created_by=users["director"].id)
         db.add(project)
