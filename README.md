@@ -119,11 +119,11 @@ MINIO_ROOT_PASSWORD=amgminio123
 MINIO_BUCKET=amg-land-media
 ```
 
-Tai khoan admin local mac dinh duoc seed khi backend startup neu chua ton tai:
+Tai khoan quan ly local duoc seed khi backend startup neu ban cau hinh trong `.env`:
 
 ```text
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=admin123
+ADMIN_EMAIL=your-local-admin@example.com
+ADMIN_PASSWORD=change-this-password
 ```
 
 Doi cac gia tri `ADMIN_*` va `JWT_SECRET_KEY` trong `.env` truoc khi dung moi truong that.
@@ -168,11 +168,11 @@ npm install
 npm run dev
 ```
 
-Tai khoan local mac dinh:
+Tai khoan local lay theo bien trong file `.env`:
 
 ```text
-admin@example.com
-admin123
+ADMIN_EMAIL
+ADMIN_PASSWORD
 ```
 
 Xem log migration:
