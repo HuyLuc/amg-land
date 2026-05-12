@@ -31,8 +31,17 @@ def get_project(slug: str, db: Session = Depends(get_db)) -> dict:
         raise HTTPException(status_code=404, detail="Project not found")
     return {
         "project_detail": ProjectOut.model_validate(project).model_dump(mode="json"),
-        "amenities": [item.amenity.name for item in project.amenities],
-        "floor_plans": [{"id": str(item.id), "floor_number": item.floor_number, "image_url": item.image_url} for item in project.floor_plans],
+        "amenities": [{"id": str(item.amenity.id), "name": item.amenity.name, "category": item.amenity.category.value} for item in project.amenities],
+        "floor_plans": [
+            {
+                "id": str(item.id),
+                "project_id": str(item.project_id),
+                "floor_number": item.floor_number,
+                "image_url": item.image_url,
+                "description": item.description,
+            }
+            for item in project.floor_plans
+        ],
         "images": [{"id": str(item.id), "image_url": item.image_url, "is_thumbnail": item.is_thumbnail} for item in project.images],
     }
 

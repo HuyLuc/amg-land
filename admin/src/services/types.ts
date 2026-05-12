@@ -54,6 +54,35 @@ export interface Project {
   status: "draft" | "active" | "closed";
 }
 
+export interface ProjectImage {
+  id: string;
+  image_url: string;
+  is_thumbnail: boolean;
+}
+
+export interface FloorPlan {
+  id: string;
+  project_id: string;
+  floor_number: number;
+  image_url: string;
+  description: string | null;
+}
+
+export interface Amenity {
+  id: string;
+  name: string;
+  icon: string | null;
+  category: "internal" | "external";
+  description: string | null;
+}
+
+export interface ProjectDetail {
+  project_detail: Project;
+  amenities: Array<{ id: string; name: string; category: string }>;
+  floor_plans: FloorPlan[];
+  images: ProjectImage[];
+}
+
 export interface Apartment {
   id: string;
   project_id: string;

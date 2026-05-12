@@ -77,7 +77,7 @@ export function ContactsPage(): JSX.Element {
       }),
   });
   const usersQuery = useQuery({ queryKey: ["users"], queryFn: listUsers });
-  const projectsQuery = useQuery({ queryKey: ["projects"], queryFn: listProjects });
+  const projectsQuery = useQuery({ queryKey: ["projects"], queryFn: () => listProjects({ limit: 100 }) });
 
   const contacts = contactsQuery.data?.items ?? [];
   const users = usersQuery.data?.items ?? [];
