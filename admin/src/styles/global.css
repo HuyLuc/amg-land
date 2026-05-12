@@ -411,31 +411,107 @@ td select {
 
 .login-page {
   display: grid;
-  place-items: center;
+  grid-template-columns: minmax(0, 1.1fr) minmax(420px, 0.9fr);
   min-height: 100vh;
-  padding: 24px;
+  background: #fff;
+}
+
+.login-visual {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--brand);
+}
+
+.login-visual img {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  object-fit: cover;
+  display: block;
+}
+
+.login-visual::after {
+  position: absolute;
+  inset: 0;
+  content: "";
   background:
-    linear-gradient(90deg, rgba(38, 63, 107, 0.94), rgba(38, 63, 107, 0.72)),
-    var(--brand);
+    linear-gradient(90deg, rgba(38, 63, 107, 0.84), rgba(38, 63, 107, 0.36)),
+    linear-gradient(0deg, rgba(10, 20, 38, 0.66), rgba(10, 20, 38, 0.08));
+}
+
+.login-visual-overlay {
+  position: absolute;
+  z-index: 1;
+  left: clamp(28px, 5vw, 72px);
+  right: clamp(28px, 5vw, 72px);
+  bottom: clamp(32px, 6vw, 82px);
+  color: #fff;
+}
+
+.visual-kicker {
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.login-visual-overlay h2 {
+  max-width: 620px;
+  margin: 0;
+  font-size: clamp(32px, 4.4vw, 58px);
+  line-height: 1.04;
+  letter-spacing: 0;
+}
+
+.visual-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.visual-stats span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 13px;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .login-panel {
-  width: min(420px, 100%);
-  padding: 28px;
-  border-radius: 8px;
+  align-self: center;
+  justify-self: center;
+  width: min(430px, calc(100% - 48px));
+  padding: 32px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   background: #fff;
-  box-shadow: 0 22px 70px rgba(16, 24, 40, 0.24);
+  box-shadow: 0 18px 60px rgba(16, 24, 40, 0.12);
 }
 
 .login-brand {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 14px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
-.login-logo {
-  background: var(--brand);
+.login-logo-image {
+  width: 300px;
+  height: 112px;
+  object-fit: contain;
+  border-radius: 12px;
+  border: 0;
+  background: #fff;
+  padding: 0;
+  transform: scale(1.42);
 }
 
 .login-brand h1 {
@@ -446,6 +522,42 @@ td select {
 .login-brand p {
   margin: 3px 0 0;
   color: var(--muted);
+}
+
+.login-intro {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding: 14px;
+  border: 1px solid #d7e3f2;
+  border-radius: 8px;
+  background: var(--brand-soft);
+}
+
+.login-intro-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--brand);
+  color: #fff;
+}
+
+.login-intro strong,
+.login-intro span {
+  display: block;
+}
+
+.login-intro strong {
+  font-size: 14px;
+}
+
+.login-intro span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .login-form {
@@ -462,7 +574,34 @@ td select {
 }
 
 .login-form input {
+  width: 100%;
   padding: 0 12px;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 36px;
+  border: 0;
+  border-radius: 0 6px 6px 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.password-toggle:hover {
+  color: var(--brand);
 }
 
 @media (max-width: 920px) {
@@ -506,5 +645,23 @@ td select {
 
   .page-surface {
     padding: 20px 14px;
+  }
+}
+
+@media (max-width: 820px) {
+  .login-page {
+    grid-template-columns: 1fr;
+    padding: 18px;
+    background:
+      linear-gradient(90deg, rgba(38, 63, 107, 0.92), rgba(38, 63, 107, 0.72)),
+      url("/brand/background.jpg") center / cover;
+  }
+
+  .login-visual {
+    display: none;
+  }
+
+  .login-panel {
+    width: min(430px, 100%);
   }
 }

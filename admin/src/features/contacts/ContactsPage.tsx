@@ -25,7 +25,7 @@ export function ContactsPage(): JSX.Element {
 
   return (
     <section className="page-stack">
-      <PageHeader title="Leads tu van" description="Theo doi va xu ly yeu cau tu khach hang." />
+      <PageHeader title="Leads tư vấn" description="Theo dõi và xử lý yêu cầu từ khách hàng." />
 
       <div className="toolbar">
         <div className="segmented">
@@ -38,16 +38,16 @@ export function ContactsPage(): JSX.Element {
       </div>
 
       <section className="panel">
-        {error ? <div className="alert-error">Khong tai duoc danh sach leads.</div> : null}
+        {error ? <div className="alert-error">Không tải được danh sách leads.</div> : null}
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Khach hang</th>
-                <th>Lien he</th>
-                <th>Trang thai</th>
-                <th>Ngay tao</th>
-                <th>Xu ly</th>
+                <th>Khách hàng</th>
+                <th>Liên hệ</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Xử lý</th>
               </tr>
             </thead>
             <tbody>
@@ -55,11 +55,11 @@ export function ContactsPage(): JSX.Element {
                 <tr key={contact.id}>
                   <td>
                     <strong>{contact.full_name}</strong>
-                    <span>{contact.message ?? "Khong co ghi chu"}</span>
+                    <span>{contact.message ?? "Không có ghi chú"}</span>
                   </td>
                   <td>
                     <strong>{contact.phone}</strong>
-                    <span>{contact.email ?? "Chua co email"}</span>
+                    <span>{contact.email ?? "Chưa có email"}</span>
                   </td>
                   <td>
                     <StatusBadge value={contact.status} />
@@ -80,8 +80,8 @@ export function ContactsPage(): JSX.Element {
             </tbody>
           </table>
         </div>
-        {isLoading ? <div className="empty-state">Dang tai du lieu...</div> : null}
-        {!isLoading && !data?.items.length ? <div className="empty-state">Chua co lead nao.</div> : null}
+        {isLoading ? <div className="empty-state">Đang tải dữ liệu...</div> : null}
+        {!isLoading && !data?.items.length ? <div className="empty-state">Chưa có lead nào.</div> : null}
       </section>
     </section>
   );

@@ -9,17 +9,17 @@ export function ProjectsPage(): JSX.Element {
 
   return (
     <section className="page-stack">
-      <PageHeader title="Du an" description="Danh sach du an dang quan ly trong he thong." />
+      <PageHeader title="Dự án" description="Danh sách dự án đang quản lý trong hệ thống." />
       <section className="panel">
-        {error ? <div className="alert-error">Khong tai duoc du an.</div> : null}
+        {error ? <div className="alert-error">Không tải được dự án.</div> : null}
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Ten du an</th>
-                <th>Khu vuc</th>
-                <th>Gia tu</th>
-                <th>Trang thai</th>
+                <th>Khu vực</th>
+                <th>Giá từ</th>
+                <th>Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -31,14 +31,14 @@ export function ProjectsPage(): JSX.Element {
                   </td>
                   <td>{project.district}, {project.city}</td>
                   <td>{project.price_from.toLocaleString("vi-VN")} VND</td>
-                  <td><StatusBadge value={project.status} /></td>
+                  <td><StatusBadge value={project.status === "active" ? "active_project" : project.status} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        {isLoading ? <div className="empty-state">Dang tai du lieu...</div> : null}
-        {!isLoading && !data?.items.length ? <div className="empty-state">Chua co du an.</div> : null}
+        {isLoading ? <div className="empty-state">Đang tải dữ liệu...</div> : null}
+        {!isLoading && !data?.items.length ? <div className="empty-state">Chưa có dự án.</div> : null}
       </section>
     </section>
   );

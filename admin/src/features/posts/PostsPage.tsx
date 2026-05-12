@@ -9,16 +9,16 @@ export function PostsPage(): JSX.Element {
 
   return (
     <section className="page-stack">
-      <PageHeader title="Bai viet" description="Quan ly tin tuc va noi dung thi truong." />
+      <PageHeader title="Bài viết" description="Quản lý tin tức và nội dung thị trường." />
       <section className="panel">
-        {error ? <div className="alert-error">Khong tai duoc bai viet.</div> : null}
+        {error ? <div className="alert-error">Không tải được bài viết.</div> : null}
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Tieu de</th>
-                <th>Trang thai</th>
-                <th>Ngay tao</th>
+                <th>Tiêu đề</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
               </tr>
             </thead>
             <tbody>
@@ -35,8 +35,8 @@ export function PostsPage(): JSX.Element {
             </tbody>
           </table>
         </div>
-        {isLoading ? <div className="empty-state">Dang tai du lieu...</div> : null}
-        {!isLoading && !data?.items.length ? <div className="empty-state">Chua co bai viet.</div> : null}
+        {isLoading ? <div className="empty-state">Đang tải dữ liệu...</div> : null}
+        {!isLoading && !data?.items.length ? <div className="empty-state">Chưa có bài viết.</div> : null}
       </section>
     </section>
   );

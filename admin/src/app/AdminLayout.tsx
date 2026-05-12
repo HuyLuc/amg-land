@@ -7,11 +7,17 @@ import { clearAuth, getAuthUser } from "@/services/authStorage";
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/contacts", label: "Leads", icon: MessageSquare },
-  { to: "/projects", label: "Du an", icon: Building2 },
-  { to: "/apartments", label: "Can ho", icon: Home },
-  { to: "/posts", label: "Bai viet", icon: FileText },
-  { to: "/users", label: "Nhan su", icon: Users },
+  { to: "/projects", label: "Dự án", icon: Building2 },
+  { to: "/apartments", label: "Căn hộ", icon: Home },
+  { to: "/posts", label: "Bài viết", icon: FileText },
+  { to: "/users", label: "Nhân sự", icon: Users },
 ];
+
+const roleLabels: Record<string, string> = {
+  admin: "Quản lý",
+  editor: "Nhân viên",
+  viewer: "Chỉ xem",
+};
 
 export function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -30,11 +36,11 @@ export function AdminLayout(): JSX.Element {
           <div className="brand-mark">A</div>
           <div>
             <div className="brand-name">AMG Land</div>
-            <div className="brand-subtitle">Admin CMS</div>
+            <div className="brand-subtitle">Cổng nội bộ</div>
           </div>
         </div>
 
-        <nav className="nav-list" aria-label="Admin navigation">
+        <nav className="nav-list" aria-label="Điều hướng nội bộ">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -53,17 +59,17 @@ export function AdminLayout(): JSX.Element {
             <Menu size={20} />
           </button>
           <div>
-            <div className="topbar-title">AMG Admin</div>
-            <div className="topbar-subtitle">Quan ly kinh doanh va noi dung</div>
+            <div className="topbar-title">AMG Land CMS</div>
+            <div className="topbar-subtitle">Quản lý kinh doanh và nội dung</div>
           </div>
           <div className="topbar-actions">
             <div className="user-chip">
-              <span>{user?.full_name ?? "Admin"}</span>
-              <strong>{user?.role ?? "admin"}</strong>
+              <span>{user?.full_name ?? "Người dùng"}</span>
+              <strong>{user?.role ? roleLabels[user.role] : "Nội bộ"}</strong>
             </div>
             <button className="secondary-button" type="button" onClick={handleLogout}>
               <LogOut size={16} />
-              Dang xuat
+              Đăng xuất
             </button>
           </div>
         </header>

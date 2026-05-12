@@ -9,19 +9,19 @@ export function ApartmentsPage(): JSX.Element {
 
   return (
     <section className="page-stack">
-      <PageHeader title="Can ho" description="Theo doi gio hang can ho dang mo ban." />
+      <PageHeader title="Căn hộ" description="Theo dõi giỏ hàng căn hộ đang mở bán." />
       <section className="panel">
-        {error ? <div className="alert-error">Khong tai duoc danh sach can ho.</div> : null}
+        {error ? <div className="alert-error">Không tải được danh sách căn hộ.</div> : null}
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Ma can</th>
-                <th>Tang</th>
-                <th>Dien tich</th>
-                <th>Huong</th>
-                <th>Gia</th>
-                <th>Trang thai</th>
+                <th>Mã căn</th>
+                <th>Tầng</th>
+                <th>Diện tích</th>
+                <th>Hướng</th>
+                <th>Giá</th>
+                <th>Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -38,8 +38,8 @@ export function ApartmentsPage(): JSX.Element {
             </tbody>
           </table>
         </div>
-        {isLoading ? <div className="empty-state">Dang tai du lieu...</div> : null}
-        {!isLoading && !data?.items.length ? <div className="empty-state">Chua co can ho phu hop.</div> : null}
+        {isLoading ? <div className="empty-state">Đang tải dữ liệu...</div> : null}
+        {!isLoading && !data?.items.length ? <div className="empty-state">Chưa có căn hộ phù hợp.</div> : null}
       </section>
     </section>
   );

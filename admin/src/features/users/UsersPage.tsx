@@ -9,17 +9,17 @@ export function UsersPage(): JSX.Element {
 
   return (
     <section className="page-stack">
-      <PageHeader title="Nhan su" description="Tai khoan noi bo va phan quyen truy cap." />
+      <PageHeader title="Nhân sự" description="Tài khoản nội bộ và phân quyền truy cập." />
       <section className="panel">
-        {error ? <div className="alert-error">Khong tai duoc danh sach nhan su.</div> : null}
+        {error ? <div className="alert-error">Không tải được danh sách nhân sự.</div> : null}
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th>Ho ten</th>
+                <th>Họ tên</th>
                 <th>Email</th>
-                <th>Vai tro</th>
-                <th>Trang thai</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
               </tr>
             </thead>
             <tbody>
@@ -34,8 +34,8 @@ export function UsersPage(): JSX.Element {
             </tbody>
           </table>
         </div>
-        {isLoading ? <div className="empty-state">Dang tai du lieu...</div> : null}
-        {!isLoading && !data?.items.length ? <div className="empty-state">Chua co nhan su.</div> : null}
+        {isLoading ? <div className="empty-state">Đang tải dữ liệu...</div> : null}
+        {!isLoading && !data?.items.length ? <div className="empty-state">Chưa có nhân sự.</div> : null}
       </section>
     </section>
   );

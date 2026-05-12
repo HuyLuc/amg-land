@@ -1,4 +1,4 @@
-import { Building2 } from "lucide-react";
+import { Eye, EyeOff, ShieldCheck } from "lucide-react";
 import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -6,8 +6,9 @@ import { login } from "@/features/auth/authApi";
 import { saveAuth } from "@/services/authStorage";
 
 export function LoginPage(): JSX.Element {
-  const [email, setEmail] = useState("admin@example.com");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -22,7 +23,7 @@ export function LoginPage(): JSX.Element {
       saveAuth(response.access_token, response.refresh_token, response.user_info);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Dang nhap that bai");
+      setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
     } finally {
       setSubmitting(false);
     }
@@ -30,14 +31,31 @@ export function LoginPage(): JSX.Element {
 
   return (
     <main className="login-page">
+      <section className="login-visual" aria-hidden="true">
+        <img src="/brand/background.jpg" alt="" />
+        <div className="login-visual-overlay">
+          <div className="visual-kicker">AMG Land</div>
+          <h2>Không gian làm việc cho đội ngũ kinh doanh và vận hành.</h2>
+          <div className="visual-stats">
+            <span>Leads</span>
+            <span>Dự án</span>
+            <span>Nội dung</span>
+          </div>
+        </div>
+      </section>
+
       <section className="login-panel">
         <div className="login-brand">
-          <div className="login-logo">
-            <Building2 size={28} />
+          <img className="login-logo-image" src="/brand/logo.png" alt="AMG Land" />
+        </div>
+
+        <div className="login-intro">
+          <div className="login-intro-icon">
+            <ShieldCheck size={18} />
           </div>
           <div>
-            <h1>AMG Land</h1>
-            <p>Admin CMS</p>
+            <strong>Đăng nhập hệ thống</strong>
+            <span>Quản lý khách hàng, dự án và nội dung nội bộ.</span>
           </div>
         </div>
 
@@ -47,12 +65,28 @@ export function LoginPage(): JSX.Element {
             <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required />
           </label>
           <label>
-            Mat khau
-            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" required />
+            Mật khẩu
+            <div className="password-field">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+              />
+              <button
+                className="password-toggle"
+                type="button"
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                onClick={() => setShowPassword((value) => !value)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </label>
           {error ? <div className="form-error">{error}</div> : null}
           <button className="primary-button" type="submit" disabled={submitting}>
-            {submitting ? "Dang dang nhap..." : "Dang nhap"}
+            {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
       </section>
