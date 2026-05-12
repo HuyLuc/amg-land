@@ -42,7 +42,16 @@ def get_project(slug: str, db: Session = Depends(get_db)) -> dict:
             }
             for item in project.floor_plans
         ],
-        "images": [{"id": str(item.id), "image_url": item.image_url, "is_thumbnail": item.is_thumbnail} for item in project.images],
+        "images": [
+            {
+                "id": str(item.id),
+                "image_url": item.image_url,
+                "caption": item.caption,
+                "sort_order": item.sort_order,
+                "is_thumbnail": item.is_thumbnail,
+            }
+            for item in sorted(project.images, key=lambda image: (image.sort_order, str(image.id)))
+        ],
     }
 
 
@@ -99,6 +108,47 @@ def upload_project_images(project_id: uuid.UUID, _: StaffUser, db: Session = Dep
     for image in created:
         db.refresh(image)
     return [{"image_id": str(image.id), "image_url": image.image_url, "is_thumbnail": image.is_thumbnail} for image in created]
+
+
+@router.put("/project-images/{image_id}", response_model=dict, tags=["projects"])
+def update_project_image(image_id: uuid.UUID, payload: ProjectImageUpdate, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+    image = db.get(ProjectImage, image_id)
+    if image is None:
+        raise HTTPException(status_code=404, detail="Project image not found")
+
+    values = payload.model_dump(exclude_unset=True)
+    if values.get("is_thumbnail") is True:
+        for item in db.scalars(select(ProjectImage).where(ProjectImage.project_id == image.project_id, ProjectImage.id != image.id)):
+            item.is_thumbnail = False
+
+    for key, value in values.items():
+        setattr(image, key, value)
+
+    log_activity(db, current_user, "projects.images.update", "project", image.project_id, {"image_id": str(image.id)})
+    commit_or_400(db)
+    db.refresh(image)
+    return {
+        "id": str(image.id),
+        "image_url": image.image_url,
+        "caption": image.caption,
+        "sort_order": image.sort_order,
+        "is_thumbnail": image.is_thumbnail,
+    }
+
+
+@router.delete("/project-images/{image_id}", response_model=dict, tags=["projects"])
+def delete_project_image(image_id: uuid.UUID, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+    image = db.get(ProjectImage, image_id)
+    if image is None:
+        raise HTTPException(status_code=404, detail="Project image not found")
+
+    project_id = image.project_id
+    image_url = image.image_url
+    db.delete(image)
+    log_activity(db, current_user, "projects.images.delete", "project", project_id, {"image_id": str(image_id)})
+    db.commit()
+    delete_public_object(image_url)
+    return {"message": "Deleted"}
 
 
 @router.post("/projects/{project_id}/floor-plans", response_model=FloorPlanOut, status_code=201, tags=["projects"])

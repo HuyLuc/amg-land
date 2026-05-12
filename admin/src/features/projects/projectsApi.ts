@@ -1,5 +1,5 @@
 import { apiClient } from "@/services/apiClient";
-import type { Amenity, Apartment, FloorPlan, PageResponse, Project, ProjectDetail } from "@/services/types";
+import type { Amenity, Apartment, FloorPlan, PageResponse, Project, ProjectDetail, ProjectImage } from "@/services/types";
 
 export interface ProjectFilters {
   page?: number;
@@ -23,6 +23,12 @@ export interface FloorPlanPayload {
   floor_number: number;
   image_url: string;
   description?: string | null;
+}
+
+export interface ProjectImagePayload {
+  caption?: string | null;
+  sort_order?: number;
+  is_thumbnail?: boolean;
 }
 
 export function listProjects(filters: ProjectFilters = {}): Promise<PageResponse<Project>> {
@@ -62,6 +68,14 @@ export function uploadProjectImages(id: string, files: FileList): Promise<Array<
   const formData = new FormData();
   Array.from(files).forEach((file) => formData.append("files", file));
   return apiClient.post<Array<{ image_id: string; image_url: string; is_thumbnail: boolean }>>(`/projects/${id}/images`, formData);
+}
+
+export function updateProjectImage(id: string, payload: ProjectImagePayload): Promise<ProjectImage> {
+  return apiClient.put<ProjectImage>(`/project-images/${id}`, payload);
+}
+
+export function deleteProjectImage(id: string): Promise<{ message: string }> {
+  return apiClient.delete<{ message: string }>(`/project-images/${id}`);
 }
 
 export function createFloorPlan(projectId: string, payload: FloorPlanPayload): Promise<FloorPlan> {

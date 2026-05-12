@@ -227,6 +227,12 @@ class ProjectAmenityAssign(BaseModel):
     note: str | None = None
 
 
+class ProjectImageUpdate(BaseModel):
+    caption: str | None = None
+    sort_order: int | None = Field(default=None, ge=0)
+    is_thumbnail: bool | None = None
+
+
 class PostCreate(BaseModel):
     title: str
     content: str

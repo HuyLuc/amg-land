@@ -154,6 +154,7 @@ export function ProjectsPage(): JSX.Element {
               <tr>
                 <th>Dự án</th>
                 <th>Khu vực</th>
+                <th>Mô tả</th>
                 <th>Giá từ</th>
                 <th>Trạng thái</th>
               </tr>
@@ -169,6 +170,7 @@ export function ProjectsPage(): JSX.Element {
                     <strong>{project.district}</strong>
                     <span>{project.city}</span>
                   </td>
+                  <td className="project-description-cell">{project.description ?? "Chưa có mô tả ngắn cho dự án này."}</td>
                   <td>
                     <strong>{formatShortCurrency(project.price_from)}</strong>
                     <span>{formatCurrency(project.price_from)}</span>

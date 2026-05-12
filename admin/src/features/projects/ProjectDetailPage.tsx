@@ -10,12 +10,14 @@ import {
   assignAmenity,
   createFloorPlan,
   deleteFloorPlan,
+  deleteProjectImage,
   deleteProject,
   getProjectDetail,
   listAmenities,
   listProjectApartments,
   unassignAmenity,
   updateProject,
+  updateProjectImage,
   uploadProjectImages,
 } from "@/features/projects/projectsApi";
 import type { Project } from "@/services/types";
@@ -82,6 +84,23 @@ export function ProjectDetailPage(): JSX.Element {
     mutationFn: (files: FileList) => (project ? uploadProjectImages(project.id, files) : Promise.reject(new Error("Chưa chọn dự án"))),
     onSuccess: () => {
       showToast("Đã tải ảnh dự án.");
+      queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
+    },
+  });
+
+  const updateImageMutation = useMutation({
+    mutationFn: ({ imageId, caption, isThumbnail }: { imageId: string; caption?: string | null; isThumbnail?: boolean }) =>
+      updateProjectImage(imageId, { caption, is_thumbnail: isThumbnail }),
+    onSuccess: () => {
+      showToast("Đã cập nhật ảnh dự án.");
+      queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
+    },
+  });
+
+  const deleteImageMutation = useMutation({
+    mutationFn: deleteProjectImage,
+    onSuccess: () => {
+      showToast("Đã xóa ảnh dự án.");
       queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
     },
   });
@@ -248,9 +267,43 @@ export function ProjectDetailPage(): JSX.Element {
             </label>
             <div className="image-grid">
               {(detail?.images ?? []).map((image) => (
-                <figure key={image.id}>
+                <figure key={image.id} className="project-image-card">
                   <img src={image.image_url} alt="Ảnh dự án" />
-                  <figcaption>{image.is_thumbnail ? "Ảnh đại diện" : "Gallery"}</figcaption>
+                  <figcaption>
+                    <div>
+                      <strong>{image.caption || (image.is_thumbnail ? "Ảnh đại diện" : "Gallery")}</strong>
+                      <span>{image.is_thumbnail ? "Đang là ảnh đại diện" : "Ảnh gallery"}</span>
+                    </div>
+                    <div className="image-card-actions">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const caption = window.prompt("Nhập tên/caption cho ảnh", image.caption ?? "");
+                          if (caption !== null) {
+                            updateImageMutation.mutate({ imageId: image.id, caption: caption.trim() || null });
+                          }
+                        }}
+                      >
+                        Sửa
+                      </button>
+                      {!image.is_thumbnail ? (
+                        <button type="button" onClick={() => updateImageMutation.mutate({ imageId: image.id, isThumbnail: true })}>
+                          Đặt đại diện
+                        </button>
+                      ) : null}
+                      <button
+                        className="danger-text-button"
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm("Xóa ảnh này khỏi dự án? File trong MinIO cũng sẽ được xóa nếu thuộc bucket hiện tại.")) {
+                            deleteImageMutation.mutate(image.id);
+                          }
+                        }}
+                      >
+                        Xóa
+                      </button>
+                    </div>
+                  </figcaption>
                 </figure>
               ))}
             </div>

@@ -57,6 +57,8 @@ export interface Project {
 export interface ProjectImage {
   id: string;
   image_url: string;
+  caption: string | null;
+  sort_order: number;
   is_thumbnail: boolean;
 }
 

@@ -63,3 +63,21 @@ def upload_project_image(project_id: UUID, file: UploadFile) -> StoredObject:
 
     public_base = os.getenv("MINIO_PUBLIC_URL", f"http://localhost:9000/{bucket}").rstrip("/")
     return StoredObject(object_name=object_name, public_url=f"{public_base}/{object_name}")
+
+
+def delete_public_object(public_url: str) -> None:
+    bucket = os.getenv("MINIO_BUCKET", "amg-land-media")
+    public_base = os.getenv("MINIO_PUBLIC_URL", f"http://localhost:9000/{bucket}").rstrip("/")
+    prefix = f"{public_base}/"
+    if not public_url.startswith(prefix):
+        return
+
+    object_name = public_url[len(prefix) :]
+    if not object_name:
+        return
+
+    client = get_minio_client()
+    try:
+        client.remove_object(bucket, object_name)
+    except S3Error:
+        return
