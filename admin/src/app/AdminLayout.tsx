@@ -6,7 +6,7 @@ import { clearAuth, getAuthUser } from "@/services/authStorage";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/contacts", label: "Leads", icon: MessageSquare },
+  { to: "/contacts", label: "Khách tư vấn", icon: MessageSquare },
   { to: "/projects", label: "Dự án", icon: Building2 },
   { to: "/apartments", label: "Căn hộ", icon: Home },
   { to: "/posts", label: "Bài viết", icon: FileText },

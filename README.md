@@ -160,6 +160,14 @@ Chay API smoke test:
 docker compose run --rm backend pytest -q -p no:cacheprovider
 ```
 
+Reset va seed du lieu demo local:
+
+```powershell
+docker compose run --rm backend python -m app.db.seed --reset
+```
+
+Lenh nay xoa du lieu nghiep vu hien tai trong database local va nap lai bo du lieu mau gom nhan su, du an, can ho, bai viet, khach tu van va analytics. Script se tu choi chay neu `APP_ENV=production`.
+
 Chay admin CMS:
 
 ```powershell

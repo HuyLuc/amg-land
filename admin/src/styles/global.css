@@ -604,6 +604,218 @@ td select {
   color: var(--brand);
 }
 
+.leads-page .page-header {
+  align-items: center;
+}
+
+.leads-metrics .metric-card:nth-child(2) .metric-icon {
+  background: #fff4df;
+  color: var(--warning);
+}
+
+.leads-metrics .metric-card:nth-child(4) .metric-icon {
+  background: #e9f7ef;
+  color: var(--success);
+}
+
+.filter-panel {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.filter-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--brand);
+  font-weight: 800;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 180px 220px 210px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.search-control,
+.select-control,
+.textarea-control {
+  display: grid;
+  gap: 7px;
+}
+
+.search-control {
+  position: relative;
+}
+
+.search-control svg {
+  position: absolute;
+  left: 12px;
+  bottom: 11px;
+  color: var(--muted);
+}
+
+.search-control input,
+.select-control select,
+.textarea-control textarea {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.search-control input,
+.select-control select {
+  height: 42px;
+}
+
+.search-control input {
+  padding: 0 12px 0 38px;
+}
+
+.select-control span,
+.textarea-control span {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.select-control select {
+  padding: 0 12px;
+}
+
+.textarea-control textarea {
+  min-height: 118px;
+  resize: vertical;
+  padding: 12px;
+  line-height: 1.5;
+}
+
+.filter-reset {
+  align-self: end;
+}
+
+.leads-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+
+.leads-table-panel {
+  min-width: 0;
+}
+
+.leads-panel-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.leads-table tbody tr {
+  cursor: pointer;
+}
+
+.leads-table tbody tr:hover,
+.leads-table tbody tr.selected-row {
+  background: #f4f8fd;
+}
+
+.lead-message {
+  max-width: 270px;
+  white-space: normal;
+  line-height: 1.45;
+  color: #344054;
+}
+
+.lead-detail-panel {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 14px 42px rgba(16, 24, 40, 0.08);
+}
+
+.lead-detail-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.lead-detail-header span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.lead-detail-header h2 {
+  margin: 5px 0 0;
+  font-size: 22px;
+  letter-spacing: 0;
+}
+
+.lead-contact-card {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--brand-soft);
+}
+
+.lead-contact-card div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.lead-contact-card svg {
+  color: var(--brand);
+  flex: 0 0 auto;
+}
+
+.lead-contact-card span,
+.lead-contact-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-section {
+  display: grid;
+  gap: 8px;
+}
+
+.detail-section h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.detail-section p {
+  margin: 0;
+  color: #344054;
+  line-height: 1.55;
+}
+
+.detail-form {
+  display: grid;
+  gap: 14px;
+}
+
 @media (max-width: 920px) {
   .admin-shell {
     grid-template-columns: 1fr;
@@ -645,6 +857,15 @@ td select {
 
   .page-surface {
     padding: 20px 14px;
+  }
+
+  .filter-grid,
+  .leads-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .lead-detail-panel {
+    position: static;
   }
 }
 

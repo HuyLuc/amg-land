@@ -278,6 +278,7 @@ class ContactOut(ORMModel):
     phone: str
     email: EmailStr | None = None
     project_id: UUID | None = None
+    message: str | None = None
     status: str
     assigned_to: UUID | None = None
     note: str | None = None

@@ -2,19 +2,82 @@ import uuid
 import sys
 from pathlib import Path
 
+import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from fastapi.testclient import TestClient
-from sqlalchemy import select
+from sqlalchemy import String, delete, or_, select
 
 from app.core.security import hash_password
 from app.db.session import SessionLocal
 from app.main import app
+from app.models.activity_log import ActivityLog
+from app.models.amenity import Amenity, ProjectAmenity
+from app.models.analytics_event import AnalyticsEvent
+from app.models.apartment import Apartment
+from app.models.auth_token import PasswordResetToken, RefreshToken
+from app.models.chat_session import ChatSession
+from app.models.contact_request import ContactRequest
+from app.models.floor_plan import FloorPlan
 from app.models.post import Category
+from app.models.post import Post
+from app.models.project import Project, ProjectImage
 from app.models.user import User, UserRole
 
 
 client = TestClient(app)
+
+
+def cleanup_smoke_artifacts() -> None:
+    with SessionLocal() as db:
+        smoke_user_ids = list(
+            db.scalars(
+                select(User.id).where(
+                    or_(
+                        User.email.like("admin-%@example.com"),
+                        User.email.like("editor-%@example.com"),
+                        User.full_name.in_(["Smoke Admin", "Editor User", "Updated Editor"]),
+                    )
+                )
+            )
+        )
+        smoke_project_ids = list(db.scalars(select(Project.id).where(Project.name.like("Project %"))))
+        smoke_category_ids = list(db.scalars(select(Category.id).where(Category.name.like("Category %"))))
+        smoke_amenity_ids = list(db.scalars(select(Amenity.id).where(Amenity.name.like("Amenity %"))))
+
+        db.execute(delete(ContactRequest).where(or_(ContactRequest.full_name == "Lead User", ContactRequest.email == "lead@example.com")))
+        db.execute(delete(ChatSession).where(ChatSession.messages.cast(String).like("%Tu van giup toi%")))
+
+        if smoke_project_ids:
+            db.execute(delete(AnalyticsEvent).where(AnalyticsEvent.project_id.in_(smoke_project_ids)))
+            db.execute(delete(ContactRequest).where(ContactRequest.project_id.in_(smoke_project_ids)))
+            db.execute(delete(ProjectAmenity).where(ProjectAmenity.project_id.in_(smoke_project_ids)))
+            db.execute(delete(FloorPlan).where(FloorPlan.project_id.in_(smoke_project_ids)))
+            db.execute(delete(ProjectImage).where(ProjectImage.project_id.in_(smoke_project_ids)))
+            db.execute(delete(Apartment).where(Apartment.project_id.in_(smoke_project_ids)))
+            db.execute(delete(Project).where(Project.id.in_(smoke_project_ids)))
+
+        db.execute(delete(Post).where(Post.title.like("Post %")))
+        if smoke_category_ids:
+            db.execute(delete(Category).where(Category.id.in_(smoke_category_ids)))
+        if smoke_amenity_ids:
+            db.execute(delete(ProjectAmenity).where(ProjectAmenity.amenity_id.in_(smoke_amenity_ids)))
+            db.execute(delete(Amenity).where(Amenity.id.in_(smoke_amenity_ids)))
+
+        if smoke_user_ids:
+            db.execute(delete(ActivityLog).where(ActivityLog.actor_id.in_(smoke_user_ids)))
+            db.execute(delete(RefreshToken).where(RefreshToken.user_id.in_(smoke_user_ids)))
+            db.execute(delete(PasswordResetToken).where(PasswordResetToken.user_id.in_(smoke_user_ids)))
+            db.execute(delete(User).where(User.id.in_(smoke_user_ids)))
+
+        db.commit()
+
+
+@pytest.fixture(autouse=True)
+def clean_smoke_data():
+    cleanup_smoke_artifacts()
+    yield
+    cleanup_smoke_artifacts()
 
 
 def ensure_admin() -> tuple[str, str]:
