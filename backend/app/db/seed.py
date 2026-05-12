@@ -273,7 +273,7 @@ def seed_posts(db: Session, users: dict[str, User], categories: dict[str, Catego
     db.commit()
 
 
-def seed_contacts(db: Session, users: dict[str, User], projects: list[Project]) -> list[ContactRequest]:
+def seed_contacts(db: Session, users: dict[str, User], projects: list[Project], apartments: list[Apartment]) -> list[ContactRequest]:
     now = datetime.now(timezone.utc)
     contacts_data = [
         ("Lê Hoài An", "0912345678", "an.le@gmail.com", "Quan tâm căn 2PN, ngân sách khoảng 3 tỷ.", "new", 0),
@@ -290,13 +290,21 @@ def seed_contacts(db: Session, users: dict[str, User], projects: list[Project]) 
         ("Lý Anh Khoa", "0909888777", "khoa.la@gmail.com", "Khách đã chốt nhu cầu, theo dõi chính sách mới.", "done", 15),
     ]
     assignees = [None, users["sales_1"].id, users["sales_2"].id]
+    apartments_by_project = {
+        project.id: [apartment for apartment in apartments if apartment.project_id == project.id]
+        for project in projects
+    }
     contacts: list[ContactRequest] = []
     for index, (name, phone, email, message, status, days_ago) in enumerate(contacts_data):
+        project = projects[index % len(projects)]
+        project_apartments = apartments_by_project.get(project.id, [])
+        apartment = project_apartments[index % len(project_apartments)] if project_apartments else None
         contact = ContactRequest(
             full_name=name,
             phone=phone,
             email=email,
-            project_id=projects[index % len(projects)].id,
+            project_id=project.id,
+            apartment_id=apartment.id if apartment else None,
             message=message,
             status=ContactStatus(status),
             assigned_to=assignees[index % len(assignees)],
@@ -368,7 +376,7 @@ def run_seed(reset: bool) -> None:
         projects = seed_projects(db, users, amenities)
         apartments = seed_apartments(db, projects)
         seed_posts(db, users, categories)
-        seed_contacts(db, users, projects)
+        seed_contacts(db, users, projects, apartments)
         seed_analytics(db, projects, apartments)
         seed_activity_logs(db, users)
 

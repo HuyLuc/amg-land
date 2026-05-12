@@ -263,6 +263,7 @@ class ContactCreate(BaseModel):
     phone: str = Field(min_length=8, max_length=15, pattern=r"^[0-9+()\-\s]+$")
     email: EmailStr | None = None
     project_id: UUID | None = None
+    apartment_id: UUID | None = None
     message: str | None = None
 
 
@@ -270,6 +271,7 @@ class ContactUpdate(BaseModel):
     status: ContactStatus | None = None
     note: str | None = None
     assigned_to: UUID | None = None
+    apartment_id: UUID | None = None
 
 
 class ContactOut(ORMModel):
@@ -278,6 +280,8 @@ class ContactOut(ORMModel):
     phone: str
     email: EmailStr | None = None
     project_id: UUID | None = None
+    apartment_id: UUID | None = None
+    apartment_code: str | None = None
     message: str | None = None
     status: str
     assigned_to: UUID | None = None

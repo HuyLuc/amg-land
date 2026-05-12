@@ -18,6 +18,12 @@ const statusOptions: Array<{ value: "" | Contact["status"]; label: string }> = [
   { value: "done", label: "Hoàn tất" },
 ];
 
+const pageSizeOptions = [
+  { value: "10", label: "10 / trang" },
+  { value: "20", label: "20 / trang" },
+  { value: "50", label: "50 / trang" },
+];
+
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
@@ -34,11 +40,16 @@ export function ContactsPage(): JSX.Element {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [assignee, setAssignee] = useState("");
   const [projectId, setProjectId] = useState("");
+  const [createdFrom, setCreatedFrom] = useState("");
+  const [createdTo, setCreatedTo] = useState("");
+  const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<Contact["status"]>("new");
   const [draftAssignee, setDraftAssignee] = useState("");
+  const [draftApartmentId, setDraftApartmentId] = useState("");
   const [draftNote, setDraftNote] = useState("");
+  const [toast, setToast] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -49,16 +60,19 @@ export function ContactsPage(): JSX.Element {
 
   useEffect(() => {
     setPage(1);
-  }, [assignee, debouncedSearch, projectId, status]);
+  }, [assignee, createdFrom, createdTo, debouncedSearch, pageSize, projectId, status]);
 
   const contactsQuery = useQuery({
-    queryKey: ["contacts", page, status, debouncedSearch, assignee, projectId],
+    queryKey: ["contacts", page, pageSize, status, debouncedSearch, assignee, projectId, createdFrom, createdTo],
     queryFn: () =>
       listContacts(page, {
         status,
         keyword: debouncedSearch,
         assignedTo: assignee,
         projectId,
+        createdFrom: createdFrom ? new Date(`${createdFrom}T00:00:00`).toISOString() : undefined,
+        createdTo: createdTo ? new Date(`${createdTo}T23:59:59`).toISOString() : undefined,
+        limit: pageSize,
       }),
   });
   const usersQuery = useQuery({ queryKey: ["users"], queryFn: listUsers });
@@ -67,7 +81,7 @@ export function ContactsPage(): JSX.Element {
   const contacts = contactsQuery.data?.items ?? [];
   const users = usersQuery.data?.items ?? [];
   const projects = projectsQuery.data?.items ?? [];
-  const totalPages = Math.max(1, Math.ceil((contactsQuery.data?.total ?? 0) / (contactsQuery.data?.limit ?? 20)));
+  const totalPages = Math.max(1, Math.ceil((contactsQuery.data?.total ?? 0) / (contactsQuery.data?.limit ?? pageSize)));
 
   const userNameById = useMemo(() => new Map(users.map((user) => [user.id, user.full_name])), [users]);
   const projectNameById = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
@@ -90,40 +104,16 @@ export function ContactsPage(): JSX.Element {
     }
     setDraftStatus(selectedContact.status);
     setDraftAssignee(selectedContact.assigned_to ?? "");
+    setDraftApartmentId(selectedContact.apartment_id ?? "");
     setDraftNote(selectedContact.note ?? "");
   }, [selectedContact]);
 
-  const mutation = useMutation({
-    mutationFn: () =>
-      selectedContact
-        ? updateContact(selectedContact.id, {
-            status: draftStatus,
-            assigned_to: draftAssignee || null,
-            note: draftNote.trim() || null,
-          })
-        : Promise.reject(new Error("Chưa chọn khách tư vấn")),
-    onSuccess: (updatedContact) => {
-      setSelectedId(updatedContact.id);
-      queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-    },
-  });
-
-  function openContact(contact: Contact): void {
-    setSelectedId(contact.id);
-    setDraftStatus(contact.status);
-    setDraftAssignee(contact.assigned_to ?? "");
-    setDraftNote(contact.note ?? "");
-  }
-
-  function resetFilters(): void {
-    setStatus("");
-    setSearch("");
-    setDebouncedSearch("");
-    setAssignee("");
-    setProjectId("");
-    setPage(1);
-  }
+  const isDirty = selectedContact
+    ? draftStatus !== selectedContact.status ||
+      draftAssignee !== (selectedContact.assigned_to ?? "") ||
+      draftApartmentId !== (selectedContact.apartment_id ?? "") ||
+      draftNote !== (selectedContact.note ?? "")
+    : false;
 
   const projectOptions = useMemo(
     () => [{ value: "", label: "Tất cả dự án" }, ...projects.map((project) => ({ value: project.id, label: project.name }))],
@@ -137,6 +127,56 @@ export function ContactsPage(): JSX.Element {
     () => [{ value: "", label: "Chưa gán" }, ...users.map((user) => ({ value: user.id, label: user.full_name }))],
     [users],
   );
+  const apartmentOptions = useMemo(() => {
+    const byId = new Map<string, string>();
+    for (const contact of contacts) {
+      if (contact.apartment_id && contact.apartment_code) {
+        byId.set(contact.apartment_id, contact.apartment_code);
+      }
+    }
+    return [{ value: "", label: "Chưa chọn căn hộ" }, ...Array.from(byId.entries()).map(([value, label]) => ({ value, label }))];
+  }, [contacts]);
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      selectedContact
+        ? updateContact(selectedContact.id, {
+            status: draftStatus,
+            assigned_to: draftAssignee || null,
+            apartment_id: draftApartmentId || null,
+            note: draftNote.trim() || null,
+          })
+        : Promise.reject(new Error("Chưa chọn khách tư vấn")),
+    onSuccess: (updatedContact) => {
+      setSelectedId(updatedContact.id);
+      setToast("Đã lưu cập nhật khách tư vấn.");
+      window.setTimeout(() => setToast(null), 2600);
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+    },
+  });
+
+  function openContact(contact: Contact): void {
+    if (isDirty && !window.confirm("Bạn có thay đổi chưa lưu. Chuyển khách sẽ bỏ các thay đổi này. Tiếp tục?")) {
+      return;
+    }
+    setSelectedId(contact.id);
+    setDraftStatus(contact.status);
+    setDraftAssignee(contact.assigned_to ?? "");
+    setDraftApartmentId(contact.apartment_id ?? "");
+    setDraftNote(contact.note ?? "");
+  }
+
+  function resetFilters(): void {
+    setStatus("");
+    setSearch("");
+    setDebouncedSearch("");
+    setAssignee("");
+    setProjectId("");
+    setCreatedFrom("");
+    setCreatedTo("");
+    setPage(1);
+  }
 
   return (
     <section className="page-stack leads-page">
@@ -162,6 +202,14 @@ export function ContactsPage(): JSX.Element {
           <SelectMenu label="Trạng thái" value={status} options={statusOptions} onChange={(value) => setStatus(value as "" | Contact["status"])} />
           <SelectMenu label="Dự án quan tâm" value={projectId} options={projectOptions} onChange={setProjectId} />
           <SelectMenu label="Phụ trách" value={assignee} options={userOptions} onChange={setAssignee} />
+          <label className="date-control">
+            <span>Từ ngày</span>
+            <input type="date" value={createdFrom} onChange={(event) => setCreatedFrom(event.target.value)} />
+          </label>
+          <label className="date-control">
+            <span>Đến ngày</span>
+            <input type="date" value={createdTo} onChange={(event) => setCreatedTo(event.target.value)} />
+          </label>
           <button className="secondary-button filter-reset" type="button" onClick={resetFilters}>
             Xóa lọc
           </button>
@@ -183,7 +231,7 @@ export function ContactsPage(): JSX.Element {
               <thead>
                 <tr>
                   <th>Khách hàng</th>
-                  <th>Nhu cầu</th>
+                  <th>Căn hộ quan tâm</th>
                   <th>Dự án</th>
                   <th>Phụ trách</th>
                   <th>Trạng thái</th>
@@ -198,7 +246,7 @@ export function ContactsPage(): JSX.Element {
                       <span>{contact.phone}</span>
                       <span>{contact.email ?? "Chưa có email"}</span>
                     </td>
-                    <td className="lead-message">{contact.message ?? "Khách chưa để lại nội dung"}</td>
+                    <td>{contact.apartment_code ?? "Chưa chọn căn hộ"}</td>
                     <td>{contact.project_id ? projectNameById.get(contact.project_id) ?? "Dự án đã chọn" : "Chưa chọn dự án"}</td>
                     <td>{contact.assigned_to ? userNameById.get(contact.assigned_to) ?? "Đã gán" : "Chưa gán"}</td>
                     <td>
@@ -217,6 +265,7 @@ export function ContactsPage(): JSX.Element {
               Hiển thị <strong>{contacts.length}</strong> / <strong>{contactsQuery.data?.total ?? 0}</strong> khách tư vấn
             </div>
             <div className="pagination-controls">
+              <SelectMenu label="Số dòng" value={String(pageSize)} options={pageSizeOptions} onChange={(value) => setPageSize(Number(value))} />
               <button className="pagination-nav" type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
                 <ChevronLeft size={16} />
                 <span>Trước</span>
@@ -275,8 +324,8 @@ export function ContactsPage(): JSX.Element {
 
               <div className="detail-form">
                 <SelectMenu label="Trạng thái xử lý" value={draftStatus} options={statusOptions.slice(1)} onChange={(value) => setDraftStatus(value as Contact["status"])} />
-
                 <SelectMenu label="Nhân sự phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} />
+                <SelectMenu label="Căn hộ quan tâm" value={draftApartmentId} options={apartmentOptions} onChange={setDraftApartmentId} />
 
                 <label className="textarea-control">
                   <span>Ghi chú nội bộ</span>
@@ -295,6 +344,8 @@ export function ContactsPage(): JSX.Element {
           )}
         </aside>
       </div>
+
+      {toast ? <div className="toast-message">{toast}</div> : null}
     </section>
   );
 }

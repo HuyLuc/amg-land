@@ -33,6 +33,8 @@ export interface Contact {
   phone: string;
   email: string | null;
   project_id: string | null;
+  apartment_id: string | null;
+  apartment_code: string | null;
   message: string | null;
   status: "new" | "processing" | "done";
   assigned_to: string | null;

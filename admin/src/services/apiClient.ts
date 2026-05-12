@@ -29,8 +29,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers,
   });
 
-  if (response.status === 401) {
+  if (response.status === 401 && path !== "/auth/login") {
     clearAuth();
+    if (window.location.pathname !== "/login") {
+      window.location.replace("/login");
+    }
   }
 
   if (!response.ok) {

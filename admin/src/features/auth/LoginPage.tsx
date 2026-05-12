@@ -23,7 +23,7 @@ export function LoginPage(): JSX.Element {
       saveAuth(response.access_token, response.refresh_token, response.user_info);
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Đăng nhập thất bại");
+      setError("Email hoặc mật khẩu không đúng.");
     } finally {
       setSubmitting(false);
     }

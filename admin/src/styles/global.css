@@ -340,13 +340,17 @@ td select {
   color: var(--success);
 }
 
-.status-new,
 .status-processing,
 .status-draft,
 .status-reserved,
 .status-editor {
   background: #fff4df;
   color: var(--warning);
+}
+
+.status-new {
+  background: #e9f0fb;
+  color: var(--brand);
 }
 
 .status-closed,
@@ -637,7 +641,7 @@ td select {
 
 .filter-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 1fr) 180px 220px 210px auto;
+  grid-template-columns: minmax(260px, 1fr) 180px 220px 210px 150px 150px auto;
   gap: 12px;
   align-items: end;
 }
@@ -645,6 +649,7 @@ td select {
 .search-control,
 .select-control,
 .select-menu,
+.date-control,
 .textarea-control {
   display: grid;
   gap: 7px;
@@ -663,6 +668,7 @@ td select {
 
 .search-control input,
 .select-control select,
+.date-control input,
 .textarea-control textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -672,7 +678,8 @@ td select {
 }
 
 .search-control input,
-.select-control select {
+.select-control select,
+.date-control input {
   height: 42px;
 }
 
@@ -682,6 +689,7 @@ td select {
 
 .select-menu-label,
 .select-control span,
+.date-control span,
 .textarea-control span {
   color: #344054;
   font-size: 12px;
@@ -690,6 +698,10 @@ td select {
 
 .select-control select {
   padding: 0 12px;
+}
+
+.date-control input {
+  padding: 0 10px;
 }
 
 .textarea-control textarea {
@@ -804,6 +816,7 @@ td select {
 
 .leads-table-panel {
   min-width: 0;
+  overflow: visible;
 }
 
 .leads-panel-header p {
@@ -822,6 +835,8 @@ td select {
 }
 
 .pagination-bar {
+  position: relative;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -841,6 +856,14 @@ td select {
   display: inline-flex;
   align-items: center;
   gap: 5px;
+}
+
+.pagination-controls .select-menu {
+  width: 122px;
+}
+
+.pagination-controls .select-menu-label {
+  display: none;
 }
 
 .pagination-controls button {
@@ -876,16 +899,22 @@ td select {
   min-width: 78px;
 }
 
+.toast-message {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 60;
+  padding: 13px 16px;
+  border-radius: 10px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 18px 48px rgba(16, 24, 40, 0.22);
+}
+
 .pagination-ellipsis {
   color: var(--muted);
   padding: 0 2px;
-}
-
-.lead-message {
-  max-width: 270px;
-  white-space: normal;
-  line-height: 1.45;
-  color: #344054;
 }
 
 .lead-customer-cell {
