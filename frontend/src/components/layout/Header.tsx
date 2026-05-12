@@ -1,18 +1,26 @@
-import { Building2, Menu, X } from "lucide-react";
+import { Building2, LogOut, Menu, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { navItems } from "../../app/navigation";
 import type { Page } from "../../app/types";
+import type { AuthUser } from "../../features/auth/types";
 
 type HeaderProps = {
   page: Page;
+  user: AuthUser | null;
+  onLogout: () => void;
   onNavigate: (page: Page) => void;
 };
 
-export function Header({ page, onNavigate }: HeaderProps) {
+export function Header({ page, user, onLogout, onNavigate }: HeaderProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navigate = (nextPage: Page) => {
     onNavigate(nextPage);
+    setMobileOpen(false);
+  };
+
+  const logout = () => {
+    onLogout();
     setMobileOpen(false);
   };
 
@@ -46,12 +54,26 @@ export function Header({ page, onNavigate }: HeaderProps) {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <a className="text-sm font-semibold text-brand-900" href="tel:0900000000">
-            0900 000 000
-          </a>
-          <button className="btn-primary" onClick={() => navigate("contact")} type="button">
-            Đăng ký tư vấn
-          </button>
+          {user ? (
+            <>
+              <button className={`inline-flex h-11 items-center gap-2 rounded px-4 text-sm font-semibold transition ${page === "profile" ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-900 hover:bg-brand-100"}`} onClick={() => navigate("profile")} type="button">
+                <UserRound size={17} />
+                {user.name.split(" ").slice(-1)[0]}
+              </button>
+              <button aria-label="Đăng xuất" className="grid h-11 w-11 place-items-center rounded border border-slate-200 text-slate-600 transition hover:border-brand-900 hover:text-brand-900" onClick={logout} type="button">
+                <LogOut size={17} />
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="text-sm font-semibold text-brand-900 transition hover:text-gold-500" onClick={() => navigate("login")} type="button">
+                Đăng nhập
+              </button>
+              <button className="btn-primary" onClick={() => navigate("register")} type="button">
+                Đăng ký
+              </button>
+            </>
+          )}
         </div>
 
         <button
@@ -79,6 +101,45 @@ export function Header({ page, onNavigate }: HeaderProps) {
                 {item.label}
               </button>
             ))}
+            <div className="mt-3 grid gap-2 border-t border-slate-100 pt-4">
+              {user ? (
+                <>
+                  <button
+                    className={`rounded px-4 py-3 text-left text-sm font-semibold ${
+                      page === "profile" ? "bg-brand-50 text-brand-900" : "text-slate-700"
+                    }`}
+                    onClick={() => navigate("profile")}
+                    type="button"
+                  >
+                    Hồ sơ cá nhân
+                  </button>
+                  <button className="rounded px-4 py-3 text-left text-sm font-semibold text-slate-700" onClick={logout} type="button">
+                    Đăng xuất
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className={`rounded px-4 py-3 text-left text-sm font-semibold ${
+                      page === "login" ? "bg-brand-50 text-brand-900" : "text-slate-700"
+                    }`}
+                    onClick={() => navigate("login")}
+                    type="button"
+                  >
+                    Đăng nhập
+                  </button>
+                  <button
+                    className={`rounded px-4 py-3 text-left text-sm font-semibold ${
+                      page === "register" ? "bg-brand-50 text-brand-900" : "text-slate-700"
+                    }`}
+                    onClick={() => navigate("register")}
+                    type="button"
+                  >
+                    Đăng ký
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
