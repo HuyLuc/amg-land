@@ -71,6 +71,15 @@ export function ProjectDetailPage(): JSX.Element {
     },
   });
 
+  const reopenProjectMutation = useMutation({
+    mutationFn: (target: Project) => updateProject(target.id, { status: "active" }),
+    onSuccess: () => {
+      showToast("Đã mở lại dự án.");
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
+      queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
+    },
+  });
+
   const deleteProjectMutation = useMutation({
     mutationFn: (target: Project) => deleteProject(target.id),
     onSuccess: () => {
@@ -181,14 +190,21 @@ export function ProjectDetailPage(): JSX.Element {
             <button
               className="secondary-button"
               type="button"
-              disabled={closeProjectMutation.isPending || project.status === "closed"}
+              disabled={closeProjectMutation.isPending || reopenProjectMutation.isPending}
               onClick={() => {
+                if (project.status === "closed") {
+                  if (window.confirm(`Mở lại dự án "${project.name}"? Dự án sẽ chuyển sang trạng thái đang mở.`)) {
+                    reopenProjectMutation.mutate(project);
+                  }
+                  return;
+                }
+
                 if (window.confirm(`Đóng dự án "${project.name}"? Dự án sẽ chuyển sang trạng thái đã đóng.`)) {
                   closeProjectMutation.mutate(project);
                 }
               }}
             >
-              Đóng dự án
+              {project.status === "closed" ? "Mở lại dự án" : "Đóng dự án"}
             </button>
             <button
               className="danger-button"
