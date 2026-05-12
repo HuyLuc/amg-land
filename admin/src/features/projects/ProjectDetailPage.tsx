@@ -221,39 +221,43 @@ export function ProjectDetailPage(): JSX.Element {
         </div>
 
         {activeTab === "overview" ? (
-          <div className="project-overview-grid">
-            <div>
-              <span>Trạng thái</span>
-              <strong>
-                <StatusBadge value={projectStatusValue(project.status)} />
-              </strong>
-            </div>
-            <div>
-              <span>Khu vực</span>
-              <strong>
-                {project.district}, {project.city}
-              </strong>
-            </div>
-            <div>
-              <span>Giá từ</span>
-              <strong>{formatCurrency(project.price_from)}</strong>
-            </div>
-            <div>
-              <span>Slug</span>
-              <strong>{project.slug}</strong>
-            </div>
-            <div>
-              <span>Gallery</span>
-              <strong>{detail?.images.length ?? 0} ảnh</strong>
-            </div>
-            <div>
-              <span>Căn hộ</span>
-              <strong>{apartmentsQuery.data?.total ?? apartments.length} căn</strong>
-            </div>
-            <div className="wide">
-              <span>Mô tả</span>
-              <p>{project.description ?? "Chưa có mô tả."}</p>
-            </div>
+          <div className="project-overview">
+            <dl className="project-overview-list">
+              <div>
+                <dt>Trạng thái</dt>
+                <dd>
+                  <StatusBadge value={projectStatusValue(project.status)} />
+                </dd>
+              </div>
+              <div>
+                <dt>Khu vực</dt>
+                <dd>
+                  {project.district}, {project.city}
+                </dd>
+              </div>
+              <div>
+                <dt>Giá từ</dt>
+                <dd>{formatCurrency(project.price_from)}</dd>
+              </div>
+              <div>
+                <dt>Slug</dt>
+                <dd>{project.slug}</dd>
+              </div>
+              <div>
+                <dt>Gallery</dt>
+                <dd>{detail?.images.length ?? 0} ảnh</dd>
+              </div>
+              <div>
+                <dt>Căn hộ</dt>
+                <dd>{apartmentsQuery.data?.total ?? apartments.length} căn</dd>
+              </div>
+              <div className="project-overview-description-row">
+                <dt>Mô tả</dt>
+                <dd>
+                  <p>{project.description ?? "Chưa có mô tả."}</p>
+                </dd>
+              </div>
+            </dl>
           </div>
         ) : null}
 
