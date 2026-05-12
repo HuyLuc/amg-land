@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, Clock3, Filter, MessageSquare, Phone, Search, UserRound } from "lucide-react";
+import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Filter, MessageSquare, Phone, Search, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
+import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listContacts, updateContact } from "@/features/contacts/contactsApi";
 import { listProjects } from "@/features/projects/projectsApi";
@@ -33,6 +34,7 @@ export function ContactsPage(): JSX.Element {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [assignee, setAssignee] = useState("");
   const [projectId, setProjectId] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<Contact["status"]>("new");
   const [draftAssignee, setDraftAssignee] = useState("");
@@ -45,10 +47,14 @@ export function ContactsPage(): JSX.Element {
     return () => window.clearTimeout(timeoutId);
   }, [search]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [assignee, debouncedSearch, projectId, status]);
+
   const contactsQuery = useQuery({
-    queryKey: ["contacts", status, debouncedSearch, assignee, projectId],
+    queryKey: ["contacts", page, status, debouncedSearch, assignee, projectId],
     queryFn: () =>
-      listContacts(1, {
+      listContacts(page, {
         status,
         keyword: debouncedSearch,
         assignedTo: assignee,
@@ -61,6 +67,7 @@ export function ContactsPage(): JSX.Element {
   const contacts = contactsQuery.data?.items ?? [];
   const users = usersQuery.data?.items ?? [];
   const projects = projectsQuery.data?.items ?? [];
+  const totalPages = Math.max(1, Math.ceil((contactsQuery.data?.total ?? 0) / (contactsQuery.data?.limit ?? 20)));
 
   const userNameById = useMemo(() => new Map(users.map((user) => [user.id, user.full_name])), [users]);
   const projectNameById = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
@@ -115,7 +122,21 @@ export function ContactsPage(): JSX.Element {
     setDebouncedSearch("");
     setAssignee("");
     setProjectId("");
+    setPage(1);
   }
+
+  const projectOptions = useMemo(
+    () => [{ value: "", label: "Tất cả dự án" }, ...projects.map((project) => ({ value: project.id, label: project.name }))],
+    [projects],
+  );
+  const userOptions = useMemo(
+    () => [{ value: "", label: "Tất cả nhân sự" }, ...users.map((user) => ({ value: user.id, label: user.full_name }))],
+    [users],
+  );
+  const detailUserOptions = useMemo(
+    () => [{ value: "", label: "Chưa gán" }, ...users.map((user) => ({ value: user.id, label: user.full_name }))],
+    [users],
+  );
 
   return (
     <section className="page-stack leads-page">
@@ -138,38 +159,9 @@ export function ContactsPage(): JSX.Element {
             <Search size={17} />
             <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm theo tên, số điện thoại, email, ghi chú..." />
           </label>
-          <label className="select-control">
-            <span>Trạng thái</span>
-            <select value={status} onChange={(event) => setStatus(event.target.value as "" | Contact["status"])}>
-              {statusOptions.map((option) => (
-                <option key={option.value || "all"} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="select-control">
-            <span>Dự án quan tâm</span>
-            <select value={projectId} onChange={(event) => setProjectId(event.target.value)}>
-              <option value="">Tất cả dự án</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="select-control">
-            <span>Phụ trách</span>
-            <select value={assignee} onChange={(event) => setAssignee(event.target.value)}>
-              <option value="">Tất cả nhân sự</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.full_name}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SelectMenu label="Trạng thái" value={status} options={statusOptions} onChange={(value) => setStatus(value as "" | Contact["status"])} />
+          <SelectMenu label="Dự án quan tâm" value={projectId} options={projectOptions} onChange={setProjectId} />
+          <SelectMenu label="Phụ trách" value={assignee} options={userOptions} onChange={setAssignee} />
           <button className="secondary-button filter-reset" type="button" onClick={resetFilters}>
             Xóa lọc
           </button>
@@ -201,7 +193,7 @@ export function ContactsPage(): JSX.Element {
               <tbody>
                 {contacts.map((contact) => (
                   <tr key={contact.id} className={selectedContact?.id === contact.id ? "selected-row" : ""} onClick={() => openContact(contact)}>
-                    <td>
+                    <td className="lead-customer-cell">
                       <strong>{contact.full_name}</strong>
                       <span>{contact.phone}</span>
                       <span>{contact.email ?? "Chưa có email"}</span>
@@ -220,6 +212,34 @@ export function ContactsPage(): JSX.Element {
           </div>
           {contactsQuery.isLoading ? <div className="empty-state">Đang tải dữ liệu...</div> : null}
           {!contactsQuery.isLoading && !contacts.length ? <div className="empty-state">Không có khách tư vấn phù hợp với bộ lọc.</div> : null}
+          <div className="pagination-bar">
+            <div className="pagination-summary">
+              Hiển thị <strong>{contacts.length}</strong> / <strong>{contactsQuery.data?.total ?? 0}</strong> khách tư vấn
+            </div>
+            <div className="pagination-controls">
+              <button className="pagination-nav" type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+                <ChevronLeft size={16} />
+                <span>Trước</span>
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1)
+                .filter((item) => item === 1 || item === totalPages || Math.abs(item - page) <= 1)
+                .map((item, index, pages) => {
+                  const previous = pages[index - 1];
+                  return (
+                    <span className="pagination-item-wrap" key={item}>
+                      {previous && item - previous > 1 ? <span className="pagination-ellipsis">...</span> : null}
+                      <button className={item === page ? "active" : ""} type="button" onClick={() => setPage(item)}>
+                        {item}
+                      </button>
+                    </span>
+                  );
+                })}
+              <button className="pagination-nav" type="button" disabled={page >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>
+                <span>Sau</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
         </section>
 
         <aside className="lead-detail-panel">
@@ -254,28 +274,9 @@ export function ContactsPage(): JSX.Element {
               </div>
 
               <div className="detail-form">
-                <label className="select-control">
-                  <span>Trạng thái xử lý</span>
-                  <select value={draftStatus} onChange={(event) => setDraftStatus(event.target.value as Contact["status"])}>
-                    {statusOptions.slice(1).map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <SelectMenu label="Trạng thái xử lý" value={draftStatus} options={statusOptions.slice(1)} onChange={(value) => setDraftStatus(value as Contact["status"])} />
 
-                <label className="select-control">
-                  <span>Nhân sự phụ trách</span>
-                  <select value={draftAssignee} onChange={(event) => setDraftAssignee(event.target.value)}>
-                    <option value="">Chưa gán</option>
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.full_name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <SelectMenu label="Nhân sự phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} />
 
                 <label className="textarea-control">
                   <span>Ghi chú nội bộ</span>
