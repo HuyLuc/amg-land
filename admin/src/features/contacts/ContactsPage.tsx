@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
+import { DatePicker } from "@/components/DatePicker";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listContacts, updateContact } from "@/features/contacts/contactsApi";
@@ -202,14 +203,8 @@ export function ContactsPage(): JSX.Element {
           <SelectMenu label="Trạng thái" value={status} options={statusOptions} onChange={(value) => setStatus(value as "" | Contact["status"])} />
           <SelectMenu label="Dự án quan tâm" value={projectId} options={projectOptions} onChange={setProjectId} />
           <SelectMenu label="Phụ trách" value={assignee} options={userOptions} onChange={setAssignee} />
-          <label className="date-control">
-            <span>Từ ngày</span>
-            <input type="date" value={createdFrom} onChange={(event) => setCreatedFrom(event.target.value)} />
-          </label>
-          <label className="date-control">
-            <span>Đến ngày</span>
-            <input type="date" value={createdTo} onChange={(event) => setCreatedTo(event.target.value)} />
-          </label>
+          <DatePicker label="Từ ngày" value={createdFrom} onChange={setCreatedFrom} />
+          <DatePicker label="Đến ngày" value={createdTo} onChange={setCreatedTo} />
           <button className="secondary-button filter-reset" type="button" onClick={resetFilters}>
             Xóa lọc
           </button>
