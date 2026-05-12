@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Building2, CheckCircle2, ChevronLeft, ChevronRight, Eye, Pencil, Plus, Search, XCircle } from "lucide-react";
+import { Building2, CheckCircle2, ChevronLeft, ChevronRight, Pencil, Plus, Search, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -156,12 +156,11 @@ export function ProjectsPage(): JSX.Element {
                 <th>Khu vực</th>
                 <th>Giá từ</th>
                 <th>Trạng thái</th>
-                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {projects.map((project) => (
-                <tr key={project.id}>
+                <tr key={project.id} onClick={() => navigate(`/projects/${project.slug}`)}>
                   <td>
                     <strong>{project.name}</strong>
                     <span>{project.location}</span>
@@ -176,11 +175,6 @@ export function ProjectsPage(): JSX.Element {
                   </td>
                   <td>
                     <StatusBadge value={projectStatusValue(project.status)} />
-                  </td>
-                  <td>
-                    <button className="icon-button" type="button" aria-label="Xem dự án" onClick={() => navigate(`/projects/${project.slug}`)}>
-                      <Eye size={16} />
-                    </button>
                   </td>
                 </tr>
               ))}

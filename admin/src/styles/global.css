@@ -1233,6 +1233,12 @@ td select {
   white-space: nowrap;
 }
 
+.project-table td .status-badge {
+  display: inline-flex;
+  width: fit-content;
+  max-width: none;
+}
+
 .project-editor-panel {
   position: sticky;
   top: 92px;
