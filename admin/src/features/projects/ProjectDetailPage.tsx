@@ -38,7 +38,8 @@ export function ProjectDetailPage(): JSX.Element {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const [formOpen, setFormOpen] = useState(false);
-  const [floorForm, setFloorForm] = useState({ floor_number: 1, image_url: "", description: "" });
+  const [floorForm, setFloorForm] = useState({ floor_number: 1, description: "" });
+  const [floorPlanImage, setFloorPlanImage] = useState<File | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const detailQuery = useQuery({
@@ -116,15 +117,16 @@ export function ProjectDetailPage(): JSX.Element {
 
   const createFloorPlanMutation = useMutation({
     mutationFn: () =>
-      project
+      project && floorPlanImage
         ? createFloorPlan(project.id, {
             floor_number: floorForm.floor_number,
-            image_url: floorForm.image_url,
+            image: floorPlanImage,
             description: floorForm.description || null,
           })
-        : Promise.reject(new Error("Chưa chọn dự án")),
+        : Promise.reject(new Error("Chưa chọn dự án hoặc ảnh mặt bằng")),
     onSuccess: () => {
-      setFloorForm({ floor_number: 1, image_url: "", description: "" });
+      setFloorForm({ floor_number: 1, description: "" });
+      setFloorPlanImage(null);
       showToast("Đã thêm mặt bằng.");
       queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
     },
@@ -341,11 +343,15 @@ export function ProjectDetailPage(): JSX.Element {
           <div className="project-tab-stack">
             <div className="inline-form floor-plan-form">
               <input type="number" min={1} value={floorForm.floor_number} onChange={(event) => setFloorForm((current) => ({ ...current, floor_number: Number(event.target.value) }))} placeholder="Tầng" />
-              <input value={floorForm.image_url} onChange={(event) => setFloorForm((current) => ({ ...current, image_url: event.target.value }))} placeholder="URL ảnh mặt bằng" />
               <input value={floorForm.description} onChange={(event) => setFloorForm((current) => ({ ...current, description: event.target.value }))} placeholder="Mô tả" />
-              <button className="primary-button" type="button" disabled={!floorForm.image_url || createFloorPlanMutation.isPending} onClick={() => createFloorPlanMutation.mutate()}>
+              <label className="file-picker-control">
+                <ImagePlus size={16} />
+                <span>{floorPlanImage ? floorPlanImage.name : "Chọn ảnh mặt bằng"}</span>
+                <input key={floorPlanImage?.name ?? "empty"} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFloorPlanImage(event.target.files?.[0] ?? null)} />
+              </label>
+              <button className="primary-button" type="button" disabled={!floorPlanImage || createFloorPlanMutation.isPending} onClick={() => createFloorPlanMutation.mutate()}>
                 <Layers3 size={16} />
-                Thêm
+                {createFloorPlanMutation.isPending ? "Đang tải..." : "Thêm"}
               </button>
             </div>
             <div className="simple-list floor-plan-list">

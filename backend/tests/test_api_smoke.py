@@ -203,7 +203,8 @@ def test_full_api_smoke_flow() -> None:
 
     floor_plan_response = client.post(
         f"/api/v1/projects/{project['id']}/floor-plans",
-        json={"floor_number": 1, "image_url": "http://example.com/floor.png", "description": "Typical floor"},
+        data={"floor_number": "1", "description": "Typical floor"},
+        files={"image": ("floor.png", b"fake-floor-image", "image/png")},
         headers=headers,
     )
     assert floor_plan_response.status_code == 201, floor_plan_response.text

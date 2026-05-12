@@ -22,7 +22,7 @@ export interface ProjectPayload {
 
 export interface FloorPlanPayload {
   floor_number: number;
-  image_url: string;
+  image: File;
   description?: string | null;
 }
 
@@ -80,7 +80,13 @@ export function deleteProjectImage(id: string): Promise<{ message: string }> {
 }
 
 export function createFloorPlan(projectId: string, payload: FloorPlanPayload): Promise<FloorPlan> {
-  return apiClient.post<FloorPlan>(`/projects/${projectId}/floor-plans`, payload);
+  const formData = new FormData();
+  formData.append("floor_number", String(payload.floor_number));
+  formData.append("image", payload.image);
+  if (payload.description?.trim()) {
+    formData.append("description", payload.description.trim());
+  }
+  return apiClient.post<FloorPlan>(`/projects/${projectId}/floor-plans`, formData);
 }
 
 export function deleteFloorPlan(id: string): Promise<{ message: string }> {

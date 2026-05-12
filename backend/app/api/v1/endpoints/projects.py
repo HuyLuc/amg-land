@@ -159,9 +159,17 @@ def delete_project_image(image_id: uuid.UUID, current_user: StaffUser, db: Sessi
 
 
 @router.post("/projects/{project_id}/floor-plans", response_model=FloorPlanOut, status_code=201, tags=["projects"])
-def create_floor_plan(project_id: uuid.UUID, payload: FloorPlanCreate, current_user: StaffUser, db: Session = Depends(get_db)) -> FloorPlan:
+def create_floor_plan(
+    project_id: uuid.UUID,
+    current_user: StaffUser,
+    db: Session = Depends(get_db),
+    floor_number: int = Form(..., gt=0),
+    description: str | None = Form(default=None),
+    image: UploadFile = File(...),
+) -> FloorPlan:
     get_project_or_404(db, project_id)
-    floor_plan = FloorPlan(project_id=project_id, **payload.model_dump())
+    stored = upload_floor_plan_image(project_id, image)
+    floor_plan = FloorPlan(project_id=project_id, floor_number=floor_number, image_url=stored.public_url, description=description)
     db.add(floor_plan)
     log_activity(db, current_user, "projects.floor_plans.create", "project", project_id)
     commit_or_400(db)
@@ -181,9 +189,11 @@ def delete_floor_plan(floor_plan_id: uuid.UUID, current_user: StaffUser, db: Ses
     if floor_plan is None:
         raise HTTPException(status_code=404, detail="Floor plan not found")
     project_id = floor_plan.project_id
+    image_url = floor_plan.image_url
     db.delete(floor_plan)
     log_activity(db, current_user, "projects.floor_plans.delete", "project", project_id)
     db.commit()
+    delete_public_object(image_url)
     return {"message": "Deleted"}
 
 

@@ -41,12 +41,20 @@ def ensure_bucket(client: Minio, bucket: str) -> None:
 
 
 def upload_project_image(project_id: UUID, file: UploadFile) -> StoredObject:
+    return upload_project_object(project_id, file, "images")
+
+
+def upload_floor_plan_image(project_id: UUID, file: UploadFile) -> StoredObject:
+    return upload_project_object(project_id, file, "floor-plans")
+
+
+def upload_project_object(project_id: UUID, file: UploadFile, folder: str) -> StoredObject:
     if file.content_type not in ALLOWED_IMAGE_CONTENT_TYPES:
         raise HTTPException(status_code=400, detail="Only JPG, PNG and WebP images are allowed")
 
     bucket = os.getenv("MINIO_BUCKET", "amg-land-media")
     filename = sanitize_filename(file.filename or "image")
-    object_name = f"projects/{project_id}/{filename}"
+    object_name = f"projects/{project_id}/{folder}/{filename}"
 
     file.file.seek(0, os.SEEK_END)
     size = file.file.tell()

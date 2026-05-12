@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -51,7 +51,7 @@ from app.api.v1.schemas import (
 )
 from app.core.config import settings
 from app.core.security import create_access_token, generate_opaque_token, hash_password, hash_token, verify_password
-from app.integrations.storage import delete_public_object, upload_project_image
+from app.integrations.storage import delete_public_object, upload_floor_plan_image, upload_project_image
 from app.models.activity_log import ActivityLog
 from app.models.amenity import Amenity, ProjectAmenity
 from app.models.analytics_event import AnalyticsEvent
