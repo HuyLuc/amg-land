@@ -1689,7 +1689,9 @@ td select {
 }
 
 .image-grid figcaption {
-  display: grid;
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
   gap: 10px;
   padding: 10px 12px;
   color: var(--brand);
@@ -1712,7 +1714,9 @@ td select {
 .image-card-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 6px;
+  flex: 0 0 auto;
 }
 
 .image-card-actions button {

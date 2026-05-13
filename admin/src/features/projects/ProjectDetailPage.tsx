@@ -17,7 +17,6 @@ import {
   listProjectApartments,
   unassignAmenity,
   updateAmenity,
-  updateProject,
   updateProjectImage,
   uploadProjectImages,
   type AmenityPayload,
@@ -89,24 +88,6 @@ export function ProjectDetailPage(): JSX.Element {
     window.setTimeout(() => setToast(null), 2600);
   }
 
-  const closeProjectMutation = useMutation({
-    mutationFn: (target: Project) => updateProject(target.id, { status: "closed" }),
-    onSuccess: () => {
-      showToast("Đã đóng dự án.");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
-    },
-  });
-
-  const reopenProjectMutation = useMutation({
-    mutationFn: (target: Project) => updateProject(target.id, { status: "active" }),
-    onSuccess: () => {
-      showToast("Đã mở lại dự án.");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
-    },
-  });
-
   const deleteProjectMutation = useMutation({
     mutationFn: (target: Project) => deleteProject(target.id),
     onSuccess: () => {
@@ -125,8 +106,7 @@ export function ProjectDetailPage(): JSX.Element {
   });
 
   const updateImageMutation = useMutation({
-    mutationFn: ({ imageId, caption, isThumbnail }: { imageId: string; caption?: string | null; isThumbnail?: boolean }) =>
-      updateProjectImage(imageId, { caption, is_thumbnail: isThumbnail }),
+    mutationFn: ({ imageId, caption }: { imageId: string; caption?: string | null }) => updateProjectImage(imageId, { caption }),
     onSuccess: () => {
       showToast("Đã cập nhật ảnh dự án.");
       queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
@@ -236,25 +216,6 @@ export function ProjectDetailPage(): JSX.Element {
               <Pencil size={16} />
             </button>
             <button
-              className="secondary-button"
-              type="button"
-              disabled={closeProjectMutation.isPending || reopenProjectMutation.isPending}
-              onClick={() => {
-                if (project.status === "closed") {
-                  if (window.confirm(`Mở lại dự án "${project.name}"? Dự án sẽ chuyển sang trạng thái đang mở.`)) {
-                    reopenProjectMutation.mutate(project);
-                  }
-                  return;
-                }
-
-                if (window.confirm(`Đóng dự án "${project.name}"? Dự án sẽ chuyển sang trạng thái đã đóng.`)) {
-                  closeProjectMutation.mutate(project);
-                }
-              }}
-            >
-              {project.status === "closed" ? "Mở lại dự án" : "Đóng dự án"}
-            </button>
-            <button
               className="icon-button danger-icon-button"
               type="button"
               title="Xóa dự án"
@@ -336,7 +297,7 @@ export function ProjectDetailPage(): JSX.Element {
             <label className="upload-dropzone">
               <ImagePlus size={22} />
               <strong>Tải ảnh dự án hoặc gallery</strong>
-              <span>Hỗ trợ JPG, PNG, WEBP. Ảnh đầu tiên trong lượt tải sẽ được đánh dấu đại diện.</span>
+              <span>Hỗ trợ JPG, PNG, WEBP.</span>
               <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => event.target.files && uploadImagesMutation.mutate(event.target.files)} />
             </label>
             <div className="image-grid">
@@ -345,8 +306,8 @@ export function ProjectDetailPage(): JSX.Element {
                   <img src={image.image_url} alt="Ảnh dự án" />
                   <figcaption onClick={(event) => event.stopPropagation()}>
                     <div>
-                      <strong>{image.caption || (image.is_thumbnail ? "Ảnh đại diện" : "Gallery")}</strong>
-                      <span>{image.is_thumbnail ? "Đang là ảnh đại diện" : "Ảnh gallery"}</span>
+                      <strong>{image.caption || "Gallery"}</strong>
+                      <span>Ảnh dự án</span>
                     </div>
                     <div className="image-card-actions">
                       <button
@@ -362,11 +323,6 @@ export function ProjectDetailPage(): JSX.Element {
                       >
                         <Pencil size={14} />
                       </button>
-                      {!image.is_thumbnail ? (
-                        <button type="button" onClick={() => updateImageMutation.mutate({ imageId: image.id, isThumbnail: true })}>
-                          Đặt đại diện
-                        </button>
-                      ) : null}
                       <button
                         className="danger-text-button"
                         type="button"
