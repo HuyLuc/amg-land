@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { createApartment, deleteApartment, listApartments, updateApartment, type ApartmentPayload } from "@/features/apartments/apartmentsApi";
+import { formatDirection } from "@/features/apartments/directions";
 import { listProjects } from "@/features/projects/projectsApi";
 import type { Apartment } from "@/services/types";
 
@@ -220,7 +221,7 @@ export function ApartmentsPage(): JSX.Element {
                   <td>
                     {apartment.bedrooms}PN / {apartment.bathrooms}WC
                   </td>
-                  <td>{apartment.direction}</td>
+                  <td>{formatDirection(apartment.direction)}</td>
                   <td>{formatCurrency(apartment.price)}</td>
                   <td>
                     <StatusBadge value={apartment.status} />

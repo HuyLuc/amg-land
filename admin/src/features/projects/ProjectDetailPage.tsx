@@ -5,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
+import { formatDirection } from "@/features/apartments/directions";
 import { ProjectFormModal } from "@/features/projects/ProjectFormModal";
 import {
   assignAmenity,
@@ -442,7 +443,7 @@ export function ProjectDetailPage(): JSX.Element {
                       <td>{apartment.floor}</td>
                       <td>{apartment.area} m2</td>
                       <td>{apartment.bedrooms}</td>
-                      <td>{apartment.direction}</td>
+                      <td>{formatDirection(apartment.direction)}</td>
                       <td>{formatCurrency(apartment.price)}</td>
                       <td>
                         <StatusBadge value={apartment.status} />
