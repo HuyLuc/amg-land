@@ -1408,16 +1408,6 @@ td select {
   padding: 20px;
 }
 
-.media-caption-input {
-  width: min(280px, 100%);
-  height: 38px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-  color: var(--ink);
-}
-
 .detail-media-upload {
   padding: 14px 20px;
   border-top: 0;
@@ -1432,6 +1422,15 @@ td select {
   grid-template-columns: 132px minmax(0, 1fr);
 }
 
+.media-preview-trigger {
+  display: block;
+  width: 132px;
+  height: 104px;
+  padding: 0;
+  border: 0;
+  background: #eef4fb;
+}
+
 .detail-media-grid .apartment-media-item img,
 .detail-media-grid .apartment-media-item video,
 .detail-media-grid .video-media-tile {
@@ -1442,6 +1441,81 @@ td select {
   background: #eef4fb;
   color: var(--brand);
   object-fit: cover;
+}
+
+.media-preview-trigger:hover img,
+.media-preview-trigger:hover video {
+  filter: brightness(0.94);
+}
+
+.media-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.media-lightbox-panel {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(1040px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 28px 84px rgba(15, 23, 42, 0.36);
+}
+
+.media-lightbox-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.media-lightbox-head div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.media-lightbox-head strong,
+.media-lightbox-head span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.media-lightbox-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.media-lightbox-body {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: 16px;
+  background: #0f172a;
+}
+
+.media-lightbox-body img,
+.media-lightbox-body video {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 160px);
+  border-radius: 6px;
+  object-fit: contain;
+}
+
+.media-caption-modal {
+  width: min(480px, 100%);
 }
 
 .apartment-media-manager {

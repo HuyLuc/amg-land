@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ImagePlus, Pencil, PlayCircle, Star, Trash2, X } from "lucide-react";
+import { ArrowLeft, ImagePlus, Pencil, PlayCircle, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -17,6 +17,7 @@ import {
 import { formatDirection } from "@/features/apartments/directions";
 import { listProjects } from "@/features/projects/projectsApi";
 import type { Apartment } from "@/services/types";
+import type { ApartmentMedia } from "@/services/types";
 
 const statusOptions = [
   { value: "available", label: "Còn trống" },
@@ -73,7 +74,9 @@ export function ApartmentDetailPage(): JSX.Element {
   const queryClient = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<ApartmentPayload>(emptyForm);
-  const [mediaCaption, setMediaCaption] = useState("");
+  const [captionDraft, setCaptionDraft] = useState("");
+  const [captionMedia, setCaptionMedia] = useState<ApartmentMedia | null>(null);
+  const [previewMedia, setPreviewMedia] = useState<ApartmentMedia | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const apartmentQuery = useQuery({
@@ -104,6 +107,21 @@ export function ApartmentDetailPage(): JSX.Element {
     }
   }, [apartment, formOpen]);
 
+  useEffect(() => {
+    if (!previewMedia) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent): void {
+      if (event.key === "Escape") {
+        setPreviewMedia(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [previewMedia]);
+
   function showToast(message: string): void {
     setToast(message);
     window.setTimeout(() => setToast(null), 2600);
@@ -121,16 +139,15 @@ export function ApartmentDetailPage(): JSX.Element {
   });
 
   const uploadMediaMutation = useMutation({
-    mutationFn: ({ mediaType, file }: { mediaType: "image" | "video"; file: File }) => uploadApartmentMedia(id, mediaType, file, mediaCaption || null),
+    mutationFn: ({ mediaType, file }: { mediaType: "image" | "video"; file: File }) => uploadApartmentMedia(id, mediaType, file),
     onSuccess: () => {
-      setMediaCaption("");
       showToast("Đã tải media căn hộ.");
       queryClient.invalidateQueries({ queryKey: ["apartment-media", id] });
     },
   });
 
   const updateMediaMutation = useMutation({
-    mutationFn: ({ mediaId, caption, isThumbnail }: { mediaId: string; caption?: string | null; isThumbnail?: boolean }) => updateApartmentMedia(mediaId, { caption, is_thumbnail: isThumbnail }),
+    mutationFn: ({ mediaId, caption }: { mediaId: string; caption?: string | null }) => updateApartmentMedia(mediaId, { caption }),
     onSuccess: () => {
       showToast("Đã cập nhật media căn hộ.");
       queryClient.invalidateQueries({ queryKey: ["apartment-media", id] });
@@ -233,7 +250,6 @@ export function ApartmentDetailPage(): JSX.Element {
             <h2>Ảnh & video căn hộ</h2>
             <p>{mediaQuery.data?.length ?? 0} media đang gắn với căn hộ này</p>
           </div>
-          <input className="media-caption-input" value={mediaCaption} onChange={(event) => setMediaCaption(event.target.value)} placeholder="Caption cho media mới" />
         </div>
         <div className="apartment-media-upload detail-media-upload">
           <label>
@@ -270,28 +286,22 @@ export function ApartmentDetailPage(): JSX.Element {
         <div className="apartment-media-grid detail-media-grid">
           {(mediaQuery.data ?? []).map((media) => (
             <figure key={media.id} className="apartment-media-item">
-              {media.media_type === "image" ? <img src={media.url} alt={media.caption ?? "Ảnh căn hộ"} /> : <video src={media.url} controls />}
+              <button className="media-preview-trigger" type="button" onClick={() => setPreviewMedia(media)}>
+                {media.media_type === "image" ? <img src={media.url} alt={media.caption ?? "Ảnh căn hộ"} /> : <video src={media.url} muted preload="metadata" />}
+              </button>
               <figcaption>
                 <strong>{media.caption || (media.media_type === "image" ? "Ảnh căn hộ" : "Video căn hộ")}</strong>
-                <span>{media.media_type === "image" ? (media.is_thumbnail ? "Ảnh đại diện" : "Ảnh") : "Video"}</span>
+                <span>{media.media_type === "image" ? "Ảnh" : "Video"}</span>
                 <div className="apartment-media-actions">
                   <button
                     type="button"
                     onClick={() => {
-                      const caption = window.prompt("Caption media", media.caption ?? "");
-                      if (caption !== null) {
-                        updateMediaMutation.mutate({ mediaId: media.id, caption: caption.trim() || null });
-                      }
+                      setCaptionMedia(media);
+                      setCaptionDraft(media.caption ?? "");
                     }}
                   >
                     Sửa
                   </button>
-                  {media.media_type === "image" && !media.is_thumbnail ? (
-                    <button type="button" onClick={() => updateMediaMutation.mutate({ mediaId: media.id, isThumbnail: true })}>
-                      <Star size={13} />
-                      Đại diện
-                    </button>
-                  ) : null}
                   <button
                     className="danger-text-button"
                     type="button"
@@ -375,6 +385,62 @@ export function ApartmentDetailPage(): JSX.Element {
                 </button>
               </div>
             </form>
+          </section>
+        </div>
+      ) : null}
+
+      {captionMedia ? (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setCaptionMedia(null)}>
+          <section className="modal-panel media-caption-modal" role="dialog" aria-modal="true" aria-labelledby="media-caption-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2 id="media-caption-title">Sửa caption media</h2>
+                <p>{captionMedia.media_type === "image" ? "Cập nhật mô tả ảnh căn hộ." : "Cập nhật mô tả video căn hộ."}</p>
+              </div>
+              <button className="icon-button" type="button" aria-label="Đóng form" onClick={() => setCaptionMedia(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form
+              className="project-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                updateMediaMutation.mutate({ mediaId: captionMedia.id, caption: captionDraft.trim() || null });
+                setCaptionMedia(null);
+              }}
+            >
+              <label>
+                <span>Caption</span>
+                <input value={captionDraft} onChange={(event) => setCaptionDraft(event.target.value)} autoFocus />
+              </label>
+              <div className="modal-actions">
+                <button className="secondary-button" type="button" onClick={() => setCaptionMedia(null)}>
+                  Hủy
+                </button>
+                <button className="primary-button" type="submit" disabled={updateMediaMutation.isPending}>
+                  {updateMediaMutation.isPending ? "Đang lưu..." : "Lưu caption"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
+
+      {previewMedia ? (
+        <div className="media-lightbox" role="presentation" onMouseDown={() => setPreviewMedia(null)}>
+          <section className="media-lightbox-panel" role="dialog" aria-modal="true" aria-label="Xem media căn hộ" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="media-lightbox-head">
+              <div>
+                <strong>{previewMedia.caption || (previewMedia.media_type === "image" ? "Ảnh căn hộ" : "Video căn hộ")}</strong>
+                <span>{previewMedia.media_type === "image" ? "Ảnh" : "Video"}</span>
+              </div>
+              <button className="icon-button" type="button" aria-label="Đóng xem media" onClick={() => setPreviewMedia(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <div className="media-lightbox-body">
+              {previewMedia.media_type === "image" ? <img src={previewMedia.url} alt={previewMedia.caption ?? "Ảnh căn hộ"} /> : <video src={previewMedia.url} controls autoPlay />}
+            </div>
           </section>
         </div>
       ) : null}
