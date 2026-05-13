@@ -109,7 +109,7 @@ export function ProjectDetailPage(): JSX.Element {
   const deleteProjectMutation = useMutation({
     mutationFn: (target: Project) => deleteProject(target.id),
     onSuccess: () => {
-      showToast("Đã xóa mềm dự án.");
+      showToast("Đã xóa dự án.");
       queryClient.invalidateQueries({ queryKey: ["projects"] });
       navigate("/projects");
     },
@@ -259,13 +259,13 @@ export function ProjectDetailPage(): JSX.Element {
               type="button"
               disabled={deleteProjectMutation.isPending}
               onClick={() => {
-                if (window.confirm(`Xóa mềm dự án "${project.name}"? Dự án sẽ bị ẩn khỏi danh sách.`)) {
+                if (window.confirm(`Xóa dự án "${project.name}"? Dự án sẽ bị ẩn khỏi danh sách.`)) {
                   deleteProjectMutation.mutate(project);
                 }
               }}
             >
               <Trash2 size={16} />
-              Xóa mềm
+              Xóa
             </button>
           </div>
         </div>

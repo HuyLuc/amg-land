@@ -59,7 +59,7 @@ export function AdminLayout(): JSX.Element {
             <Menu size={20} />
           </button>
           <div>
-            <div className="topbar-title">AMG Land CMS</div>
+            <div className="topbar-title">AMG Land</div>
             <div className="topbar-subtitle">Quản lý kinh doanh và nội dung</div>
           </div>
           <div className="topbar-actions">
