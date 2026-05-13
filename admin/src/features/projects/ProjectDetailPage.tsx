@@ -387,10 +387,6 @@ export function ProjectDetailPage(): JSX.Element {
         {activeTab === "amenities" ? (
           <div className="project-tab-stack">
             <div className="amenity-toolbar">
-              <div>
-                <strong>Danh mục tiện ích</strong>
-                <span>Bấm vào tên tiện ích để gán hoặc bỏ gán. Dòng nền xanh là tiện ích đang thuộc dự án.</span>
-              </div>
               <button className="primary-button" type="button" onClick={openCreateAmenity}>
                 Thêm tiện ích
               </button>
