@@ -3,6 +3,7 @@ import { ArrowLeft, ImagePlus, MapPin, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDirection } from "@/features/apartments/directions";
@@ -39,6 +40,13 @@ const initialAmenityForm: AmenityPayload = {
   description: "",
 };
 
+interface ConfirmState {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+}
+
 function formatCurrency(value: number): string {
   return `${value.toLocaleString("vi-VN")} VND`;
 }
@@ -68,6 +76,7 @@ export function ProjectDetailPage(): JSX.Element {
   const [amenityForm, setAmenityForm] = useState<AmenityPayload>(initialAmenityForm);
   const [previewImage, setPreviewImage] = useState<ProjectImage | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 
   const detailQuery = useQuery({
     queryKey: ["project-detail", slug],
@@ -222,11 +231,17 @@ export function ProjectDetailPage(): JSX.Element {
               title="Xóa dự án"
               aria-label="Xóa dự án"
               disabled={deleteProjectMutation.isPending}
-              onClick={() => {
-                if (window.confirm(`Xóa dự án "${project.name}"? Dự án sẽ bị ẩn khỏi danh sách.`)) {
-                  deleteProjectMutation.mutate(project);
-                }
-              }}
+              onClick={() =>
+                setConfirmDialog({
+                  title: "Xóa dự án",
+                  description: `Bạn chắc chắn muốn xóa dự án "${project.name}"? Dự án sẽ bị ẩn khỏi danh sách quản lý.`,
+                  confirmLabel: "Xóa dự án",
+                  onConfirm: () => {
+                    setConfirmDialog(null);
+                    deleteProjectMutation.mutate(project);
+                  },
+                })
+              }
             >
               <Trash2 size={16} />
             </button>
@@ -329,11 +344,17 @@ export function ProjectDetailPage(): JSX.Element {
                         type="button"
                         title="Xóa ảnh"
                         aria-label="Xóa ảnh"
-                        onClick={() => {
-                          if (window.confirm("Xóa ảnh này khỏi dự án? File trong MinIO cũng sẽ được xóa nếu thuộc bucket hiện tại.")) {
-                            deleteImageMutation.mutate(image.id);
-                          }
-                        }}
+                        onClick={() =>
+                          setConfirmDialog({
+                            title: "Xóa ảnh dự án",
+                            description: "Bạn chắc chắn muốn xóa ảnh này khỏi dự án? File trong MinIO cũng sẽ được xóa nếu thuộc bucket hiện tại.",
+                            confirmLabel: "Xóa ảnh",
+                            onConfirm: () => {
+                              setConfirmDialog(null);
+                              deleteImageMutation.mutate(image.id);
+                            },
+                          })
+                        }
                       >
                         <Trash2 size={14} />
                       </button>
@@ -395,11 +416,17 @@ export function ProjectDetailPage(): JSX.Element {
                               type="button"
                               title="Xóa tiện ích"
                               aria-label="Xóa tiện ích"
-                              onClick={() => {
-                                if (window.confirm(`Xóa tiện ích "${amenity.name}"? Tiện ích này sẽ bị bỏ khỏi các dự án đang gán.`)) {
-                                  deleteAmenityMutation.mutate(amenity.id);
-                                }
-                              }}
+                              onClick={() =>
+                                setConfirmDialog({
+                                  title: "Xóa tiện ích",
+                                  description: `Bạn chắc chắn muốn xóa tiện ích "${amenity.name}"? Tiện ích này sẽ bị bỏ khỏi các dự án đang gán.`,
+                                  confirmLabel: "Xóa tiện ích",
+                                  onConfirm: () => {
+                                    setConfirmDialog(null);
+                                    deleteAmenityMutation.mutate(amenity.id);
+                                  },
+                                })
+                              }
                             >
                               <Trash2 size={14} />
                             </button>
@@ -512,6 +539,16 @@ export function ProjectDetailPage(): JSX.Element {
           </section>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(confirmDialog)}
+        title={confirmDialog?.title ?? ""}
+        description={confirmDialog?.description ?? ""}
+        confirmLabel={confirmDialog?.confirmLabel}
+        loading={deleteProjectMutation.isPending || deleteImageMutation.isPending || deleteAmenityMutation.isPending}
+        onClose={() => setConfirmDialog(null)}
+        onConfirm={() => confirmDialog?.onConfirm()}
+      />
 
       {previewImage ? (
         <div className="image-lightbox-backdrop" role="presentation" onMouseDown={() => setPreviewImage(null)}>

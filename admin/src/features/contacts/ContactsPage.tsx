@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock3, Filter, MessageSquare, Phone, Search, UserRound } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { DatePicker } from "@/components/DatePicker";
@@ -24,6 +25,14 @@ const pageSizeOptions = [
   { value: "20", label: "20 / trang" },
   { value: "50", label: "50 / trang" },
 ];
+
+interface ConfirmState {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  tone?: "default" | "danger";
+  onConfirm: () => void;
+}
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("vi-VN", {
@@ -51,6 +60,7 @@ export function ContactsPage(): JSX.Element {
   const [draftApartmentId, setDraftApartmentId] = useState("");
   const [draftNote, setDraftNote] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -157,15 +167,29 @@ export function ContactsPage(): JSX.Element {
     },
   });
 
-  function openContact(contact: Contact): void {
-    if (isDirty && !window.confirm("Bạn có thay đổi chưa lưu. Chuyển khách sẽ bỏ các thay đổi này. Tiếp tục?")) {
-      return;
-    }
+  function selectContact(contact: Contact): void {
     setSelectedId(contact.id);
     setDraftStatus(contact.status);
     setDraftAssignee(contact.assigned_to ?? "");
     setDraftApartmentId(contact.apartment_id ?? "");
     setDraftNote(contact.note ?? "");
+  }
+
+  function openContact(contact: Contact): void {
+    if (isDirty) {
+      setConfirmDialog({
+        title: "Bỏ thay đổi chưa lưu?",
+        description: "Bạn đang có thay đổi chưa lưu. Nếu chuyển sang khách khác, các thay đổi hiện tại sẽ bị bỏ qua.",
+        confirmLabel: "Tiếp tục",
+        tone: "default",
+        onConfirm: () => {
+          setConfirmDialog(null);
+          selectContact(contact);
+        },
+      });
+      return;
+    }
+    selectContact(contact);
   }
 
   function resetFilters(): void {
@@ -339,6 +363,16 @@ export function ContactsPage(): JSX.Element {
           )}
         </aside>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(confirmDialog)}
+        title={confirmDialog?.title ?? ""}
+        description={confirmDialog?.description ?? ""}
+        confirmLabel={confirmDialog?.confirmLabel}
+        tone={confirmDialog?.tone ?? "danger"}
+        onClose={() => setConfirmDialog(null)}
+        onConfirm={() => confirmDialog?.onConfirm()}
+      />
 
       {toast ? <div className="toast-message">{toast}</div> : null}
     </section>

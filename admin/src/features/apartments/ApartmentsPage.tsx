@@ -3,6 +3,7 @@ import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -47,6 +48,13 @@ const initialForm: ApartmentPayload = {
   feng_shui_element: "",
 };
 
+interface ConfirmState {
+  title: string;
+  description: string;
+  confirmLabel?: string;
+  onConfirm: () => void;
+}
+
 function formatCurrency(value: number): string {
   return `${value.toLocaleString("vi-VN")} VND`;
 }
@@ -64,6 +72,7 @@ export function ApartmentsPage(): JSX.Element {
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
   const [form, setForm] = useState<ApartmentPayload>({ ...initialForm, project_id: initialProjectId });
   const [toast, setToast] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 
   const projectsQuery = useQuery({
     queryKey: ["projects", "apartment-filter"],
@@ -236,11 +245,17 @@ export function ApartmentsPage(): JSX.Element {
                         type="button"
                         title="Xóa căn hộ"
                         aria-label="Xóa căn hộ"
-                        onClick={() => {
-                          if (window.confirm(`Xóa căn hộ "${apartment.code}"?`)) {
-                            deleteMutation.mutate(apartment.id);
-                          }
-                        }}
+                        onClick={() =>
+                          setConfirmDialog({
+                            title: "Xóa căn hộ",
+                            description: `Bạn chắc chắn muốn xóa căn hộ "${apartment.code}"? Thao tác này sẽ gỡ căn hộ khỏi danh sách quản lý.`,
+                            confirmLabel: "Xóa căn hộ",
+                            onConfirm: () => {
+                              setConfirmDialog(null);
+                              deleteMutation.mutate(apartment.id);
+                            },
+                          })
+                        }
                       >
                         <Trash2 size={14} />
                       </button>
@@ -320,6 +335,16 @@ export function ApartmentsPage(): JSX.Element {
           </section>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={Boolean(confirmDialog)}
+        title={confirmDialog?.title ?? ""}
+        description={confirmDialog?.description ?? ""}
+        confirmLabel={confirmDialog?.confirmLabel}
+        loading={deleteMutation.isPending}
+        onClose={() => setConfirmDialog(null)}
+        onConfirm={() => confirmDialog?.onConfirm()}
+      />
 
       {toast ? <div className="toast-message">{toast}</div> : null}
     </section>
