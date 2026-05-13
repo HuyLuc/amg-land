@@ -6,7 +6,7 @@ export function ContactForm() {
     <form className="rounded bg-white p-6 shadow-soft">
       <div className="grid gap-4 md:grid-cols-2">
         <TextInput label="Họ tên" placeholder="Nguyễn Văn A" />
-        <TextInput label="Số điện thoại" placeholder="0900 000 000" />
+        <TextInput label="Số điện thoại" placeholder="0942 319 933" />
         <TextInput label="Email" placeholder="email@example.com" />
         <TextInput label="Dự án quan tâm" placeholder="The Aurora Riverside" />
       </div>
@@ -17,11 +17,10 @@ export function ContactForm() {
           placeholder="Ngân sách, khu vực, số phòng ngủ mong muốn..."
         />
       </label>
-      <button className="btn-primary mt-5 h-12 px-6" type="button">
+      <button className="btn-primary mt-5 h-12 w-full px-6 md:w-auto" type="button">
         Gửi yêu cầu
         <Send size={18} />
       </button>
     </form>
   );
 }
-

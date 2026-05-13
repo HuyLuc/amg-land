@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Building2 } from "lucide-react";
+import { companyAssets, companyInfo } from "../../../app/company";
 
 type AuthShellProps = {
   title: string;
@@ -14,10 +14,8 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
         <aside className="relative overflow-hidden bg-brand-900 p-7 text-white lg:p-9">
           <div className="absolute inset-0 opacity-[0.08] luxury-grid" />
           <div className="relative">
-            <span className="grid h-12 w-12 place-items-center rounded bg-white text-brand-900 shadow-gold">
-              <Building2 size={24} />
-            </span>
-            <p className="mt-8 text-sm font-semibold uppercase tracking-[0.14em] text-gold-400">AMG Land</p>
+            <img alt={companyInfo.brandName} className="h-20 w-auto rounded bg-white p-2 shadow-gold" src={companyAssets.logo} />
+            <p className="mt-8 text-sm font-semibold uppercase tracking-[0.14em] text-gold-400">{companyInfo.tagline}</p>
             <h1 className="font-display mt-3 text-4xl font-bold leading-tight md:text-5xl">{title}</h1>
             <p className="mt-4 max-w-sm text-sm leading-7 text-brand-100">{description}</p>
           </div>

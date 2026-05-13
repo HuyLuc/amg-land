@@ -1,5 +1,6 @@
-import { Building2, LogOut, Menu, UserRound, X } from "lucide-react";
+import { LogOut, Menu, UserRound, X } from "lucide-react";
 import { useState } from "react";
+import { companyAssets, companyInfo } from "../../app/company";
 import { navItems } from "../../app/navigation";
 import type { Page } from "../../app/types";
 import type { AuthUser } from "../../features/auth/types";
@@ -28,16 +29,14 @@ export function Header({ page, user, onLogout, onNavigate }: HeaderProps) {
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-md">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-5 lg:px-8">
         <button className="group flex items-center gap-3" onClick={() => navigate("home")} type="button">
-          <span className="grid h-11 w-11 place-items-center rounded bg-brand-900 text-white shadow-[0_10px_22px_rgba(31,56,100,0.22)] ring-1 ring-brand-700 transition duration-300 group-hover:-translate-y-0.5">
-            <Building2 size={23} strokeWidth={1.9} />
-          </span>
+          <img alt="" className="h-12 w-auto object-contain transition duration-300 group-hover:-translate-y-0.5" src={companyAssets.logo} />
           <span className="text-left">
-            <span className="font-display block text-xl font-bold leading-5 text-brand-900">AMG News</span>
-            <span className="block text-xs font-medium text-slate-500">AMG Land</span>
+            <span className="font-display block text-xl font-bold leading-5 text-brand-900">{companyInfo.brandName}</span>
+            <span className="block text-xs font-medium text-slate-500">{companyInfo.tagline}</span>
           </span>
         </button>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           {navItems.map((item) => (
             <button
               className={`relative rounded px-4 py-2 text-sm font-semibold transition ${
@@ -53,7 +52,7 @@ export function Header({ page, user, onLogout, onNavigate }: HeaderProps) {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
+        <div className="hidden items-center gap-3 lg:flex">
           {user ? (
             <>
               <button className={`inline-flex h-11 items-center gap-2 rounded px-4 text-sm font-semibold transition ${page === "profile" ? "bg-brand-900 text-white" : "bg-brand-50 text-brand-900 hover:bg-brand-100"}`} onClick={() => navigate("profile")} type="button">
@@ -78,7 +77,7 @@ export function Header({ page, user, onLogout, onNavigate }: HeaderProps) {
 
         <button
           aria-label="Mở menu"
-          className="grid h-11 w-11 place-items-center rounded border border-slate-200 text-brand-900 md:hidden"
+          className="grid h-11 w-11 place-items-center rounded border border-slate-200 text-brand-900 lg:hidden"
           onClick={() => setMobileOpen(!mobileOpen)}
           type="button"
         >
@@ -87,7 +86,7 @@ export function Header({ page, user, onLogout, onNavigate }: HeaderProps) {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-slate-100 bg-white px-5 pb-5 md:hidden">
+        <div className="border-t border-slate-100 bg-white px-5 pb-5 lg:hidden">
           <div className="grid gap-2 pt-4">
             {navItems.map((item) => (
               <button

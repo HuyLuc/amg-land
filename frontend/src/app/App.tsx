@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { projects } from "../assets/data/mockData";
 import { Chatbot } from "../features/chat/components/Chatbot";
 import type { AuthUser } from "../features/auth/types";
 import { useProjectFilters } from "../features/projects/hooks/useProjectFilters";
+import { AboutPage } from "../pages/AboutPage";
 import { ContactPage } from "../pages/ContactPage";
 import { CommunityPage } from "../pages/CommunityPage";
 import { HomePage } from "../pages/HomePage";
@@ -27,13 +28,11 @@ export function App() {
 
   const navigate = (nextPage: Page) => {
     setPage(nextPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openProject = (project: Project) => {
     setSelectedProject(project);
     setPage("projectDetail");
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const completeAuth = (nextUser: AuthUser) => {
@@ -45,6 +44,10 @@ export function App() {
     setUser(null);
     navigate("home");
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [page, selectedProject.id]);
 
   return (
     <AppLayout currentPage={page} user={user} onLogout={logout} onNavigate={navigate}>
@@ -75,6 +78,7 @@ export function App() {
           />
         )}
 
+        {page === "about" && <AboutPage onContact={() => navigate("contact")} />}
         {page === "news" && <NewsPage />}
         {page === "community" && <CommunityPage />}
         {page === "contact" && <ContactPage />}
