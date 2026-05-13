@@ -443,6 +443,11 @@ td select {
   color: var(--brand);
 }
 
+.danger-icon-button {
+  border-color: #f2b7b3;
+  color: var(--danger);
+}
+
 .mobile-only {
   display: none;
 }
@@ -1711,7 +1716,10 @@ td select {
 }
 
 .image-card-actions button {
+  display: inline-grid;
+  place-items: center;
   min-height: 30px;
+  min-width: 32px;
   padding: 0 9px;
   border: 1px solid #d5deea;
   border-radius: 8px;
@@ -1898,7 +1906,10 @@ td select {
 
 .amenity-actions button,
 .danger-text-button {
+  display: inline-grid;
+  place-items: center;
   min-height: 30px;
+  min-width: 32px;
   padding: 0 9px;
   border: 1px solid #d5deea;
   border-radius: 8px;

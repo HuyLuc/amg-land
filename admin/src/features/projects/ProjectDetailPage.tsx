@@ -232,9 +232,8 @@ export function ProjectDetailPage(): JSX.Element {
             </p>
           </div>
           <div className="project-actions">
-            <button className="secondary-button" type="button" onClick={() => setFormOpen(true)}>
+            <button className="icon-button" type="button" title="Sửa thông tin" aria-label="Sửa thông tin" onClick={() => setFormOpen(true)}>
               <Pencil size={16} />
-              Sửa thông tin
             </button>
             <button
               className="secondary-button"
@@ -256,8 +255,10 @@ export function ProjectDetailPage(): JSX.Element {
               {project.status === "closed" ? "Mở lại dự án" : "Đóng dự án"}
             </button>
             <button
-              className="danger-button"
+              className="icon-button danger-icon-button"
               type="button"
+              title="Xóa dự án"
+              aria-label="Xóa dự án"
               disabled={deleteProjectMutation.isPending}
               onClick={() => {
                 if (window.confirm(`Xóa dự án "${project.name}"? Dự án sẽ bị ẩn khỏi danh sách.`)) {
@@ -266,7 +267,6 @@ export function ProjectDetailPage(): JSX.Element {
               }}
             >
               <Trash2 size={16} />
-              Xóa
             </button>
           </div>
         </div>
@@ -351,6 +351,8 @@ export function ProjectDetailPage(): JSX.Element {
                     <div className="image-card-actions">
                       <button
                         type="button"
+                        title="Sửa ảnh"
+                        aria-label="Sửa ảnh"
                         onClick={() => {
                           const caption = window.prompt("Nhập tên/caption cho ảnh", image.caption ?? "");
                           if (caption !== null) {
@@ -358,7 +360,7 @@ export function ProjectDetailPage(): JSX.Element {
                           }
                         }}
                       >
-                        Sửa
+                        <Pencil size={14} />
                       </button>
                       {!image.is_thumbnail ? (
                         <button type="button" onClick={() => updateImageMutation.mutate({ imageId: image.id, isThumbnail: true })}>
@@ -368,13 +370,15 @@ export function ProjectDetailPage(): JSX.Element {
                       <button
                         className="danger-text-button"
                         type="button"
+                        title="Xóa ảnh"
+                        aria-label="Xóa ảnh"
                         onClick={() => {
                           if (window.confirm("Xóa ảnh này khỏi dự án? File trong MinIO cũng sẽ được xóa nếu thuộc bucket hiện tại.")) {
                             deleteImageMutation.mutate(image.id);
                           }
                         }}
                       >
-                        Xóa
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </figcaption>
@@ -426,19 +430,21 @@ export function ProjectDetailPage(): JSX.Element {
                         <td>{amenity.description ?? "Không có mô tả"}</td>
                         <td>
                           <div className="amenity-actions">
-                            <button type="button" onClick={() => openEditAmenity(amenity)}>
-                              Sửa
+                            <button type="button" title="Sửa tiện ích" aria-label="Sửa tiện ích" onClick={() => openEditAmenity(amenity)}>
+                              <Pencil size={14} />
                             </button>
                             <button
                               className="danger-text-button"
                               type="button"
+                              title="Xóa tiện ích"
+                              aria-label="Xóa tiện ích"
                               onClick={() => {
                                 if (window.confirm(`Xóa tiện ích "${amenity.name}"? Tiện ích này sẽ bị bỏ khỏi các dự án đang gán.`)) {
                                   deleteAmenityMutation.mutate(amenity.id);
                                 }
                               }}
                             >
-                              Xóa
+                              <Trash2 size={14} />
                             </button>
                           </div>
                         </td>
