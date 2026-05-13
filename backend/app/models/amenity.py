@@ -12,6 +12,7 @@ from app.models.common import UUIDPrimaryKeyMixin
 class AmenityCategory(str, Enum):
     internal = "internal"
     external = "external"
+    other = "other"
 
 
 class Amenity(UUIDPrimaryKeyMixin, Base):

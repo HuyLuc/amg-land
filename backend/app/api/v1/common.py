@@ -14,6 +14,7 @@ from app.api.v1.schemas import (
     AnalyticsEventCreate,
     AmenityCreate,
     AmenityOut,
+    AmenityUpdate,
     ApartmentCreate,
     ApartmentPage,
     ApartmentOut,

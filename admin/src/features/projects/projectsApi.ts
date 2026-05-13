@@ -32,6 +32,13 @@ export interface ProjectImagePayload {
   is_thumbnail?: boolean;
 }
 
+export interface AmenityPayload {
+  name: string;
+  icon?: string | null;
+  category: Amenity["category"];
+  description?: string | null;
+}
+
 export function listProjects(filters: ProjectFilters = {}): Promise<PageResponse<Project>> {
   const params = new URLSearchParams({
     page: String(filters.page ?? 1),
@@ -99,6 +106,18 @@ export function listProjectApartments(projectId: string): Promise<PageResponse<A
 
 export function listAmenities(): Promise<Amenity[]> {
   return apiClient.get<Amenity[]>("/amenities");
+}
+
+export function createAmenity(payload: AmenityPayload): Promise<Amenity> {
+  return apiClient.post<Amenity>("/amenities", payload);
+}
+
+export function updateAmenity(id: string, payload: Partial<AmenityPayload>): Promise<Amenity> {
+  return apiClient.put<Amenity>(`/amenities/${id}`, payload);
+}
+
+export function deleteAmenity(id: string): Promise<{ message: string }> {
+  return apiClient.delete<{ message: string }>(`/amenities/${id}`);
 }
 
 export function assignAmenity(projectId: string, amenityId: string): Promise<{ message: string }> {

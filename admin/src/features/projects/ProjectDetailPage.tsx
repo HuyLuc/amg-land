@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, ImagePlus, Layers3, MapPin, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, ImagePlus, MapPin, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -8,21 +8,36 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ProjectFormModal } from "@/features/projects/ProjectFormModal";
 import {
   assignAmenity,
-  createFloorPlan,
-  deleteFloorPlan,
-  deleteProjectImage,
+  createAmenity,
+  deleteAmenity,
   deleteProject,
+  deleteProjectImage,
   getProjectDetail,
   listAmenities,
   listProjectApartments,
   unassignAmenity,
+  updateAmenity,
   updateProject,
   updateProjectImage,
   uploadProjectImages,
+  type AmenityPayload,
 } from "@/features/projects/projectsApi";
-import type { Project } from "@/services/types";
+import type { Amenity, Project } from "@/services/types";
 
-type DetailTab = "overview" | "images" | "floorPlans" | "amenities" | "apartments";
+type DetailTab = "overview" | "images" | "amenities" | "apartments";
+
+const amenityCategoryOptions = [
+  { value: "internal", label: "Nội khu" },
+  { value: "external", label: "Ngoại khu" },
+  { value: "other", label: "Khác" },
+];
+
+const initialAmenityForm: AmenityPayload = {
+  name: "",
+  icon: "",
+  category: "internal",
+  description: "",
+};
 
 function formatCurrency(value: number): string {
   return `${value.toLocaleString("vi-VN")} VND`;
@@ -32,14 +47,25 @@ function projectStatusValue(status: Project["status"]): string {
   return status === "active" ? "active_project" : status;
 }
 
+function amenityCategoryLabel(category: Amenity["category"]): string {
+  if (category === "internal") {
+    return "Nội khu";
+  }
+  if (category === "external") {
+    return "Ngoại khu";
+  }
+  return "Khác";
+}
+
 export function ProjectDetailPage(): JSX.Element {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const [formOpen, setFormOpen] = useState(false);
-  const [floorForm, setFloorForm] = useState({ floor_number: 1, description: "" });
-  const [floorPlanImage, setFloorPlanImage] = useState<File | null>(null);
+  const [amenityFormOpen, setAmenityFormOpen] = useState(false);
+  const [editingAmenity, setEditingAmenity] = useState<Amenity | null>(null);
+  const [amenityForm, setAmenityForm] = useState<AmenityPayload>(initialAmenityForm);
   const [toast, setToast] = useState<string | null>(null);
 
   const detailQuery = useQuery({
@@ -49,7 +75,6 @@ export function ProjectDetailPage(): JSX.Element {
   });
 
   const project = detailQuery.data?.project_detail ?? null;
-
   const amenitiesQuery = useQuery({ queryKey: ["amenities"], queryFn: listAmenities });
 
   const apartmentsQuery = useQuery({
@@ -115,27 +140,31 @@ export function ProjectDetailPage(): JSX.Element {
     },
   });
 
-  const createFloorPlanMutation = useMutation({
-    mutationFn: () =>
-      project && floorPlanImage
-        ? createFloorPlan(project.id, {
-            floor_number: floorForm.floor_number,
-            image: floorPlanImage,
-            description: floorForm.description || null,
-          })
-        : Promise.reject(new Error("Chưa chọn dự án hoặc ảnh mặt bằng")),
+  const saveAmenityMutation = useMutation({
+    mutationFn: () => {
+      const payload: AmenityPayload = {
+        name: amenityForm.name.trim(),
+        icon: amenityForm.icon?.trim() || null,
+        category: amenityForm.category,
+        description: amenityForm.description?.trim() || null,
+      };
+      return editingAmenity ? updateAmenity(editingAmenity.id, payload) : createAmenity(payload);
+    },
     onSuccess: () => {
-      setFloorForm({ floor_number: 1, description: "" });
-      setFloorPlanImage(null);
-      showToast("Đã thêm mặt bằng.");
+      showToast(editingAmenity ? "Đã cập nhật tiện ích." : "Đã thêm tiện ích.");
+      setAmenityFormOpen(false);
+      setEditingAmenity(null);
+      setAmenityForm(initialAmenityForm);
+      queryClient.invalidateQueries({ queryKey: ["amenities"] });
       queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
     },
   });
 
-  const deleteFloorPlanMutation = useMutation({
-    mutationFn: deleteFloorPlan,
+  const deleteAmenityMutation = useMutation({
+    mutationFn: deleteAmenity,
     onSuccess: () => {
-      showToast("Đã xóa mặt bằng.");
+      showToast("Đã xóa tiện ích.");
+      queryClient.invalidateQueries({ queryKey: ["amenities"] });
       queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
     },
   });
@@ -143,7 +172,7 @@ export function ProjectDetailPage(): JSX.Element {
   const assignAmenityMutation = useMutation({
     mutationFn: (amenityId: string) => (project ? assignAmenity(project.id, amenityId) : Promise.reject(new Error("Chưa chọn dự án"))),
     onSuccess: () => {
-      showToast("Đã thêm tiện ích.");
+      showToast("Đã thêm tiện ích vào dự án.");
       queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
     },
   });
@@ -155,6 +184,23 @@ export function ProjectDetailPage(): JSX.Element {
       queryClient.invalidateQueries({ queryKey: ["project-detail", slug] });
     },
   });
+
+  function openCreateAmenity(): void {
+    setEditingAmenity(null);
+    setAmenityForm(initialAmenityForm);
+    setAmenityFormOpen(true);
+  }
+
+  function openEditAmenity(amenity: Amenity): void {
+    setEditingAmenity(amenity);
+    setAmenityForm({
+      name: amenity.name,
+      icon: amenity.icon ?? "",
+      category: amenity.category,
+      description: amenity.description ?? "",
+    });
+    setAmenityFormOpen(true);
+  }
 
   if (detailQuery.isLoading) {
     return <div className="panel empty-state">Đang tải chi tiết dự án...</div>;
@@ -228,7 +274,6 @@ export function ProjectDetailPage(): JSX.Element {
           {[
             ["overview", "Thông tin chung"],
             ["images", "Ảnh/Gallery"],
-            ["floorPlans", "Mặt bằng"],
             ["amenities", "Tiện ích"],
             ["apartments", "Căn hộ"],
           ].map(([tab, label]) => (
@@ -339,70 +384,73 @@ export function ProjectDetailPage(): JSX.Element {
           </div>
         ) : null}
 
-        {activeTab === "floorPlans" ? (
+        {activeTab === "amenities" ? (
           <div className="project-tab-stack">
-            <div className="inline-form floor-plan-form">
-              <input type="number" min={1} value={floorForm.floor_number} onChange={(event) => setFloorForm((current) => ({ ...current, floor_number: Number(event.target.value) }))} placeholder="Tầng" />
-              <input value={floorForm.description} onChange={(event) => setFloorForm((current) => ({ ...current, description: event.target.value }))} placeholder="Mô tả" />
-              <label className="file-picker-control">
-                <ImagePlus size={16} />
-                <span>{floorPlanImage ? floorPlanImage.name : "Chọn ảnh mặt bằng"}</span>
-                <input key={floorPlanImage?.name ?? "empty"} type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setFloorPlanImage(event.target.files?.[0] ?? null)} />
-              </label>
-              <button className="primary-button" type="button" disabled={!floorPlanImage || createFloorPlanMutation.isPending} onClick={() => createFloorPlanMutation.mutate()}>
-                <Layers3 size={16} />
-                {createFloorPlanMutation.isPending ? "Đang tải..." : "Thêm"}
+            <div className="amenity-toolbar">
+              <div>
+                <strong>Danh mục tiện ích</strong>
+                <span>Bấm vào tên tiện ích để gán hoặc bỏ gán. Dòng nền xanh là tiện ích đang thuộc dự án.</span>
+              </div>
+              <button className="primary-button" type="button" onClick={openCreateAmenity}>
+                Thêm tiện ích
               </button>
             </div>
-            <div className="simple-list floor-plan-list">
-              {(detail?.floor_plans ?? []).map((floor) => (
-                <div key={floor.id}>
-                  <span>Tầng {floor.floor_number}</span>
-                  <strong>{floor.description ?? floor.image_url}</strong>
-                  <a href={floor.image_url} target="_blank" rel="noreferrer">
-                    Xem ảnh
-                  </a>
-                  <button
-                    className="icon-button"
-                    type="button"
-                    aria-label="Xóa mặt bằng"
-                    onClick={() => {
-                      if (window.confirm(`Xóa mặt bằng tầng ${floor.floor_number}?`)) {
-                        deleteFloorPlanMutation.mutate(floor.id);
-                      }
-                    }}
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
+            <div className="table-wrap amenity-table-wrap">
+              <table className="amenity-table">
+                <thead>
+                  <tr>
+                    <th>Tiện ích</th>
+                    <th>Loại</th>
+                    <th>Ghi chú</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(amenitiesQuery.data ?? []).map((amenity) => {
+                    const assigned = Boolean(detail?.amenities.some((item) => item.id === amenity.id));
+                    return (
+                      <tr key={amenity.id} className={assigned ? "selected-row" : ""}>
+                        <td>
+                          <button
+                            className="table-link-button"
+                            type="button"
+                            onClick={() => {
+                              if (assigned) {
+                                unassignAmenityMutation.mutate(amenity.id);
+                              } else {
+                                assignAmenityMutation.mutate(amenity.id);
+                              }
+                            }}
+                          >
+                            {amenity.name}
+                          </button>
+                        </td>
+                        <td>{amenityCategoryLabel(amenity.category)}</td>
+                        <td>{amenity.description ?? "Không có mô tả"}</td>
+                        <td>
+                          <div className="amenity-actions">
+                            <button type="button" onClick={() => openEditAmenity(amenity)}>
+                              Sửa
+                            </button>
+                            <button
+                              className="danger-text-button"
+                              type="button"
+                              onClick={() => {
+                                if (window.confirm(`Xóa tiện ích "${amenity.name}"? Tiện ích này sẽ bị bỏ khỏi các dự án đang gán.`)) {
+                                  deleteAmenityMutation.mutate(amenity.id);
+                                }
+                              }}
+                            >
+                              Xóa
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-            {!detail?.floor_plans.length ? <div className="empty-state">Chưa có mặt bằng.</div> : null}
-          </div>
-        ) : null}
-
-        {activeTab === "amenities" ? (
-          <div className="amenity-grid">
-            {(amenitiesQuery.data ?? []).map((amenity) => {
-              const assigned = Boolean(detail?.amenities.some((item) => item.id === amenity.id));
-              return (
-                <button
-                  key={amenity.id}
-                  className={`amenity-chip ${assigned ? "assigned" : ""}`}
-                  type="button"
-                  onClick={() => {
-                    if (assigned) {
-                      unassignAmenityMutation.mutate(amenity.id);
-                    } else {
-                      assignAmenityMutation.mutate(amenity.id);
-                    }
-                  }}
-                >
-                  <strong>{amenity.name}</strong>
-                  <span>{amenity.category === "internal" ? "Nội khu" : "Ngoại khu"}</span>
-                </button>
-              );
-            })}
           </div>
         ) : null}
 
@@ -455,6 +503,54 @@ export function ProjectDetailPage(): JSX.Element {
           }
         }}
       />
+
+      {amenityFormOpen ? (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setAmenityFormOpen(false)}>
+          <section className="modal-panel amenity-form-modal" role="dialog" aria-modal="true" aria-labelledby="amenity-form-title" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="modal-header">
+              <div>
+                <h2 id="amenity-form-title">{editingAmenity ? "Sửa tiện ích" : "Thêm tiện ích"}</h2>
+                <p>Quản lý danh mục tiện ích dùng chung cho các dự án.</p>
+              </div>
+              <button className="icon-button" type="button" aria-label="Đóng form" onClick={() => setAmenityFormOpen(false)}>
+                <X size={18} />
+              </button>
+            </div>
+            <form
+              className="project-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                saveAmenityMutation.mutate();
+              }}
+            >
+              <label>
+                <span>Tên tiện ích</span>
+                <input value={amenityForm.name} onChange={(event) => setAmenityForm((current) => ({ ...current, name: event.target.value }))} required />
+              </label>
+              <div className="form-grid-two">
+                <SelectMenu label="Loại tiện ích" value={amenityForm.category} options={amenityCategoryOptions} onChange={(value) => setAmenityForm((current) => ({ ...current, category: value as Amenity["category"] }))} />
+                <label>
+                  <span>Biểu tượng</span>
+                  <input value={amenityForm.icon ?? ""} onChange={(event) => setAmenityForm((current) => ({ ...current, icon: event.target.value }))} placeholder="Ví dụ: pool, gym, metro" />
+                </label>
+              </div>
+              <label>
+                <span>Mô tả</span>
+                <textarea value={amenityForm.description ?? ""} onChange={(event) => setAmenityForm((current) => ({ ...current, description: event.target.value }))} />
+              </label>
+              {saveAmenityMutation.error ? <div className="form-error">Không lưu được tiện ích. Vui lòng kiểm tra dữ liệu.</div> : null}
+              <div className="modal-actions">
+                <button className="secondary-button" type="button" onClick={() => setAmenityFormOpen(false)}>
+                  Hủy
+                </button>
+                <button className="primary-button" type="submit" disabled={saveAmenityMutation.isPending}>
+                  {saveAmenityMutation.isPending ? "Đang lưu..." : "Lưu tiện ích"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
 
       {toast ? <div className="toast-message">{toast}</div> : null}
     </section>

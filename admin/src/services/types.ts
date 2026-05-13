@@ -75,7 +75,7 @@ export interface Amenity {
   id: string;
   name: string;
   icon: string | null;
-  category: "internal" | "external";
+  category: "internal" | "external" | "other";
   description: string | null;
 }
 

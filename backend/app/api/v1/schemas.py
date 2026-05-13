@@ -191,6 +191,13 @@ class AmenityCreate(BaseModel):
     description: str | None = None
 
 
+class AmenityUpdate(BaseModel):
+    name: str | None = None
+    icon: str | None = None
+    category: AmenityCategory | None = None
+    description: str | None = None
+
+
 class AmenityOut(ORMModel):
     id: UUID
     name: str
