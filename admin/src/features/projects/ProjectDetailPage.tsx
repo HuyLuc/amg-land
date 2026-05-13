@@ -22,7 +22,7 @@ import {
   uploadProjectImages,
   type AmenityPayload,
 } from "@/features/projects/projectsApi";
-import type { Amenity, Project } from "@/services/types";
+import type { Amenity, Project, ProjectImage } from "@/services/types";
 
 type DetailTab = "overview" | "images" | "amenities" | "apartments";
 
@@ -66,6 +66,7 @@ export function ProjectDetailPage(): JSX.Element {
   const [amenityFormOpen, setAmenityFormOpen] = useState(false);
   const [editingAmenity, setEditingAmenity] = useState<Amenity | null>(null);
   const [amenityForm, setAmenityForm] = useState<AmenityPayload>(initialAmenityForm);
+  const [previewImage, setPreviewImage] = useState<ProjectImage | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const detailQuery = useQuery({
@@ -340,9 +341,9 @@ export function ProjectDetailPage(): JSX.Element {
             </label>
             <div className="image-grid">
               {(detail?.images ?? []).map((image) => (
-                <figure key={image.id} className="project-image-card">
+                <figure key={image.id} className="project-image-card" onClick={() => setPreviewImage(image)}>
                   <img src={image.image_url} alt="Ảnh dự án" />
-                  <figcaption>
+                  <figcaption onClick={(event) => event.stopPropagation()}>
                     <div>
                       <strong>{image.caption || (image.is_thumbnail ? "Ảnh đại diện" : "Gallery")}</strong>
                       <span>{image.is_thumbnail ? "Đang là ảnh đại diện" : "Ảnh gallery"}</span>
@@ -544,6 +545,20 @@ export function ProjectDetailPage(): JSX.Element {
                 </button>
               </div>
             </form>
+          </section>
+        </div>
+      ) : null}
+
+      {previewImage ? (
+        <div className="image-lightbox-backdrop" role="presentation" onMouseDown={() => setPreviewImage(null)}>
+          <section className="image-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh dự án" onMouseDown={(event) => event.stopPropagation()}>
+            <div className="image-lightbox-header">
+              <strong>{previewImage.caption || "Ảnh dự án"}</strong>
+              <button className="icon-button" type="button" aria-label="Đóng ảnh" onClick={() => setPreviewImage(null)}>
+                <X size={18} />
+              </button>
+            </div>
+            <img src={previewImage.image_url} alt={previewImage.caption || "Ảnh dự án"} />
           </section>
         </div>
       ) : null}

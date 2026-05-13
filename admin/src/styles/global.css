@@ -1672,6 +1672,7 @@ td select {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: #fff;
+  cursor: zoom-in;
 }
 
 .image-grid img {
@@ -1689,6 +1690,7 @@ td select {
   color: var(--brand);
   font-size: 12px;
   font-weight: 650;
+  cursor: default;
 }
 
 .image-grid figcaption strong,
@@ -1722,6 +1724,44 @@ td select {
 .image-card-actions .danger-text-button {
   border-color: #f2b7b3;
   color: var(--danger);
+}
+
+.image-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.image-lightbox {
+  width: min(1120px, 100%);
+  max-height: calc(100vh - 48px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 28px 90px rgba(15, 23, 42, 0.34);
+}
+
+.image-lightbox-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.image-lightbox img {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 116px);
+  object-fit: contain;
+  background: #0f172a;
 }
 
 .inline-form {
