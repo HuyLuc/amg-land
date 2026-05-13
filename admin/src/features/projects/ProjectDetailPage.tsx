@@ -524,13 +524,7 @@ export function ProjectDetailPage(): JSX.Element {
                 <span>Tên tiện ích</span>
                 <input value={amenityForm.name} onChange={(event) => setAmenityForm((current) => ({ ...current, name: event.target.value }))} required />
               </label>
-              <div className="form-grid-two">
-                <SelectMenu label="Loại tiện ích" value={amenityForm.category} options={amenityCategoryOptions} onChange={(value) => setAmenityForm((current) => ({ ...current, category: value as Amenity["category"] }))} />
-                <label>
-                  <span>Biểu tượng</span>
-                  <input value={amenityForm.icon ?? ""} onChange={(event) => setAmenityForm((current) => ({ ...current, icon: event.target.value }))} placeholder="Ví dụ: pool, gym, metro" />
-                </label>
-              </div>
+              <SelectMenu label="Loại tiện ích" value={amenityForm.category} options={amenityCategoryOptions} onChange={(value) => setAmenityForm((current) => ({ ...current, category: value as Amenity["category"] }))} />
               <label>
                 <span>Mô tả</span>
                 <textarea value={amenityForm.description ?? ""} onChange={(event) => setAmenityForm((current) => ({ ...current, description: event.target.value }))} />
