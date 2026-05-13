@@ -33,11 +33,7 @@ export function AdminLayout(): JSX.Element {
     <div className="admin-shell">
       <aside className={`sidebar ${sidebarOpen ? "sidebar-open" : ""}`}>
         <div className="brand-block">
-          <div className="brand-mark">A</div>
-          <div>
-            <div className="brand-name">AMG Land</div>
-            <div className="brand-subtitle">Cổng nội bộ</div>
-          </div>
+          <img className="sidebar-logo" src="/brand/logo.png" alt="AMG Land" />
         </div>
 
         <nav className="nav-list" aria-label="Điều hướng nội bộ">
@@ -55,7 +51,7 @@ export function AdminLayout(): JSX.Element {
 
       <div className="workspace">
         <header className="topbar">
-          <button className="icon-button mobile-only" type="button" aria-label="Open navigation" onClick={() => setSidebarOpen(true)}>
+          <button className="icon-button mobile-only" type="button" aria-label="Mở menu" onClick={() => setSidebarOpen(true)}>
             <Menu size={20} />
           </button>
           <div>

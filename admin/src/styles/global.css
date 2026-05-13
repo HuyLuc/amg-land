@@ -55,8 +55,18 @@ button {
 .brand-block {
   display: flex;
   align-items: center;
-  gap: 12px;
+  min-height: 68px;
   padding: 4px 6px 26px;
+}
+
+.sidebar-logo {
+  display: block;
+  width: 168px;
+  height: 56px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px 10px;
 }
 
 .brand-mark,
