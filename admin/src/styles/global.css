@@ -1233,6 +1233,34 @@ td select {
   align-items: end;
 }
 
+.apartments-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) 170px 120px 130px 170px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.compact-input-control {
+  display: grid;
+  gap: 7px;
+}
+
+.compact-input-control span {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.compact-input-control input {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cfdae9;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  color: var(--ink);
+}
+
 .projects-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1987,6 +2015,7 @@ td select {
   .filter-grid,
   .leads-workspace,
   .projects-filter-grid,
+  .apartments-filter-grid,
   .projects-workspace {
     grid-template-columns: 1fr;
   }

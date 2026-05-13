@@ -3,6 +3,33 @@ from app.api.v1.common import *
 router = APIRouter()
 
 
+@router.get("/apartments", response_model=ApartmentPage, tags=["apartments"])
+def list_apartments(
+    db: Session = Depends(get_db),
+    project_id: uuid.UUID | None = None,
+    floor: int | None = None,
+    bedrooms: int | None = None,
+    direction: Direction | None = None,
+    status: ApartmentStatus | None = None,
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+) -> dict:
+    query = select(Apartment).join(Project).where(Project.deleted_at.is_(None))
+    if project_id:
+        query = query.where(Apartment.project_id == project_id)
+    if floor is not None:
+        query = query.where(Apartment.floor == floor)
+    if bedrooms is not None:
+        query = query.where(Apartment.bedrooms == bedrooms)
+    if direction:
+        query = query.where(Apartment.direction == direction)
+    if status:
+        query = query.where(Apartment.status == status)
+    total = db.scalar(select(func.count()).select_from(query.subquery()))
+    items = list(db.scalars(query.order_by(Apartment.project_id, Apartment.floor, Apartment.code).offset((page - 1) * limit).limit(limit)))
+    return page_response(items, total, page, limit)
+
+
 @router.get("/projects/{project_id}/apartments", response_model=ApartmentPage, tags=["apartments"])
 def list_project_apartments(
     project_id: uuid.UUID,

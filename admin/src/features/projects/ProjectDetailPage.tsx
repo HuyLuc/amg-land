@@ -414,39 +414,46 @@ export function ProjectDetailPage(): JSX.Element {
         ) : null}
 
         {activeTab === "apartments" ? (
-          <div className="table-wrap apartment-table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Mã căn</th>
-                  <th>Tầng</th>
-                  <th>Diện tích</th>
-                  <th>Phòng ngủ</th>
-                  <th>Hướng</th>
-                  <th>Giá</th>
-                  <th>Trạng thái</th>
-                </tr>
-              </thead>
-              <tbody>
-                {apartments.map((apartment) => (
-                  <tr key={apartment.id}>
-                    <td>
-                      <strong>{apartment.code}</strong>
-                    </td>
-                    <td>{apartment.floor}</td>
-                    <td>{apartment.area} m2</td>
-                    <td>{apartment.bedrooms}</td>
-                    <td>{apartment.direction}</td>
-                    <td>{formatCurrency(apartment.price)}</td>
-                    <td>
-                      <StatusBadge value={apartment.status} />
-                    </td>
+          <div className="project-tab-stack">
+            <div className="amenity-toolbar">
+              <button className="primary-button" type="button" onClick={() => navigate(`/apartments?projectId=${project.id}`)}>
+                Quản lý căn hộ dự án này
+              </button>
+            </div>
+            <div className="table-wrap apartment-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mã căn</th>
+                    <th>Tầng</th>
+                    <th>Diện tích</th>
+                    <th>Phòng ngủ</th>
+                    <th>Hướng</th>
+                    <th>Giá</th>
+                    <th>Trạng thái</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-            {apartmentsQuery.isLoading ? <div className="empty-state">Đang tải căn hộ...</div> : null}
-            {!apartmentsQuery.isLoading && !apartments.length ? <div className="empty-state">Dự án này chưa có căn hộ.</div> : null}
+                </thead>
+                <tbody>
+                  {apartments.map((apartment) => (
+                    <tr key={apartment.id}>
+                      <td>
+                        <strong>{apartment.code}</strong>
+                      </td>
+                      <td>{apartment.floor}</td>
+                      <td>{apartment.area} m2</td>
+                      <td>{apartment.bedrooms}</td>
+                      <td>{apartment.direction}</td>
+                      <td>{formatCurrency(apartment.price)}</td>
+                      <td>
+                        <StatusBadge value={apartment.status} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {apartmentsQuery.isLoading ? <div className="empty-state">Đang tải căn hộ...</div> : null}
+              {!apartmentsQuery.isLoading && !apartments.length ? <div className="empty-state">Dự án này chưa có căn hộ.</div> : null}
+            </div>
           </div>
         ) : null}
       </section>
