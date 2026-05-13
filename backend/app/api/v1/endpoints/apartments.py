@@ -11,6 +11,10 @@ def list_apartments(
     bedrooms: int | None = None,
     direction: Direction | None = None,
     status: ApartmentStatus | None = None,
+    price_min: int | None = Query(default=None, ge=0),
+    price_max: int | None = Query(default=None, ge=0),
+    area_min: float | None = Query(default=None, ge=0),
+    area_max: float | None = Query(default=None, ge=0),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
 ) -> dict:
@@ -25,6 +29,14 @@ def list_apartments(
         query = query.where(Apartment.direction == direction)
     if status:
         query = query.where(Apartment.status == status)
+    if price_min is not None:
+        query = query.where(Apartment.price >= price_min)
+    if price_max is not None:
+        query = query.where(Apartment.price <= price_max)
+    if area_min is not None:
+        query = query.where(Apartment.area >= area_min)
+    if area_max is not None:
+        query = query.where(Apartment.area <= area_max)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = list(db.scalars(query.order_by(Apartment.project_id, Apartment.floor, Apartment.code).offset((page - 1) * limit).limit(limit)))
     return page_response(items, total, page, limit)
@@ -38,6 +50,10 @@ def list_project_apartments(
     bedrooms: int | None = None,
     direction: Direction | None = None,
     status: ApartmentStatus | None = None,
+    price_min: int | None = Query(default=None, ge=0),
+    price_max: int | None = Query(default=None, ge=0),
+    area_min: float | None = Query(default=None, ge=0),
+    area_max: float | None = Query(default=None, ge=0),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
 ) -> dict:
@@ -51,6 +67,14 @@ def list_project_apartments(
         query = query.where(Apartment.direction == direction)
     if status:
         query = query.where(Apartment.status == status)
+    if price_min is not None:
+        query = query.where(Apartment.price >= price_min)
+    if price_max is not None:
+        query = query.where(Apartment.price <= price_max)
+    if area_min is not None:
+        query = query.where(Apartment.area >= area_min)
+    if area_max is not None:
+        query = query.where(Apartment.area <= area_max)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = list(db.scalars(query.order_by(Apartment.floor, Apartment.code).offset((page - 1) * limit).limit(limit)))
     return page_response(items, total, page, limit)

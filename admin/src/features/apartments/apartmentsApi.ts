@@ -9,6 +9,10 @@ export interface ApartmentFilters {
   floor?: string;
   bedrooms?: string;
   direction?: string;
+  priceMin?: string;
+  priceMax?: string;
+  areaMin?: string;
+  areaMax?: string;
 }
 
 export interface ApartmentPayload {
@@ -43,6 +47,18 @@ export function listApartments(filters: ApartmentFilters = {}): Promise<PageResp
   }
   if (filters.direction) {
     params.set("direction", filters.direction);
+  }
+  if (filters.priceMin) {
+    params.set("price_min", filters.priceMin);
+  }
+  if (filters.priceMax) {
+    params.set("price_max", filters.priceMax);
+  }
+  if (filters.areaMin) {
+    params.set("area_min", filters.areaMin);
+  }
+  if (filters.areaMax) {
+    params.set("area_max", filters.areaMax);
   }
   return apiClient.get<PageResponse<Apartment>>(`/apartments?${params.toString()}`);
 }

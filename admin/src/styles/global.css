@@ -1235,7 +1235,7 @@ td select {
 
 .apartments-filter-grid {
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) 170px 120px 130px 170px auto;
+  grid-template-columns: minmax(220px, 1.4fr) 160px 92px 110px 150px repeat(4, minmax(104px, 0.6fr)) auto;
   gap: 12px;
   align-items: end;
 }
@@ -1259,6 +1259,113 @@ td select {
   border-radius: 10px;
   background: linear-gradient(180deg, #ffffff, #fbfdff);
   color: var(--ink);
+}
+
+.apartments-list-panel {
+  overflow: visible;
+}
+
+.apartment-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.apartment-list-header p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.apartment-list-stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.apartment-list-stats button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: #536176;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.apartment-list-stats button:hover,
+.apartment-list-stats button.active {
+  border-color: #d7e1ee;
+  background: #f7faff;
+  color: var(--brand);
+}
+
+.apartment-list-stats strong {
+  color: var(--ink);
+}
+
+.apartment-management-table {
+  table-layout: fixed;
+}
+
+.apartment-management-table th:nth-child(1),
+.apartment-management-table td:nth-child(1) {
+  width: 110px;
+}
+
+.apartment-management-table th:nth-child(2),
+.apartment-management-table td:nth-child(2) {
+  width: 20%;
+}
+
+.apartment-management-table th:nth-child(3),
+.apartment-management-table td:nth-child(3),
+.apartment-management-table th:nth-child(4),
+.apartment-management-table td:nth-child(4),
+.apartment-management-table th:nth-child(5),
+.apartment-management-table td:nth-child(5),
+.apartment-management-table th:nth-child(6),
+.apartment-management-table td:nth-child(6) {
+  width: 96px;
+}
+
+.apartment-management-table th:nth-child(7),
+.apartment-management-table td:nth-child(7) {
+  width: 170px;
+  text-align: center;
+}
+
+.apartment-management-table th:nth-child(8),
+.apartment-management-table td:nth-child(8) {
+  width: 128px;
+}
+
+.apartment-management-table th:nth-child(9),
+.apartment-management-table td:nth-child(9) {
+  width: 92px;
+}
+
+.apartment-project-cell,
+.money-cell {
+  font-weight: 750;
+}
+
+.apartment-project-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.money-cell {
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .projects-workspace {
@@ -2118,6 +2225,17 @@ td select {
 
   .project-detail-head {
     flex-direction: column;
+  }
+
+  .apartment-list-header,
+  .project-list-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .apartment-list-stats,
+  .project-list-stats {
+    justify-content: flex-start;
   }
 
   .project-actions {

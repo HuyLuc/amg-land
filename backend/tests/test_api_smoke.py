@@ -226,6 +226,12 @@ def test_full_api_smoke_flow() -> None:
     apartment_response = client.post("/api/v1/apartments", json=apartment_payload, headers=headers)
     assert apartment_response.status_code == 201, apartment_response.text
     apartment = apartment_response.json()
+    filtered_apartments_response = client.get(
+        f"/api/v1/apartments?project_id={project['id']}&price_min=2000000000&price_max=3000000000&area_min=70&area_max=80",
+        headers=headers,
+    )
+    assert filtered_apartments_response.status_code == 200, filtered_apartments_response.text
+    assert filtered_apartments_response.json()["total"] >= 1
     assert client.get(f"/api/v1/apartments/{apartment['id']}").status_code == 200
     assert client.get(f"/api/v1/projects/{project['id']}/apartments").status_code == 200
     assert client.put(f"/api/v1/apartments/{apartment['id']}", json={"price": 2400000000}, headers=headers).status_code == 200

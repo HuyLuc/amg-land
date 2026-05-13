@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
@@ -20,6 +20,12 @@ const statusOptions = [
 ];
 
 const apartmentStatusOptions = statusOptions.slice(1);
+
+const pageSizeOptions = [
+  { value: "10", label: "10 / trang" },
+  { value: "20", label: "20 / trang" },
+  { value: "50", label: "50 / trang" },
+];
 
 const directionOptions = [
   { value: "", label: "Tất cả hướng" },
@@ -68,6 +74,12 @@ export function ApartmentsPage(): JSX.Element {
   const [floor, setFloor] = useState("");
   const [bedrooms, setBedrooms] = useState("");
   const [direction, setDirection] = useState("");
+  const [priceMin, setPriceMin] = useState("");
+  const [priceMax, setPriceMax] = useState("");
+  const [areaMin, setAreaMin] = useState("");
+  const [areaMax, setAreaMax] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [formOpen, setFormOpen] = useState(false);
   const [editingApartment, setEditingApartment] = useState<Apartment | null>(null);
   const [form, setForm] = useState<ApartmentPayload>({ ...initialForm, project_id: initialProjectId });
@@ -80,16 +92,37 @@ export function ApartmentsPage(): JSX.Element {
   });
 
   const apartmentsQuery = useQuery({
-    queryKey: ["apartments", projectId, status, floor, bedrooms, direction],
-    queryFn: () => listApartments({ limit: 100, projectId, status, floor, bedrooms, direction }),
+    queryKey: ["apartments", page, pageSize, projectId, status, floor, bedrooms, direction, priceMin, priceMax, areaMin, areaMax],
+    queryFn: () => listApartments({ page, limit: pageSize, projectId, status, floor, bedrooms, direction, priceMin, priceMax, areaMin, areaMax }),
+  });
+
+  const allApartmentsQuery = useQuery({
+    queryKey: ["apartments", "summary", projectId, floor, bedrooms, direction, priceMin, priceMax, areaMin, areaMax],
+    queryFn: () => listApartments({ limit: 100, projectId, floor, bedrooms, direction, priceMin, priceMax, areaMin, areaMax }),
   });
 
   const projects = projectsQuery.data?.items ?? [];
   const apartments = apartmentsQuery.data?.items ?? [];
+  const allApartments = allApartmentsQuery.data?.items ?? [];
+  const totalPages = Math.max(1, Math.ceil((apartmentsQuery.data?.total ?? 0) / (apartmentsQuery.data?.limit ?? pageSize)));
 
   const projectOptions = useMemo(() => [{ value: "", label: "Tất cả dự án" }, ...projects.map((project) => ({ value: project.id, label: project.name }))], [projects]);
   const formProjectOptions = useMemo(() => projects.map((project) => ({ value: project.id, label: project.name })), [projects]);
   const projectNameById = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
+
+  const summary = useMemo(
+    () => ({
+      total: allApartmentsQuery.data?.total ?? allApartments.length,
+      available: allApartments.filter((apartment) => apartment.status === "available").length,
+      reserved: allApartments.filter((apartment) => apartment.status === "reserved").length,
+      sold: allApartments.filter((apartment) => apartment.status === "sold").length,
+    }),
+    [allApartments, allApartmentsQuery.data?.total],
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [projectId, status, floor, bedrooms, direction, priceMin, priceMax, areaMin, areaMax, pageSize]);
 
   useEffect(() => {
     if (projectId) {
@@ -128,7 +161,7 @@ export function ApartmentsPage(): JSX.Element {
   }
 
   const saveMutation = useMutation({
-    mutationFn: () => (editingApartment ? updateApartment(editingApartment.id, form) : createApartment(form)),
+    mutationFn: () => (form.project_id ? (editingApartment ? updateApartment(editingApartment.id, form) : createApartment(form)) : Promise.reject(new Error("Chưa chọn dự án"))),
     onSuccess: () => {
       showToast(editingApartment ? "Đã cập nhật căn hộ." : "Đã thêm căn hộ.");
       setFormOpen(false);
@@ -182,6 +215,22 @@ export function ApartmentsPage(): JSX.Element {
             <input value={bedrooms} onChange={(event) => setBedrooms(event.target.value)} placeholder="Tất cả" />
           </label>
           <SelectMenu label="Hướng" value={direction} options={directionOptions} onChange={setDirection} />
+          <label className="compact-input-control">
+            <span>Giá từ</span>
+            <input inputMode="numeric" value={priceMin} onChange={(event) => setPriceMin(event.target.value)} placeholder="VNĐ" />
+          </label>
+          <label className="compact-input-control">
+            <span>Giá đến</span>
+            <input inputMode="numeric" value={priceMax} onChange={(event) => setPriceMax(event.target.value)} placeholder="VNĐ" />
+          </label>
+          <label className="compact-input-control">
+            <span>DT từ</span>
+            <input inputMode="decimal" value={areaMin} onChange={(event) => setAreaMin(event.target.value)} placeholder="m2" />
+          </label>
+          <label className="compact-input-control">
+            <span>DT đến</span>
+            <input inputMode="decimal" value={areaMax} onChange={(event) => setAreaMax(event.target.value)} placeholder="m2" />
+          </label>
           <button
             className="secondary-button filter-reset"
             type="button"
@@ -191,6 +240,10 @@ export function ApartmentsPage(): JSX.Element {
               setFloor("");
               setBedrooms("");
               setDirection("");
+              setPriceMin("");
+              setPriceMax("");
+              setAreaMin("");
+              setAreaMax("");
             }}
           >
             Xóa lọc
@@ -198,13 +251,33 @@ export function ApartmentsPage(): JSX.Element {
         </div>
       </section>
 
-      <section className="panel">
-        <div className="panel-header leads-panel-header">
-          <h2>Danh sách căn hộ</h2>
-          <p>{apartmentsQuery.data?.total ?? apartments.length} căn hộ phù hợp</p>
+      <section className="panel apartments-list-panel">
+        <div className="panel-header apartment-list-header">
+          <div>
+            <h2>Danh sách căn hộ</h2>
+            <p>{apartmentsQuery.data?.total ?? apartments.length} căn hộ phù hợp</p>
+          </div>
+          <div className="apartment-list-stats" aria-label="Lọc nhanh theo trạng thái căn hộ">
+            <button className={status === "" ? "active" : ""} type="button" onClick={() => setStatus("")}>
+              <span>Tổng</span>
+              <strong>{summary.total}</strong>
+            </button>
+            <button className={status === "available" ? "active" : ""} type="button" onClick={() => setStatus("available")}>
+              <span>Còn trống</span>
+              <strong>{summary.available}</strong>
+            </button>
+            <button className={status === "reserved" ? "active" : ""} type="button" onClick={() => setStatus("reserved")}>
+              <span>Đã giữ</span>
+              <strong>{summary.reserved}</strong>
+            </button>
+            <button className={status === "sold" ? "active" : ""} type="button" onClick={() => setStatus("sold")}>
+              <span>Đã bán</span>
+              <strong>{summary.sold}</strong>
+            </button>
+          </div>
         </div>
-        <div className="table-wrap">
-          <table>
+        <div className="table-wrap apartment-management-table-wrap">
+          <table className="apartment-management-table">
             <thead>
               <tr>
                 <th>Mã căn</th>
@@ -224,14 +297,14 @@ export function ApartmentsPage(): JSX.Element {
                   <td>
                     <strong>{apartment.code}</strong>
                   </td>
-                  <td>{projectNameById.get(apartment.project_id) ?? "Dự án"}</td>
+                  <td className="apartment-project-cell">{projectNameById.get(apartment.project_id) ?? "Dự án"}</td>
                   <td>{apartment.floor}</td>
-                  <td>{apartment.area} m2</td>
+                  <td>{Number(apartment.area).toLocaleString("vi-VN")} m2</td>
                   <td>
                     {apartment.bedrooms}PN / {apartment.bathrooms}WC
                   </td>
                   <td>{formatDirection(apartment.direction)}</td>
-                  <td>{formatCurrency(apartment.price)}</td>
+                  <td className="money-cell">{formatCurrency(apartment.price)}</td>
                   <td>
                     <StatusBadge value={apartment.status} />
                   </td>
@@ -268,6 +341,25 @@ export function ApartmentsPage(): JSX.Element {
         </div>
         {apartmentsQuery.isLoading ? <div className="empty-state">Đang tải dữ liệu...</div> : null}
         {!apartmentsQuery.isLoading && !apartments.length ? <div className="empty-state">Chưa có căn hộ phù hợp.</div> : null}
+        <div className="pagination-bar">
+          <div className="pagination-summary">
+            Hiển thị <strong>{apartments.length}</strong> / <strong>{apartmentsQuery.data?.total ?? 0}</strong> căn hộ
+          </div>
+          <div className="pagination-controls">
+            <SelectMenu label="Số dòng" value={String(pageSize)} options={pageSizeOptions} onChange={(value) => setPageSize(Number(value))} />
+            <button className="pagination-nav" type="button" disabled={page <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
+              <ChevronLeft size={16} />
+              <span>Trước</span>
+            </button>
+            <button className="active" type="button">
+              {page}
+            </button>
+            <button className="pagination-nav" type="button" disabled={page >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>
+              <span>Sau</span>
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
       </section>
 
       {formOpen ? (
@@ -322,12 +414,13 @@ export function ApartmentsPage(): JSX.Element {
                 <span>Mệnh phong thủy</span>
                 <input value={form.feng_shui_element ?? ""} onChange={(event) => setForm((current) => ({ ...current, feng_shui_element: event.target.value }))} placeholder="Kim, Mộc, Thủy, Hỏa, Thổ" />
               </label>
+              {!form.project_id ? <div className="form-error">Vui lòng chọn dự án trước khi lưu căn hộ.</div> : null}
               {saveMutation.error ? <div className="form-error">Không lưu được căn hộ. Vui lòng kiểm tra dữ liệu.</div> : null}
               <div className="modal-actions">
                 <button className="secondary-button" type="button" onClick={() => setFormOpen(false)}>
                   Hủy
                 </button>
-                <button className="primary-button" type="submit" disabled={saveMutation.isPending}>
+                <button className="primary-button" type="submit" disabled={saveMutation.isPending || !form.project_id}>
                   {saveMutation.isPending ? "Đang lưu..." : "Lưu căn hộ"}
                 </button>
               </div>
