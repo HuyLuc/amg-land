@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AdminLayout } from "@/app/AdminLayout";
+import { ApartmentDetailPage } from "@/features/apartments/ApartmentDetailPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { ApartmentsPage } from "@/features/apartments/ApartmentsPage";
 import { ContactsPage } from "@/features/contacts/ContactsPage";
@@ -30,6 +31,7 @@ export function App(): JSX.Element {
         <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:slug" element={<ProjectDetailPage />} />
         <Route path="/apartments" element={<ApartmentsPage />} />
+        <Route path="/apartments/:id" element={<ApartmentDetailPage />} />
         <Route path="/posts" element={<PostsPage />} />
         <Route path="/users" element={<UsersPage />} />
       </Route>

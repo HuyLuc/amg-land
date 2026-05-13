@@ -100,6 +100,16 @@ export interface Apartment {
   feng_shui_element: string | null;
 }
 
+export interface ApartmentMedia {
+  id: string;
+  apartment_id: string;
+  media_type: "image" | "video";
+  url: string;
+  caption: string | null;
+  sort_order: number;
+  is_thumbnail: boolean;
+}
+
 export interface Post {
   id: string;
   title: string;

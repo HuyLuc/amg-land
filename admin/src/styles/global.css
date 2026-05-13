@@ -1314,6 +1314,14 @@ td select {
   table-layout: fixed;
 }
 
+.apartment-management-table tbody tr {
+  cursor: pointer;
+}
+
+.apartment-management-table tbody tr:hover {
+  background: #f4f8fd;
+}
+
 .apartment-management-table th:nth-child(1),
 .apartment-management-table td:nth-child(1) {
   width: 110px;
@@ -1366,6 +1374,213 @@ td select {
   text-align: center;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
+}
+
+.apartment-detail-panel,
+.apartment-media-panel {
+  overflow: visible;
+}
+
+.apartment-detail-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px;
+  border-bottom: 1px solid var(--line);
+  background:
+    linear-gradient(90deg, rgba(38, 63, 107, 0.08), rgba(38, 63, 107, 0)),
+    #fff;
+}
+
+.apartment-detail-head h2 {
+  margin: 5px 0 6px;
+  font-size: 24px;
+  letter-spacing: 0;
+}
+
+.apartment-detail-head p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.apartment-detail-grid {
+  padding: 20px;
+}
+
+.media-caption-input {
+  width: min(280px, 100%);
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.detail-media-upload {
+  padding: 14px 20px;
+  border-top: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-media-grid {
+  padding: 18px 20px;
+}
+
+.detail-media-grid .apartment-media-item {
+  grid-template-columns: 132px minmax(0, 1fr);
+}
+
+.detail-media-grid .apartment-media-item img,
+.detail-media-grid .apartment-media-item video,
+.detail-media-grid .video-media-tile {
+  display: grid;
+  place-items: center;
+  width: 132px;
+  height: 104px;
+  background: #eef4fb;
+  color: var(--brand);
+  object-fit: cover;
+}
+
+.apartment-media-manager {
+  display: grid;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.apartment-media-head {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.apartment-media-head div {
+  display: grid;
+  gap: 3px;
+}
+
+.apartment-media-head strong {
+  color: var(--ink);
+}
+
+.apartment-media-head span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.apartment-media-head input {
+  width: min(260px, 100%);
+  height: 36px;
+  padding: 0 11px;
+}
+
+.apartment-media-upload {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #edf2f7;
+}
+
+.apartment-media-upload label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid #d5deea;
+  border-radius: 6px;
+  background: #f8fbff;
+  color: var(--brand);
+  font-weight: 750;
+  overflow: hidden;
+}
+
+.apartment-media-upload input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.apartment-media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.apartment-media-item {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+}
+
+.apartment-media-item img,
+.video-media-tile {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  aspect-ratio: auto;
+  background: #eef4fb;
+  color: var(--brand);
+  object-fit: cover;
+}
+
+.apartment-media-item figcaption {
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px 12px;
+}
+
+.apartment-media-item figcaption strong,
+.apartment-media-item figcaption span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apartment-media-item figcaption span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.apartment-media-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 6px;
+}
+
+.apartment-media-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--brand);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .projects-workspace {

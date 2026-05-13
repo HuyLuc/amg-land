@@ -1,5 +1,5 @@
 import { apiClient } from "@/services/apiClient";
-import type { Apartment, PageResponse } from "@/services/types";
+import type { Apartment, ApartmentMedia, PageResponse } from "@/services/types";
 
 export interface ApartmentFilters {
   page?: number;
@@ -67,10 +67,36 @@ export function createApartment(payload: ApartmentPayload): Promise<Apartment> {
   return apiClient.post<Apartment>("/apartments", payload);
 }
 
+export function getApartment(id: string): Promise<Apartment> {
+  return apiClient.get<Apartment>(`/apartments/${id}`);
+}
+
 export function updateApartment(id: string, payload: Partial<ApartmentPayload>): Promise<Apartment> {
   return apiClient.put<Apartment>(`/apartments/${id}`, payload);
 }
 
 export function deleteApartment(id: string): Promise<{ message: string }> {
   return apiClient.delete<{ message: string }>(`/apartments/${id}`);
+}
+
+export function listApartmentMedia(apartmentId: string): Promise<ApartmentMedia[]> {
+  return apiClient.get<ApartmentMedia[]>(`/apartments/${apartmentId}/media`);
+}
+
+export function uploadApartmentMedia(apartmentId: string, mediaType: "image" | "video", file: File, caption?: string | null): Promise<ApartmentMedia> {
+  const formData = new FormData();
+  formData.append("media_type", mediaType);
+  formData.append("file", file);
+  if (caption?.trim()) {
+    formData.append("caption", caption.trim());
+  }
+  return apiClient.post<ApartmentMedia>(`/apartments/${apartmentId}/media`, formData);
+}
+
+export function updateApartmentMedia(id: string, payload: { caption?: string | null; sort_order?: number; is_thumbnail?: boolean }): Promise<ApartmentMedia> {
+  return apiClient.put<ApartmentMedia>(`/apartment-media/${id}`, payload);
+}
+
+export function deleteApartmentMedia(id: string): Promise<{ message: string }> {
+  return apiClient.delete<{ message: string }>(`/apartment-media/${id}`);
 }

@@ -16,6 +16,8 @@ from app.api.v1.schemas import (
     AmenityOut,
     AmenityUpdate,
     ApartmentCreate,
+    ApartmentMediaOut,
+    ApartmentMediaUpdate,
     ApartmentPage,
     ApartmentOut,
     ApartmentUpdate,
@@ -52,11 +54,11 @@ from app.api.v1.schemas import (
 )
 from app.core.config import settings
 from app.core.security import create_access_token, generate_opaque_token, hash_password, hash_token, verify_password
-from app.integrations.storage import delete_public_object, upload_floor_plan_image, upload_project_image
+from app.integrations.storage import delete_public_object, upload_apartment_media, upload_floor_plan_image, upload_project_image
 from app.models.activity_log import ActivityLog
 from app.models.amenity import Amenity, ProjectAmenity
 from app.models.analytics_event import AnalyticsEvent
-from app.models.apartment import Apartment, ApartmentStatus, Direction
+from app.models.apartment import Apartment, ApartmentMedia, ApartmentMediaType, ApartmentStatus, Direction
 from app.models.auth_token import PasswordResetToken, RefreshToken
 from app.models.chat_session import ChatSession
 from app.models.contact_request import ContactRequest, ContactStatus

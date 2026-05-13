@@ -88,6 +88,75 @@ def get_apartment(apartment_id: uuid.UUID, db: Session = Depends(get_db)) -> Apa
     return apartment
 
 
+@router.get("/apartments/{apartment_id}/media", response_model=list[ApartmentMediaOut], tags=["apartments"])
+def list_apartment_media(apartment_id: uuid.UUID, db: Session = Depends(get_db)) -> list[ApartmentMedia]:
+    if db.get(Apartment, apartment_id) is None:
+        raise HTTPException(status_code=404, detail="Apartment not found")
+    return list(db.scalars(select(ApartmentMedia).where(ApartmentMedia.apartment_id == apartment_id).order_by(ApartmentMedia.sort_order, ApartmentMedia.id)))
+
+
+@router.post("/apartments/{apartment_id}/media", response_model=ApartmentMediaOut, status_code=201, tags=["apartments"])
+def upload_apartment_media_item(
+    apartment_id: uuid.UUID,
+    current_user: StaffUser,
+    db: Session = Depends(get_db),
+    media_type: ApartmentMediaType = Form(...),
+    caption: str | None = Form(default=None),
+    file: UploadFile = File(...),
+) -> ApartmentMedia:
+    if db.get(Apartment, apartment_id) is None:
+        raise HTTPException(status_code=404, detail="Apartment not found")
+
+    stored = upload_apartment_media(apartment_id, file, media_type.value)
+    is_thumbnail = False
+    if media_type == ApartmentMediaType.image:
+        is_thumbnail = db.scalar(
+            select(func.count()).select_from(ApartmentMedia).where(ApartmentMedia.apartment_id == apartment_id, ApartmentMedia.media_type == ApartmentMediaType.image)
+        ) == 0
+    sort_order = db.scalar(select(func.count()).select_from(ApartmentMedia).where(ApartmentMedia.apartment_id == apartment_id)) or 0
+    media = ApartmentMedia(apartment_id=apartment_id, media_type=media_type, url=stored.public_url, caption=caption, sort_order=sort_order, is_thumbnail=is_thumbnail)
+    db.add(media)
+    log_activity(db, current_user, "apartments.media.upload", "apartment", apartment_id, {"media_type": media_type.value})
+    commit_or_400(db)
+    db.refresh(media)
+    return media
+
+
+@router.put("/apartment-media/{media_id}", response_model=ApartmentMediaOut, tags=["apartments"])
+def update_apartment_media_item(media_id: uuid.UUID, payload: ApartmentMediaUpdate, current_user: StaffUser, db: Session = Depends(get_db)) -> ApartmentMedia:
+    media = db.get(ApartmentMedia, media_id)
+    if media is None:
+        raise HTTPException(status_code=404, detail="Apartment media not found")
+
+    values = payload.model_dump(exclude_unset=True)
+    if values.get("is_thumbnail") is True:
+        if media.media_type != ApartmentMediaType.image:
+            raise HTTPException(status_code=400, detail="Only images can be used as thumbnail")
+        for item in db.scalars(select(ApartmentMedia).where(ApartmentMedia.apartment_id == media.apartment_id, ApartmentMedia.media_type == ApartmentMediaType.image, ApartmentMedia.id != media.id)):
+            item.is_thumbnail = False
+
+    for key, value in values.items():
+        setattr(media, key, value)
+    log_activity(db, current_user, "apartments.media.update", "apartment", media.apartment_id, {"media_id": str(media.id)})
+    commit_or_400(db)
+    db.refresh(media)
+    return media
+
+
+@router.delete("/apartment-media/{media_id}", response_model=dict, tags=["apartments"])
+def delete_apartment_media_item(media_id: uuid.UUID, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+    media = db.get(ApartmentMedia, media_id)
+    if media is None:
+        raise HTTPException(status_code=404, detail="Apartment media not found")
+    apartment_id = media.apartment_id
+    media_url = media.url
+    db.delete(media)
+    log_activity(db, current_user, "apartments.media.delete", "apartment", apartment_id, {"media_id": str(media_id)})
+    db.commit()
+    delete_public_object(media_url)
+    return {"message": "Deleted"}
+
+
 @router.post("/apartments", response_model=ApartmentOut, status_code=201, tags=["apartments"])
 def create_apartment(payload: ApartmentCreate, _: StaffUser, db: Session = Depends(get_db)) -> Apartment:
     get_project_or_404(db, payload.project_id)

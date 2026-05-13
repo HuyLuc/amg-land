@@ -1,13 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
-import { createApartment, deleteApartment, listApartments, updateApartment, type ApartmentPayload } from "@/features/apartments/apartmentsApi";
+import {
+  createApartment,
+  deleteApartment,
+  listApartments,
+  updateApartment,
+  type ApartmentPayload,
+} from "@/features/apartments/apartmentsApi";
 import { formatDirection } from "@/features/apartments/directions";
 import { listProjects } from "@/features/projects/projectsApi";
 import type { Apartment } from "@/services/types";
@@ -67,6 +73,7 @@ function formatCurrency(value: number): string {
 
 export function ApartmentsPage(): JSX.Element {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialProjectId = searchParams.get("projectId") ?? "";
   const [projectId, setProjectId] = useState(initialProjectId);
@@ -293,7 +300,7 @@ export function ApartmentsPage(): JSX.Element {
             </thead>
             <tbody>
               {apartments.map((apartment) => (
-                <tr key={apartment.id}>
+                <tr key={apartment.id} onClick={() => navigate(`/apartments/${apartment.id}`)}>
                   <td>
                     <strong>{apartment.code}</strong>
                   </td>
@@ -310,7 +317,15 @@ export function ApartmentsPage(): JSX.Element {
                   </td>
                   <td>
                     <div className="amenity-actions">
-                      <button type="button" title="Sửa căn hộ" aria-label="Sửa căn hộ" onClick={() => openEditForm(apartment)}>
+                      <button
+                        type="button"
+                        title="Sửa căn hộ"
+                        aria-label="Sửa căn hộ"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openEditForm(apartment);
+                        }}
+                      >
                         <Pencil size={14} />
                       </button>
                       <button
@@ -318,7 +333,8 @@ export function ApartmentsPage(): JSX.Element {
                         type="button"
                         title="Xóa căn hộ"
                         aria-label="Xóa căn hộ"
-                        onClick={() =>
+                        onClick={(event) => {
+                          event.stopPropagation();
                           setConfirmDialog({
                             title: "Xóa căn hộ",
                             description: `Bạn chắc chắn muốn xóa căn hộ "${apartment.code}"? Thao tác này sẽ gỡ căn hộ khỏi danh sách quản lý.`,
@@ -327,8 +343,8 @@ export function ApartmentsPage(): JSX.Element {
                               setConfirmDialog(null);
                               deleteMutation.mutate(apartment.id);
                             },
-                          })
-                        }
+                          });
+                        }}
                       >
                         <Trash2 size={14} />
                       </button>

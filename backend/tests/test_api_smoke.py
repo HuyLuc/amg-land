@@ -235,6 +235,17 @@ def test_full_api_smoke_flow() -> None:
     assert client.get(f"/api/v1/apartments/{apartment['id']}").status_code == 200
     assert client.get(f"/api/v1/projects/{project['id']}/apartments").status_code == 200
     assert client.put(f"/api/v1/apartments/{apartment['id']}", json={"price": 2400000000}, headers=headers).status_code == 200
+    apartment_media_response = client.post(
+        f"/api/v1/apartments/{apartment['id']}/media",
+        data={"media_type": "image", "caption": "Living room"},
+        files={"file": ("apartment.jpg", b"fake-apartment-image", "image/jpeg")},
+        headers=headers,
+    )
+    assert apartment_media_response.status_code == 201, apartment_media_response.text
+    apartment_media = apartment_media_response.json()
+    assert apartment_media["is_thumbnail"] is True
+    assert client.get(f"/api/v1/apartments/{apartment['id']}/media", headers=headers).status_code == 200
+    assert client.put(f"/api/v1/apartment-media/{apartment_media['id']}", json={"caption": "Updated media"}, headers=headers).status_code == 200
 
     assert client.post(
         "/api/v1/analytics/events",
@@ -275,6 +286,7 @@ def test_full_api_smoke_flow() -> None:
 
     assert client.delete(f"/api/v1/posts/{post['id']}", headers=headers).status_code == 200
     assert client.delete(f"/api/v1/floor-plans/{floor_plan['id']}", headers=headers).status_code == 200
+    assert client.delete(f"/api/v1/apartment-media/{apartment_media['id']}", headers=headers).status_code == 200
     assert client.delete(f"/api/v1/projects/{project['id']}/amenities/{amenity['id']}", headers=headers).status_code == 200
     assert client.delete(f"/api/v1/apartments/{apartment['id']}", headers=headers).status_code == 200
     assert client.delete(f"/api/v1/projects/{project['id']}", headers=headers).status_code == 200

@@ -6,7 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.amenity import AmenityCategory
-from app.models.apartment import ApartmentStatus, Direction
+from app.models.apartment import ApartmentMediaType, ApartmentStatus, Direction
 from app.models.contact_request import ContactStatus
 from app.models.post import PostStatus
 from app.models.project import ProjectStatus
@@ -182,6 +182,22 @@ class ApartmentOut(ORMModel):
     price: int
     status: ApartmentStatus
     feng_shui_element: str | None = None
+
+
+class ApartmentMediaUpdate(BaseModel):
+    caption: str | None = None
+    sort_order: int | None = None
+    is_thumbnail: bool | None = None
+
+
+class ApartmentMediaOut(ORMModel):
+    id: UUID
+    apartment_id: UUID
+    media_type: ApartmentMediaType
+    url: str
+    caption: str | None = None
+    sort_order: int
+    is_thumbnail: bool
 
 
 class AmenityCreate(BaseModel):

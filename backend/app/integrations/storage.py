@@ -9,7 +9,9 @@ from minio.error import S3Error
 
 
 ALLOWED_IMAGE_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
+ALLOWED_VIDEO_CONTENT_TYPES = {"video/mp4", "video/webm", "video/quicktime"}
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024
+MAX_VIDEO_UPLOAD_SIZE = 80 * 1024 * 1024
 
 
 @dataclass(frozen=True)
@@ -48,19 +50,29 @@ def upload_floor_plan_image(project_id: UUID, file: UploadFile) -> StoredObject:
     return upload_project_object(project_id, file, "floor-plans")
 
 
+def upload_apartment_media(apartment_id: UUID, file: UploadFile, media_type: str) -> StoredObject:
+    return upload_media_object("apartments", apartment_id, file, media_type)
+
+
 def upload_project_object(project_id: UUID, file: UploadFile, folder: str) -> StoredObject:
-    if file.content_type not in ALLOWED_IMAGE_CONTENT_TYPES:
-        raise HTTPException(status_code=400, detail="Only JPG, PNG and WebP images are allowed")
+    return upload_media_object("projects", project_id, file, folder, image_only=True)
+
+
+def upload_media_object(owner_folder: str, owner_id: UUID, file: UploadFile, folder: str, image_only: bool = False) -> StoredObject:
+    allowed_types = ALLOWED_IMAGE_CONTENT_TYPES if image_only or folder == "image" else ALLOWED_VIDEO_CONTENT_TYPES
+    max_size = MAX_UPLOAD_SIZE if image_only or folder == "image" else MAX_VIDEO_UPLOAD_SIZE
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Only JPG, PNG, WebP, MP4, WebM and MOV files are allowed")
 
     bucket = os.getenv("MINIO_BUCKET", "amg-land-media")
     filename = sanitize_filename(file.filename or "image")
-    object_name = f"projects/{project_id}/{folder}/{filename}"
+    object_name = f"{owner_folder}/{owner_id}/{folder}/{filename}"
 
     file.file.seek(0, os.SEEK_END)
     size = file.file.tell()
     file.file.seek(0)
-    if size <= 0 or size > MAX_UPLOAD_SIZE:
-        raise HTTPException(status_code=413, detail="File size must be between 1 byte and 5MB")
+    if size <= 0 or size > max_size:
+        raise HTTPException(status_code=413, detail=f"File size must be between 1 byte and {max_size // (1024 * 1024)}MB")
 
     client = get_minio_client()
     try:

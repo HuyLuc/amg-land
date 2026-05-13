@@ -1,7 +1,7 @@
 from app.models.activity_log import ActivityLog
 from app.models.amenity import Amenity, ProjectAmenity
 from app.models.analytics_event import AnalyticsEvent
-from app.models.apartment import Apartment
+from app.models.apartment import Apartment, ApartmentMedia
 from app.models.auth_token import PasswordResetToken, RefreshToken
 from app.models.chat_session import ChatSession
 from app.models.contact_request import ContactRequest
@@ -15,6 +15,7 @@ __all__ = [
     "ActivityLog",
     "AnalyticsEvent",
     "Apartment",
+    "ApartmentMedia",
     "Category",
     "ChatSession",
     "ContactRequest",

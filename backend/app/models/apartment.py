@@ -15,6 +15,11 @@ class ApartmentStatus(str, Enum):
     sold = "sold"
 
 
+class ApartmentMediaType(str, Enum):
+    image = "image"
+    video = "video"
+
+
 class Direction(str, Enum):
     N = "N"
     S = "S"
@@ -42,3 +47,17 @@ class Apartment(UUIDPrimaryKeyMixin, Base):
 
     project = relationship("Project", back_populates="apartments")
     analytics_events = relationship("AnalyticsEvent", back_populates="apartment")
+    media = relationship("ApartmentMedia", back_populates="apartment", cascade="all, delete-orphan")
+
+
+class ApartmentMedia(UUIDPrimaryKeyMixin, Base):
+    __tablename__ = "apartment_media"
+
+    apartment_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("apartments.id", ondelete="CASCADE"), index=True)
+    media_type: Mapped[ApartmentMediaType] = mapped_column(SqlEnum(ApartmentMediaType, name="apartment_media_type"), index=True)
+    url: Mapped[str] = mapped_column(String(500))
+    caption: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    sort_order: Mapped[int] = mapped_column(default=0)
+    is_thumbnail: Mapped[bool] = mapped_column(default=False)
+
+    apartment = relationship("Apartment", back_populates="media")
