@@ -29,6 +29,11 @@ textarea {
   font: inherit;
 }
 
+input[type="password"]::-ms-clear,
+input[type="password"]::-ms-reveal {
+  display: none;
+}
+
 button {
   cursor: pointer;
 }

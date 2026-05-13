@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { TextInput } from "../components/ui/TextInput";
 import { AuthShell } from "../features/auth/components/AuthShell";
 import type { AuthUser } from "../features/auth/types";
@@ -13,15 +13,23 @@ type RegisterPageProps = {
 export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
 
   const submitRegister = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (password !== confirmPassword) {
+      setPasswordError("Mật khẩu nhập lại chưa khớp.");
+      return;
+    }
+
+    setPasswordError("");
     onRegister({
       name: name || "Khách hàng AMG",
       email: email || "khachhang@amgland.vn",
-      phone: phone || "0900 000 000",
+      phone: "Chưa cập nhật",
       role: "Nhà đầu tư"
     });
   };
@@ -29,28 +37,38 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
   return (
     <AuthShell
       title="Đăng ký tài khoản"
-      description="Tạo tài khoản để lưu dự án quan tâm, tham gia cộng đồng, nhận tư vấn và theo dõi lịch hẹn với AMG Land."
+      description="Tạo tài khoản để lưu dự án quan tâm và theo dõi lịch hẹn với AMG Land."
     >
-      <form className="mx-auto grid max-w-md gap-5" onSubmit={submitRegister}>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-gold-500">Tạo hồ sơ khách hàng</p>
-          <h2 className="font-display mt-2 text-3xl font-bold text-brand-900">Bắt đầu với AMG Land</h2>
-        </div>
-
-        <TextInput label="Họ và tên" onChange={setName} placeholder="Nhập họ tên" value={name} />
-        <TextInput label="Email" onChange={setEmail} placeholder="email@example.com" type="email" value={email} />
-        <TextInput label="Số điện thoại" onChange={setPhone} placeholder="0900 000 000" type="tel" value={phone} />
-        <TextInput label="Mật khẩu" onChange={setPassword} placeholder="Tối thiểu 8 ký tự" type="password" value={password} />
-
-        <div className="grid gap-2 rounded bg-brand-50 p-4 text-sm text-slate-700">
-          {["Nhận thông báo dự án phù hợp", "Lưu căn hộ yêu thích", "Tương tác trong cộng đồng khách hàng"].map((item) => (
-            <span className="flex items-center gap-2" key={item}>
-              <Check className="text-brand-900" size={16} />
-              {item}
-            </span>
-          ))}
-        </div>
-
+      <form className="mx-auto grid max-w-md gap-4" onSubmit={submitRegister}>
+        <TextInput autoComplete="name" label="Họ và tên" onChange={setName} placeholder="Nhập họ tên" required value={name} />
+        <TextInput autoComplete="email" label="Email" onChange={setEmail} placeholder="email@example.com" required type="email" value={email} />
+        <TextInput
+          autoComplete="new-password"
+          label="Mật khẩu"
+          minLength={8}
+          onChange={(value) => {
+            setPassword(value);
+            setPasswordError("");
+          }}
+          placeholder="Tối thiểu 8 ký tự"
+          required
+          type="password"
+          value={password}
+        />
+        <TextInput
+          autoComplete="new-password"
+          error={passwordError}
+          label="Nhập lại mật khẩu"
+          minLength={8}
+          onChange={(value) => {
+            setConfirmPassword(value);
+            setPasswordError("");
+          }}
+          placeholder="Nhập lại mật khẩu"
+          required
+          type="password"
+          value={confirmPassword}
+        />
         <button className="btn-primary h-12 justify-center" type="submit">
           Tạo tài khoản
           <ArrowRight size={17} />

@@ -1,0 +1,252 @@
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5]:
+      - button "AMG News AMG Land" [ref=e6] [cursor=pointer]:
+        - img [ref=e8]
+        - generic [ref=e12]:
+          - generic [ref=e13]: AMG News
+          - generic [ref=e14]: AMG Land
+      - navigation [ref=e15]:
+        - button "Trang chủ" [ref=e16] [cursor=pointer]: Trang chủ
+        - button "Dự án" [ref=e18] [cursor=pointer]
+        - button "Tin tức" [ref=e19] [cursor=pointer]
+        - button "Cộng đồng" [ref=e20] [cursor=pointer]
+        - button "Liên hệ" [ref=e21] [cursor=pointer]
+      - generic [ref=e22]:
+        - button "Đăng nhập" [ref=e23] [cursor=pointer]
+        - button "Đăng ký" [ref=e24] [cursor=pointer]
+  - main [ref=e25]:
+    - generic [ref=e26]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - heading "AMG News" [level=1] [ref=e32]
+          - paragraph [ref=e33]: Nền tảng thông tin bất động sản chính thống của AMG Land, kết nối khách hàng với dự án và căn hộ phù hợp.
+          - generic [ref=e34]:
+            - button "Xem dự án" [ref=e35] [cursor=pointer]:
+              - text: Xem dự án
+              - img [ref=e36]
+            - button "Đặt lịch tư vấn" [ref=e38] [cursor=pointer]
+        - generic [ref=e40]:
+          - img "Không gian dự án AMG Land 1" [ref=e41]
+          - img "Không gian dự án AMG Land 2" [ref=e42]
+          - img "Không gian dự án AMG Land 3" [ref=e43]
+          - generic [ref=e46]:
+            - img [ref=e48]
+            - generic [ref=e51]:
+              - generic [ref=e52]: Khu vực nổi bật
+              - generic [ref=e53]: Tây Hồ, Hà Nội
+          - generic [ref=e55]:
+            - img [ref=e56]
+            - generic [ref=e59]: Gợi ý hướng Đông Nam
+          - generic [ref=e60]:
+            - button "Chuyển ảnh 1" [ref=e61] [cursor=pointer]
+            - button "Chuyển ảnh 2" [ref=e62] [cursor=pointer]
+            - button "Chuyển ảnh 3" [ref=e63] [cursor=pointer]
+          - generic [ref=e66]:
+            - generic [ref=e67]:
+              - generic [ref=e68]: 12+
+              - generic [ref=e69]: Dự án
+            - generic [ref=e70]:
+              - generic [ref=e71]: 480+
+              - generic [ref=e72]: Căn hộ
+            - generic [ref=e73]:
+              - generic [ref=e74]: 2.4k
+              - generic [ref=e75]: Quan tâm
+      - generic [ref=e77]:
+        - generic [ref=e79]:
+          - img [ref=e81]
+          - generic [ref=e84]:
+            - generic [ref=e85]: Khu vực
+            - combobox "Khu vực" [ref=e86]:
+              - option "Tất cả" [selected]
+              - option "Tây Hồ"
+              - option "Nam Từ Liêm"
+              - option "Long Biên"
+          - img [ref=e87]
+        - generic [ref=e89]:
+          - img [ref=e91]
+          - generic [ref=e92]:
+            - generic [ref=e93]: Ngân sách
+            - combobox "Ngân sách" [ref=e94]:
+              - option "Tất cả" [selected]
+              - option "Dưới 3 tỷ"
+              - option "3 - 5 tỷ"
+              - option "Trên 5 tỷ"
+          - img [ref=e95]
+        - generic [ref=e97]:
+          - img [ref=e99]
+          - generic [ref=e102]:
+            - generic [ref=e103]: Số phòng
+            - combobox "Số phòng" [ref=e104]:
+              - option "Tất cả" [selected]
+              - option "2 PN"
+              - option "3 PN"
+          - img [ref=e105]
+        - button "Tìm kiếm" [ref=e107] [cursor=pointer]:
+          - img [ref=e108]
+          - text: Tìm kiếm
+      - generic [ref=e111]:
+        - generic [ref=e112]:
+          - heading "Dự án nổi bật" [level=2] [ref=e113]
+          - paragraph [ref=e114]: Danh sách dự án đang được AMG Land phân phối và cập nhật thông tin mới nhất.
+        - generic [ref=e115]:
+          - article [ref=e116]:
+            - img "The Aurora Riverside" [ref=e118]
+            - generic [ref=e119]:
+              - generic [ref=e120]:
+                - generic [ref=e121]: Đang mở bán
+                - generic [ref=e122]: Từ 4.2 tỷ
+              - heading "The Aurora Riverside" [level=3] [ref=e123]
+              - paragraph [ref=e124]:
+                - img [ref=e125]
+                - text: Võ Chí Công, Tây Hồ, Hà Nội
+              - paragraph [ref=e128]: Cụm căn hộ ven sông với mật độ xây dựng thấp, tầm nhìn mở và hệ tiện ích nội khu gần như khép kín.
+              - button "Xem chi tiết" [ref=e129] [cursor=pointer]:
+                - text: Xem chi tiết
+                - img [ref=e130]
+          - article [ref=e132]:
+            - img "AMG Sky Garden" [ref=e134]
+            - generic [ref=e135]:
+              - generic [ref=e136]:
+                - generic [ref=e137]: Sắp mở bán
+                - generic [ref=e138]: Từ 3.1 tỷ
+              - heading "AMG Sky Garden" [level=3] [ref=e139]
+              - paragraph [ref=e140]:
+                - img [ref=e141]
+                - text: Đại lộ Thăng Long, Nam Từ Liêm, Hà Nội
+              - paragraph [ref=e144]: Tòa tháp căn hộ hiện đại gần trung tâm hành chính mới, phù hợp gia đình trẻ và nhà đầu tư dài hạn.
+              - button "Xem chi tiết" [ref=e145] [cursor=pointer]:
+                - text: Xem chi tiết
+                - img [ref=e146]
+          - article [ref=e148]:
+            - img "Lotus Residence" [ref=e150]
+            - generic [ref=e151]:
+              - generic [ref=e152]:
+                - generic [ref=e153]: Đang mở bán
+                - generic [ref=e154]: Từ 2.8 tỷ
+              - heading "Lotus Residence" [level=3] [ref=e155]
+              - paragraph [ref=e156]:
+                - img [ref=e157]
+                - text: Ngọc Thụy, Long Biên, Hà Nội
+              - paragraph [ref=e160]: Khu căn hộ xanh tại cửa ngõ phía Đông, kết nối nhanh vào phố cổ và các tuyến cầu lớn.
+              - button "Xem chi tiết" [ref=e161] [cursor=pointer]:
+                - text: Xem chi tiết
+                - img [ref=e162]
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - heading "Gợi ý căn hộ theo phong thủy" [level=2] [ref=e169]
+          - paragraph [ref=e170]: Bộ lọc theo ngày sinh, ngân sách và hướng nhà giúp khách hàng rút ngắn thời gian chọn căn hộ phù hợp.
+          - button "Thử bộ lọc" [ref=e171] [cursor=pointer]:
+            - text: Thử bộ lọc
+            - img [ref=e172]
+        - generic [ref=e174]:
+          - generic [ref=e175]:
+            - generic [ref=e176]: Kim
+            - generic [ref=e177]: Tây, Tây Bắc, Tây Nam
+          - generic [ref=e178]:
+            - generic [ref=e179]: Mộc
+            - generic [ref=e180]: Đông, Đông Nam, Nam
+          - generic [ref=e181]:
+            - generic [ref=e182]: Thủy
+            - generic [ref=e183]: Bắc, Đông, Đông Nam
+          - generic [ref=e184]:
+            - generic [ref=e185]: Hỏa
+            - generic [ref=e186]: Nam, Đông, Đông Nam
+      - generic [ref=e187]:
+        - generic [ref=e188]:
+          - heading "Tin tức mới" [level=2] [ref=e189]
+          - paragraph [ref=e190]: Cập nhật thị trường, kinh nghiệm mua căn hộ và góc nhìn phong thủy ứng dụng.
+        - generic [ref=e191]:
+          - article [ref=e192]:
+            - img "Căn hộ ven sông tiếp tục hút nhu cầu ở thực tại Hà Nội" [ref=e194]
+            - generic [ref=e195]:
+              - generic [ref=e196]:
+                - generic [ref=e197]: Thị trường
+                - generic [ref=e198]: 18/03/2026
+              - heading "Căn hộ ven sông tiếp tục hút nhu cầu ở thực tại Hà Nội" [level=3] [ref=e199]
+              - paragraph [ref=e200]: Người mua ưu tiên không gian sống thoáng, kết nối giao thông và tiện ích gần nhà.
+          - article [ref=e201]:
+            - img "Cách đọc bảng giá căn hộ để tránh bỏ sót chi phí" [ref=e203]
+            - generic [ref=e204]:
+              - generic [ref=e205]:
+                - generic [ref=e206]: Hướng dẫn
+                - generic [ref=e207]: 16/03/2026
+              - heading "Cách đọc bảng giá căn hộ để tránh bỏ sót chi phí" [level=3] [ref=e208]
+              - paragraph [ref=e209]: Ngoài giá niêm yết, khách hàng cần quan tâm phí bảo trì, nội thất và tiến độ thanh toán.
+          - article [ref=e210]:
+            - img "Hướng nhà và yếu tố phong thủy trong quyết định mua căn hộ" [ref=e212]
+            - generic [ref=e213]:
+              - generic [ref=e214]:
+                - generic [ref=e215]: Phong thủy
+                - generic [ref=e216]: 12/03/2026
+              - heading "Hướng nhà và yếu tố phong thủy trong quyết định mua căn hộ" [level=3] [ref=e217]
+              - paragraph [ref=e218]: Hướng căn hộ nên được xem cùng ngân sách, nhu cầu sử dụng và khả năng thanh khoản.
+        - button "Xem tất cả tin tức" [ref=e220] [cursor=pointer]
+      - generic [ref=e222]:
+        - generic [ref=e224]:
+          - heading "Cần tư vấn dự án phù hợp?" [level=2] [ref=e225]
+          - paragraph [ref=e226]: Để lại thông tin, đội ngũ AMG Land sẽ liên hệ và gửi bảng hàng phù hợp nhu cầu.
+        - button "Gửi thông tin" [ref=e227] [cursor=pointer]:
+          - text: Gửi thông tin
+          - img [ref=e228]
+    - button "Mở chatbot" [ref=e232] [cursor=pointer]:
+      - img [ref=e234]
+  - contentinfo [ref=e236]:
+    - generic [ref=e239]:
+      - generic [ref=e240]:
+        - generic [ref=e241]:
+          - button "AMG News AMG Land" [ref=e242] [cursor=pointer]:
+            - img [ref=e244]
+            - generic [ref=e248]:
+              - generic [ref=e249]: AMG News
+              - generic [ref=e250]: AMG Land
+          - paragraph [ref=e251]: Nền tảng thông tin bất động sản, bảng tin dự án và kênh kết nối khách hàng chính thống của AMG Land.
+          - generic [ref=e252]:
+            - generic [ref=e253]: Dự án chọn lọc
+            - generic [ref=e254]: Tư vấn phong thủy
+            - generic [ref=e255]: Cộng đồng khách hàng
+        - generic [ref=e256]:
+          - heading "Điều hướng" [level=2] [ref=e257]
+          - generic [ref=e258]:
+            - button "Trang chủ" [ref=e259] [cursor=pointer]:
+              - img [ref=e260]
+              - text: Trang chủ
+            - button "Dự án" [ref=e262] [cursor=pointer]:
+              - img [ref=e263]
+              - text: Dự án
+            - button "Tin tức" [ref=e265] [cursor=pointer]:
+              - img [ref=e266]
+              - text: Tin tức
+            - button "Cộng đồng" [ref=e268] [cursor=pointer]:
+              - img [ref=e269]
+              - text: Cộng đồng
+            - button "Liên hệ" [ref=e271] [cursor=pointer]:
+              - img [ref=e272]
+              - text: Liên hệ
+        - generic [ref=e274]:
+          - heading "Liên hệ" [level=2] [ref=e275]
+          - generic [ref=e276]:
+            - generic [ref=e277]:
+              - img [ref=e279]
+              - generic [ref=e281]: 0900 000 000
+            - generic [ref=e282]:
+              - img [ref=e284]
+              - generic [ref=e287]: contact@amgland.vn
+            - generic [ref=e288]:
+              - img [ref=e290]
+              - generic [ref=e293]: Hà Nội, Việt Nam
+          - button "Đăng ký tư vấn" [ref=e294] [cursor=pointer]:
+            - text: Đăng ký tư vấn
+            - img [ref=e295]
+        - generic [ref=e297]:
+          - heading "Nhận tin mới" [level=2] [ref=e298]
+          - paragraph [ref=e299]: Nhận cập nhật dự án, bảng hàng mới và các bài phân tích thị trường từ AMG News.
+          - generic [ref=e300]:
+            - textbox "Email của bạn" [ref=e301]
+            - button [ref=e302] [cursor=pointer]:
+              - img [ref=e303]
+      - generic [ref=e306]:
+        - paragraph [ref=e307]: © 2026 AMG News. All rights reserved.
+        - generic [ref=e308]:
+          - button "Chính sách bảo mật" [ref=e309] [cursor=pointer]
+          - button "Điều khoản sử dụng" [ref=e310] [cursor=pointer]
