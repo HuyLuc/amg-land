@@ -38,10 +38,15 @@ button {
 .admin-shell {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
   background: var(--brand);
   color: #fff;
   padding: 22px 16px;
@@ -110,9 +115,14 @@ td span {
 
 .workspace {
   min-width: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 18;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1861,6 +1871,7 @@ td select {
 @media (max-width: 920px) {
   .admin-shell {
     grid-template-columns: 1fr;
+    overflow: auto;
   }
 
   .sidebar {
@@ -1868,8 +1879,15 @@ td select {
     inset: 0 auto 0 0;
     z-index: 20;
     width: 260px;
+    height: 100vh;
     transform: translateX(-100%);
     transition: transform 160ms ease;
+  }
+
+  .workspace {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
   }
 
   .sidebar-open {
