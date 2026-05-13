@@ -50,6 +50,7 @@ from app.api.v1.schemas import (
     UserCreate,
     UserOut,
     UserPage,
+    UserPasswordUpdate,
     UserUpdate,
 )
 from app.core.config import settings

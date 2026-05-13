@@ -10,10 +10,13 @@ import { PostsPage } from "@/features/posts/PostsPage";
 import { ProjectDetailPage } from "@/features/projects/ProjectDetailPage";
 import { ProjectsPage } from "@/features/projects/ProjectsPage";
 import { UsersPage } from "@/features/users/UsersPage";
-import { isAuthenticated } from "@/services/authStorage";
+import { getAuthUser, isAuthenticated } from "@/services/authStorage";
 
 function ProtectedRoute(): JSX.Element {
   if (!isAuthenticated()) {
+    return <Navigate to="/login" replace />;
+  }
+  if (getAuthUser()?.role === "customer") {
     return <Navigate to="/login" replace />;
   }
 

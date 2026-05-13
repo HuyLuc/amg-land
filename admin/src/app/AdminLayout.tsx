@@ -10,13 +10,14 @@ const navItems = [
   { to: "/projects", label: "Dự án", icon: Building2 },
   { to: "/apartments", label: "Căn hộ", icon: Home },
   { to: "/posts", label: "Bài viết", icon: FileText },
-  { to: "/users", label: "Nhân sự", icon: Users },
+  { to: "/users", label: "Tài khoản", icon: Users },
 ];
 
 const roleLabels: Record<string, string> = {
   admin: "Quản lý",
   editor: "Nhân viên",
   viewer: "Chỉ xem",
+  customer: "Khách hàng",
 };
 
 export function AdminLayout(): JSX.Element {

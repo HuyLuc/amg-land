@@ -12,6 +12,7 @@ class UserRole(str, Enum):
     admin = "admin"
     editor = "editor"
     viewer = "viewer"
+    customer = "customer"
 
 
 class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -20,6 +21,7 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(255))
     full_name: Mapped[str] = mapped_column(String(100))
+    phone: Mapped[str | None] = mapped_column(String(20), nullable=True, index=True)
     role: Mapped[UserRole] = mapped_column(SqlEnum(UserRole, name="user_role"), default=UserRole.editor)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     failed_attempts: Mapped[int] = mapped_column(Integer, default=0)

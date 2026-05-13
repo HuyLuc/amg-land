@@ -2,7 +2,7 @@ export interface AuthUser {
   id: string;
   email: string;
   full_name: string;
-  role: "admin" | "editor" | "viewer";
+  role: "admin" | "editor" | "viewer" | "customer";
 }
 
 export interface LoginResponse {
@@ -127,7 +127,8 @@ export interface User {
   id: string;
   email: string;
   full_name: string;
-  role: "admin" | "editor" | "viewer";
+  phone: string | null;
+  role: "admin" | "editor" | "viewer" | "customer";
   is_active: boolean;
   created_at: string;
   last_login: string | null;

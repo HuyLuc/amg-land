@@ -8,6 +8,7 @@ const labelMap: Record<string, string> = {
   admin: "Quản lý",
   editor: "Nhân viên",
   viewer: "Chỉ xem",
+  customer: "Khách hàng",
   draft: "Bản nháp",
   active_project: "Đang mở",
   closed: "Đã đóng",

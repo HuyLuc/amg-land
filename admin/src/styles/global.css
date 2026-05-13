@@ -373,6 +373,12 @@ td select {
   color: var(--brand);
 }
 
+.status-customer,
+.status-viewer {
+  background: #eef4ff;
+  color: #175cd3;
+}
+
 .status-closed,
 .status-sold,
 .status-archived,
@@ -1940,6 +1946,188 @@ td select {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   align-items: end;
+}
+
+.accounts-page .page-header {
+  align-items: center;
+}
+
+.account-summary-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.account-summary-strip button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  color: #475467;
+  font-weight: 800;
+}
+
+.account-summary-strip button:last-child {
+  border-right: 0;
+}
+
+.account-summary-strip button.active {
+  background: #e9f0fb;
+  color: var(--brand);
+}
+
+.account-summary-strip strong {
+  color: var(--ink);
+}
+
+.accounts-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) 190px 190px auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.accounts-list-panel {
+  padding: 0;
+}
+
+.accounts-list-panel .panel-header {
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.account-table-wrap {
+  border: 0;
+  border-radius: 0;
+}
+
+.account-table th:last-child,
+.account-table td:last-child {
+  width: 116px;
+  text-align: right;
+}
+
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 260px;
+}
+
+.account-identity strong,
+.account-identity span {
+  display: block;
+}
+
+.account-identity > div span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #eef4ff;
+  color: var(--brand);
+}
+
+.account-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.account-actions button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--brand);
+}
+
+.account-actions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.account-form-modal {
+  width: min(760px, 100%);
+}
+
+.account-form {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+}
+
+.account-form label {
+  display: grid;
+  gap: 7px;
+}
+
+.account-form label span,
+.account-form .select-menu-label {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.account-form input {
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+}
+
+.account-form .form-grid.two-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 13px;
+  align-items: end;
+}
+
+.toggle-row {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px !important;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.toggle-row input {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+}
+
+.toggle-row span {
+  font-size: 13px !important;
+  color: var(--ink) !important;
 }
 
 .project-detail-panel {

@@ -36,7 +36,8 @@ def cleanup_smoke_artifacts() -> None:
                     or_(
                         User.email.like("admin-%@example.com"),
                         User.email.like("editor-%@example.com"),
-                        User.full_name.in_(["Smoke Admin", "Editor User", "Updated Editor"]),
+                        User.email.like("customer-%@example.com"),
+                        User.full_name.in_(["Smoke Admin", "Editor User", "Updated Editor", "Customer User"]),
                     )
                 )
             )
@@ -141,13 +142,34 @@ def test_full_api_smoke_flow() -> None:
         "email": f"editor-{uuid.uuid4().hex}@example.com",
         "password": "secret123",
         "full_name": "Editor User",
+        "phone": "0900000001",
         "role": "editor",
     }
     user_response = client.post("/api/v1/users", json=user_payload, headers=headers)
     assert user_response.status_code == 201, user_response.text
     user_id = user_response.json()["id"]
-    assert client.get("/api/v1/users", headers=headers).status_code == 200
-    assert client.put(f"/api/v1/users/{user_id}", json={"full_name": "Updated Editor"}, headers=headers).status_code == 200
+    customer_response = client.post(
+        "/api/v1/users",
+        json={
+            "email": f"customer-{uuid.uuid4().hex}@example.com",
+            "password": "secret123",
+            "full_name": "Customer User",
+            "phone": "0912345678",
+            "role": "customer",
+        },
+        headers=headers,
+    )
+    assert customer_response.status_code == 201, customer_response.text
+    assert customer_response.json()["phone"] == "0912345678"
+    assert client.get("/api/v1/users?keyword=0900000001", headers=headers).status_code == 200
+    customer_list_response = client.get("/api/v1/users?role=customer", headers=headers)
+    assert customer_list_response.status_code == 200
+    assert customer_list_response.json()["total"] >= 1
+    assert client.put(f"/api/v1/users/{user_id}", json={"full_name": "Updated Editor", "phone": "0900000002"}, headers=headers).status_code == 200
+    assert client.put(f"/api/v1/users/{user_id}/password", json={"password": "newsecret123"}, headers=headers).status_code == 200
+    assert client.delete(f"/api/v1/users/{user_id}", headers=headers).status_code == 200
+    assert client.get("/api/v1/users?is_active=false", headers=headers).status_code == 200
+    assert client.put(f"/api/v1/users/{user_id}", json={"is_active": True}, headers=headers).status_code == 200
 
     project_payload = {
         "name": f"Project {uuid.uuid4().hex[:8]}",

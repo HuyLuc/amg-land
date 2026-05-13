@@ -86,7 +86,7 @@ export function ContactsPage(): JSX.Element {
         limit: pageSize,
       }),
   });
-  const usersQuery = useQuery({ queryKey: ["users"], queryFn: listUsers });
+  const usersQuery = useQuery({ queryKey: ["users"], queryFn: () => listUsers({ limit: 100 }) });
   const projectsQuery = useQuery({ queryKey: ["projects"], queryFn: () => listProjects({ limit: 100 }) });
 
   const contacts = contactsQuery.data?.items ?? [];
@@ -131,7 +131,7 @@ export function ContactsPage(): JSX.Element {
     [projects],
   );
   const userOptions = useMemo(
-    () => [{ value: "", label: "Tất cả nhân sự" }, ...users.map((user) => ({ value: user.id, label: user.full_name }))],
+    () => [{ value: "", label: "Tất cả người phụ trách" }, ...users.map((user) => ({ value: user.id, label: user.full_name }))],
     [users],
   );
   const detailUserOptions = useMemo(
@@ -343,7 +343,7 @@ export function ContactsPage(): JSX.Element {
 
               <div className="detail-form">
                 <SelectMenu label="Trạng thái xử lý" value={draftStatus} options={statusOptions.slice(1)} onChange={(value) => setDraftStatus(value as Contact["status"])} />
-                <SelectMenu label="Nhân sự phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} />
+                <SelectMenu label="Người phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} />
                 <SelectMenu label="Căn hộ quan tâm" value={draftApartmentId} options={apartmentOptions} onChange={setDraftApartmentId} />
 
                 <label className="textarea-control">
