@@ -269,18 +269,24 @@ class ProjectImageUpdate(BaseModel):
 
 class PostCreate(BaseModel):
     title: str
+    excerpt: str | None = Field(default=None, max_length=500)
     content: str
     category_id: UUID
     thumbnail: str | None = None
+    project_id: UUID | None = None
+    apartment_id: UUID | None = None
     status: PostStatus = PostStatus.draft
     scheduled_at: datetime | None = None
 
 
 class PostUpdate(BaseModel):
     title: str | None = None
+    excerpt: str | None = Field(default=None, max_length=500)
     content: str | None = None
     category_id: UUID | None = None
     thumbnail: str | None = None
+    project_id: UUID | None = None
+    apartment_id: UUID | None = None
     status: PostStatus | None = None
     published_at: datetime | None = None
 
@@ -289,9 +295,12 @@ class PostOut(ORMModel):
     id: UUID
     title: str
     slug: str
+    excerpt: str | None = None
     content: str | None = None
     thumbnail: str | None = None
     category_id: UUID
+    project_id: UUID | None = None
+    apartment_id: UUID | None = None
     author_id: UUID
     status: PostStatus
     published_at: datetime | None = None

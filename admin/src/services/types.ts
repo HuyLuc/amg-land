@@ -114,13 +114,23 @@ export interface Post {
   id: string;
   title: string;
   slug: string;
+  excerpt: string | null;
   content: string | null;
   thumbnail: string | null;
   category_id: string;
+  project_id: string | null;
+  apartment_id: string | null;
   author_id: string;
   status: "draft" | "published" | "archived";
   published_at: string | null;
   created_at: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
 }
 
 export interface User {

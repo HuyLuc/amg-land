@@ -290,13 +290,25 @@ def test_full_api_smoke_flow() -> None:
 
     post_response = client.post(
         "/api/v1/posts",
-        json={"title": f"Post {uuid.uuid4().hex[:8]}", "content": "<p>Body</p>", "category_id": category["id"], "status": "published"},
+        json={
+            "title": f"Post {uuid.uuid4().hex[:8]}",
+            "excerpt": "Post linked to project and apartment",
+            "content": "<p>Body</p>",
+            "category_id": category["id"],
+            "project_id": project["id"],
+            "apartment_id": apartment["id"],
+            "status": "published",
+        },
         headers=headers,
     )
     assert post_response.status_code == 201, post_response.text
     post = post_response.json()
+    assert post["project_id"] == project["id"]
+    assert post["apartment_id"] == apartment["id"]
+    assert post["excerpt"] == "Post linked to project and apartment"
     assert client.get(f"/api/v1/posts/{post['slug']}").status_code == 200
-    assert client.put(f"/api/v1/posts/{post['id']}", json={"status": "archived"}, headers=headers).status_code == 200
+    assert client.get(f"/api/v1/posts?project_id={project['id']}", headers=headers).status_code == 200
+    assert client.put(f"/api/v1/posts/{post['id']}", json={"status": "archived", "apartment_id": None}, headers=headers).status_code == 200
 
     chat_response = client.post("/api/v1/chat/message", json={"message": "Tu van giup toi"})
     assert chat_response.status_code == 200, chat_response.text
