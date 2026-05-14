@@ -44,8 +44,10 @@ class Apartment(UUIDPrimaryKeyMixin, Base):
     price: Mapped[int] = mapped_column(BigInteger, index=True)
     status: Mapped[ApartmentStatus] = mapped_column(SqlEnum(ApartmentStatus, name="apartment_status"), default=ApartmentStatus.available, index=True)
     feng_shui_element: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    consultant_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
 
     project = relationship("Project", back_populates="apartments")
+    consultant = relationship("User", foreign_keys=[consultant_id])
     analytics_events = relationship("AnalyticsEvent", back_populates="apartment")
     media = relationship("ApartmentMedia", back_populates="apartment", cascade="all, delete-orphan")
 

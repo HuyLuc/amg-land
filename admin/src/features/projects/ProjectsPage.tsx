@@ -9,6 +9,8 @@ import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { ProjectFormModal } from "@/features/projects/ProjectFormModal";
 import { listProjects } from "@/features/projects/projectsApi";
+import { getAuthUser } from "@/services/authStorage";
+import { isAdminRole } from "@/services/permissions";
 import type { Project } from "@/services/types";
 
 const statusOptions = [
@@ -41,6 +43,7 @@ function projectStatusValue(status: Project["status"]): string {
 
 export function ProjectsPage(): JSX.Element {
   const navigate = useNavigate();
+  const canManageProjects = isAdminRole(getAuthUser()?.role);
   const [keyword, setKeyword] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [district, setDistrict] = useState("");
@@ -98,12 +101,12 @@ export function ProjectsPage(): JSX.Element {
       <PageHeader
         title="Dự án"
         description="Quản lý danh mục dự án, thông tin bán hàng, gallery, mặt bằng, tiện ích và giỏ hàng căn hộ."
-        action={
+        action={canManageProjects ? (
           <button className="primary-button" type="button" onClick={() => setFormOpen(true)}>
             <Plus size={17} />
             Thêm dự án
           </button>
-        }
+        ) : undefined}
       />
 
       <div className="metric-grid projects-metrics">
@@ -208,7 +211,7 @@ export function ProjectsPage(): JSX.Element {
         </div>
       </section>
 
-      <ProjectFormModal open={formOpen} project={null} onClose={() => setFormOpen(false)} onSaved={(_, message) => showToast(message)} />
+      {canManageProjects ? <ProjectFormModal open={formOpen} project={null} onClose={() => setFormOpen(false)} onSaved={(_, message) => showToast(message)} /> : null}
 
       {toast ? <div className="toast-message">{toast}</div> : null}
     </section>

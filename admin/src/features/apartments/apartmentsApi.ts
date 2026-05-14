@@ -26,6 +26,7 @@ export interface ApartmentPayload {
   price: number;
   status: Apartment["status"];
   feng_shui_element?: string | null;
+  consultant_id?: string | null;
 }
 
 export function listApartments(filters: ApartmentFilters = {}): Promise<PageResponse<Apartment>> {

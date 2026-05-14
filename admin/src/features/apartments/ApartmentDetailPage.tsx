@@ -16,6 +16,9 @@ import {
 } from "@/features/apartments/apartmentsApi";
 import { formatDirection } from "@/features/apartments/directions";
 import { listProjects } from "@/features/projects/projectsApi";
+import { listUsers } from "@/features/users/usersApi";
+import { getAuthUser } from "@/services/authStorage";
+import { isAdminRole } from "@/services/permissions";
 import type { Apartment } from "@/services/types";
 import type { ApartmentMedia } from "@/services/types";
 
@@ -47,6 +50,7 @@ const emptyForm: ApartmentPayload = {
   price: 1000000000,
   status: "available",
   feng_shui_element: "",
+  consultant_id: null,
 };
 
 function formatCurrency(value: number): string {
@@ -65,6 +69,7 @@ function toForm(apartment: Apartment): ApartmentPayload {
     price: apartment.price,
     status: apartment.status,
     feng_shui_element: apartment.feng_shui_element ?? "",
+    consultant_id: apartment.consultant_id,
   };
 }
 
@@ -72,6 +77,7 @@ export function ApartmentDetailPage(): JSX.Element {
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const canManageApartments = isAdminRole(getAuthUser()?.role);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<ApartmentPayload>(emptyForm);
   const [captionDraft, setCaptionDraft] = useState("");
@@ -95,11 +101,25 @@ export function ApartmentDetailPage(): JSX.Element {
     queryKey: ["projects", "apartment-detail"],
     queryFn: () => listProjects({ limit: 100 }),
   });
+  const usersQuery = useQuery({
+    queryKey: ["users", "consultants-for-apartment-detail"],
+    queryFn: () => listUsers({ limit: 100 }),
+    enabled: canManageApartments,
+  });
 
   const apartment = apartmentQuery.data ?? null;
   const projects = projectsQuery.data?.items ?? [];
   const projectName = useMemo(() => projects.find((project) => project.id === apartment?.project_id)?.name ?? "Dự án", [apartment?.project_id, projects]);
   const projectOptions = useMemo(() => projects.map((project) => ({ value: project.id, label: project.name })), [projects]);
+  const consultantOptions = useMemo(
+    () => [
+      { value: "", label: "Theo nhân viên phụ trách dự án" },
+      ...(usersQuery.data?.items ?? [])
+        .filter((user) => user.role === "consultant" || user.role === "editor")
+        .map((user) => ({ value: user.id, label: user.full_name })),
+    ],
+    [usersQuery.data?.items],
+  );
 
   useEffect(() => {
     if (apartment && formOpen) {
@@ -189,7 +209,7 @@ export function ApartmentDetailPage(): JSX.Element {
             <h2>{apartment.code}</h2>
             <p>{projectName}</p>
           </div>
-          <button
+          {canManageApartments ? <button
             className="primary-button"
             type="button"
             onClick={() => {
@@ -199,7 +219,7 @@ export function ApartmentDetailPage(): JSX.Element {
           >
             <Pencil size={16} />
             Sửa thông tin
-          </button>
+          </button> : null}
         </div>
 
         <div className="apartment-detail-grid">
@@ -251,7 +271,7 @@ export function ApartmentDetailPage(): JSX.Element {
             <p>{mediaQuery.data?.length ?? 0} media đang gắn với căn hộ này</p>
           </div>
         </div>
-        <div className="apartment-media-upload detail-media-upload">
+        {canManageApartments ? <div className="apartment-media-upload detail-media-upload">
           <label>
             <ImagePlus size={16} />
             <span>Upload ảnh</span>
@@ -282,7 +302,7 @@ export function ApartmentDetailPage(): JSX.Element {
               }}
             />
           </label>
-        </div>
+        </div> : null}
         <div className="apartment-media-grid detail-media-grid">
           {(mediaQuery.data ?? []).map((media) => (
             <figure key={media.id} className="apartment-media-item">
@@ -292,7 +312,7 @@ export function ApartmentDetailPage(): JSX.Element {
               <figcaption>
                 <strong>{media.caption || (media.media_type === "image" ? "Ảnh căn hộ" : "Video căn hộ")}</strong>
                 <span>{media.media_type === "image" ? "Ảnh" : "Video"}</span>
-                <div className="apartment-media-actions">
+                {canManageApartments ? <div className="apartment-media-actions">
                   <button
                     type="button"
                     onClick={() => {
@@ -314,7 +334,7 @@ export function ApartmentDetailPage(): JSX.Element {
                     <Trash2 size={13} />
                     Xóa
                   </button>
-                </div>
+                </div> : null}
               </figcaption>
             </figure>
           ))}
@@ -323,7 +343,7 @@ export function ApartmentDetailPage(): JSX.Element {
         {!mediaQuery.isLoading && !(mediaQuery.data ?? []).length ? <div className="empty-state">Chưa có ảnh hoặc video cho căn hộ này.</div> : null}
       </section>
 
-      {formOpen ? (
+      {formOpen && canManageApartments ? (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setFormOpen(false)}>
           <section className="modal-panel apartment-form-modal" role="dialog" aria-modal="true" aria-labelledby="apartment-form-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -375,6 +395,7 @@ export function ApartmentDetailPage(): JSX.Element {
                 <span>Mệnh phong thủy</span>
                 <input value={form.feng_shui_element ?? ""} onChange={(event) => setForm((current) => ({ ...current, feng_shui_element: event.target.value }))} placeholder="Kim, Mộc, Thủy, Hỏa, Thổ" />
               </label>
+              <SelectMenu label="Nhân viên tư vấn phụ trách" value={form.consultant_id ?? ""} options={consultantOptions} onChange={(value) => setForm((current) => ({ ...current, consultant_id: value || null }))} />
               {saveMutation.error ? <div className="form-error">Không lưu được căn hộ. Vui lòng kiểm tra dữ liệu.</div> : null}
               <div className="modal-actions">
                 <button className="secondary-button" type="button" onClick={() => setFormOpen(false)}>
@@ -389,7 +410,7 @@ export function ApartmentDetailPage(): JSX.Element {
         </div>
       ) : null}
 
-      {captionMedia ? (
+      {captionMedia && canManageApartments ? (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setCaptionMedia(null)}>
           <section className="modal-panel media-caption-modal" role="dialog" aria-modal="true" aria-labelledby="media-caption-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">

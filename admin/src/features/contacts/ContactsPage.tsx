@@ -11,7 +11,9 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { listContacts, updateContact } from "@/features/contacts/contactsApi";
 import { listProjects } from "@/features/projects/projectsApi";
 import { listUsers } from "@/features/users/usersApi";
-import type { Contact } from "@/services/types";
+import { getAuthUser } from "@/services/authStorage";
+import { isAdminRole } from "@/services/permissions";
+import type { Contact, User } from "@/services/types";
 
 const statusOptions: Array<{ value: "" | Contact["status"]; label: string }> = [
   { value: "", label: "Tất cả trạng thái" },
@@ -45,6 +47,8 @@ function formatDate(value: string): string {
 }
 
 export function ContactsPage(): JSX.Element {
+  const currentUser = getAuthUser();
+  const canAssignContacts = isAdminRole(currentUser?.role);
   const [status, setStatus] = useState<"" | Contact["status"]>("");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -86,11 +90,15 @@ export function ContactsPage(): JSX.Element {
         limit: pageSize,
       }),
   });
-  const usersQuery = useQuery({ queryKey: ["users"], queryFn: () => listUsers({ limit: 100 }) });
+  const usersQuery = useQuery({ queryKey: ["users"], queryFn: () => listUsers({ limit: 100 }), enabled: canAssignContacts });
   const projectsQuery = useQuery({ queryKey: ["projects"], queryFn: () => listProjects({ limit: 100 }) });
 
   const contacts = contactsQuery.data?.items ?? [];
-  const users = usersQuery.data?.items ?? [];
+  const users = canAssignContacts
+    ? usersQuery.data?.items ?? []
+    : currentUser
+      ? [{ id: currentUser.id, email: currentUser.email, full_name: currentUser.full_name, phone: null, role: currentUser.role, is_active: true, created_at: "", last_login: null } as User]
+      : [];
   const projects = projectsQuery.data?.items ?? [];
   const totalPages = Math.max(1, Math.ceil((contactsQuery.data?.total ?? 0) / (contactsQuery.data?.limit ?? pageSize)));
 
@@ -153,7 +161,7 @@ export function ContactsPage(): JSX.Element {
       selectedContact
         ? updateContact(selectedContact.id, {
             status: draftStatus,
-            assigned_to: draftAssignee || null,
+            ...(canAssignContacts ? { assigned_to: draftAssignee || null } : {}),
             apartment_id: draftApartmentId || null,
             note: draftNote.trim() || null,
           })
@@ -226,7 +234,7 @@ export function ContactsPage(): JSX.Element {
           </label>
           <SelectMenu label="Trạng thái" value={status} options={statusOptions} onChange={(value) => setStatus(value as "" | Contact["status"])} />
           <SelectMenu label="Dự án quan tâm" value={projectId} options={projectOptions} onChange={setProjectId} />
-          <SelectMenu label="Phụ trách" value={assignee} options={userOptions} onChange={setAssignee} />
+          {canAssignContacts ? <SelectMenu label="Phụ trách" value={assignee} options={userOptions} onChange={setAssignee} /> : null}
           <DatePicker label="Từ ngày" value={createdFrom} onChange={setCreatedFrom} />
           <DatePicker label="Đến ngày" value={createdTo} onChange={setCreatedTo} />
           <button className="secondary-button filter-reset" type="button" onClick={resetFilters}>
@@ -343,7 +351,7 @@ export function ContactsPage(): JSX.Element {
 
               <div className="detail-form">
                 <SelectMenu label="Trạng thái xử lý" value={draftStatus} options={statusOptions.slice(1)} onChange={(value) => setDraftStatus(value as Contact["status"])} />
-                <SelectMenu label="Người phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} />
+                {canAssignContacts ? <SelectMenu label="Người phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} /> : null}
                 <SelectMenu label="Căn hộ quan tâm" value={draftApartmentId} options={apartmentOptions} onChange={setDraftApartmentId} />
 
                 <label className="textarea-control">

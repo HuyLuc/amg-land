@@ -34,19 +34,21 @@ const emptyForm: UserFormState = {
   password: "",
   full_name: "",
   phone: "",
-  role: "editor",
+  role: "consultant",
   is_active: true,
 };
 
 const roleOptions = [
   { value: "", label: "Tất cả vai trò" },
   { value: "admin", label: "Quản lý" },
-  { value: "editor", label: "Nhân viên" },
+  { value: "consultant", label: "Nhân viên tư vấn" },
+  { value: "content", label: "Nhân viên đăng bài" },
+  { value: "editor", label: "Nhân viên cũ" },
   { value: "customer", label: "Khách hàng" },
   { value: "viewer", label: "Chỉ xem" },
 ];
 
-const formRoleOptions = roleOptions.filter((option) => option.value !== "" && option.value !== "viewer");
+const formRoleOptions = roleOptions.filter((option) => option.value !== "" && option.value !== "viewer" && option.value !== "editor");
 
 const activeOptions = [
   { value: "", label: "Tất cả trạng thái" },
@@ -131,7 +133,7 @@ export function UsersPage(): JSX.Element {
       password: "",
       full_name: user.full_name,
       phone: user.phone ?? "",
-      role: user.role === "viewer" ? "editor" : user.role,
+      role: user.role === "viewer" || user.role === "editor" ? "consultant" : user.role,
       is_active: user.is_active,
     });
     setFormOpen(true);

@@ -6,6 +6,7 @@ router = APIRouter()
 @router.get("/apartments", response_model=ApartmentPage, tags=["apartments"])
 def list_apartments(
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
     project_id: uuid.UUID | None = None,
     floor: int | None = None,
     bedrooms: int | None = None,
@@ -19,6 +20,8 @@ def list_apartments(
     limit: int = Query(20, ge=1, le=100),
 ) -> dict:
     query = select(Apartment).join(Project).where(Project.deleted_at.is_(None))
+    if is_consultant_user(current_user):
+        query = query.where(consultant_apartment_condition(current_user))
     if project_id:
         query = query.where(Apartment.project_id == project_id)
     if floor is not None:
@@ -46,6 +49,7 @@ def list_apartments(
 def list_project_apartments(
     project_id: uuid.UUID,
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
     floor: int | None = None,
     bedrooms: int | None = None,
     direction: Direction | None = None,
@@ -58,7 +62,9 @@ def list_project_apartments(
     limit: int = Query(20, ge=1, le=100),
 ) -> dict:
     get_project_or_404(db, project_id)
-    query = select(Apartment).where(Apartment.project_id == project_id)
+    query = select(Apartment).join(Project).where(Apartment.project_id == project_id)
+    if is_consultant_user(current_user):
+        query = query.where(consultant_apartment_condition(current_user))
     if floor is not None:
         query = query.where(Apartment.floor == floor)
     if bedrooms is not None:
@@ -81,24 +87,27 @@ def list_project_apartments(
 
 
 @router.get("/apartments/{apartment_id}", response_model=ApartmentOut, tags=["apartments"])
-def get_apartment(apartment_id: uuid.UUID, db: Session = Depends(get_db)) -> Apartment:
+def get_apartment(apartment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User | None = Depends(get_optional_current_user)) -> Apartment:
     apartment = db.get(Apartment, apartment_id)
     if apartment is None:
         raise HTTPException(status_code=404, detail="Apartment not found")
+    ensure_apartment_visible(db, apartment, current_user)
     return apartment
 
 
 @router.get("/apartments/{apartment_id}/media", response_model=list[ApartmentMediaOut], tags=["apartments"])
-def list_apartment_media(apartment_id: uuid.UUID, db: Session = Depends(get_db)) -> list[ApartmentMedia]:
-    if db.get(Apartment, apartment_id) is None:
+def list_apartment_media(apartment_id: uuid.UUID, db: Session = Depends(get_db), current_user: User | None = Depends(get_optional_current_user)) -> list[ApartmentMedia]:
+    apartment = db.get(Apartment, apartment_id)
+    if apartment is None:
         raise HTTPException(status_code=404, detail="Apartment not found")
+    ensure_apartment_visible(db, apartment, current_user)
     return list(db.scalars(select(ApartmentMedia).where(ApartmentMedia.apartment_id == apartment_id).order_by(ApartmentMedia.sort_order, ApartmentMedia.id)))
 
 
 @router.post("/apartments/{apartment_id}/media", response_model=ApartmentMediaOut, status_code=201, tags=["apartments"])
 def upload_apartment_media_item(
     apartment_id: uuid.UUID,
-    current_user: StaffUser,
+    current_user: AdminUser,
     db: Session = Depends(get_db),
     media_type: ApartmentMediaType = Form(...),
     caption: str | None = Form(default=None),
@@ -123,7 +132,7 @@ def upload_apartment_media_item(
 
 
 @router.put("/apartment-media/{media_id}", response_model=ApartmentMediaOut, tags=["apartments"])
-def update_apartment_media_item(media_id: uuid.UUID, payload: ApartmentMediaUpdate, current_user: StaffUser, db: Session = Depends(get_db)) -> ApartmentMedia:
+def update_apartment_media_item(media_id: uuid.UUID, payload: ApartmentMediaUpdate, current_user: AdminUser, db: Session = Depends(get_db)) -> ApartmentMedia:
     media = db.get(ApartmentMedia, media_id)
     if media is None:
         raise HTTPException(status_code=404, detail="Apartment media not found")
@@ -144,7 +153,7 @@ def update_apartment_media_item(media_id: uuid.UUID, payload: ApartmentMediaUpda
 
 
 @router.delete("/apartment-media/{media_id}", response_model=dict, tags=["apartments"])
-def delete_apartment_media_item(media_id: uuid.UUID, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+def delete_apartment_media_item(media_id: uuid.UUID, current_user: AdminUser, db: Session = Depends(get_db)) -> dict:
     media = db.get(ApartmentMedia, media_id)
     if media is None:
         raise HTTPException(status_code=404, detail="Apartment media not found")
@@ -158,8 +167,9 @@ def delete_apartment_media_item(media_id: uuid.UUID, current_user: StaffUser, db
 
 
 @router.post("/apartments", response_model=ApartmentOut, status_code=201, tags=["apartments"])
-def create_apartment(payload: ApartmentCreate, _: StaffUser, db: Session = Depends(get_db)) -> Apartment:
+def create_apartment(payload: ApartmentCreate, _: AdminUser, db: Session = Depends(get_db)) -> Apartment:
     get_project_or_404(db, payload.project_id)
+    validate_consultant_id(db, payload.consultant_id)
     apartment = Apartment(**payload.model_dump())
     db.add(apartment)
     commit_or_400(db)
@@ -168,11 +178,14 @@ def create_apartment(payload: ApartmentCreate, _: StaffUser, db: Session = Depen
 
 
 @router.put("/apartments/{apartment_id}", response_model=ApartmentOut, tags=["apartments"])
-def update_apartment(apartment_id: uuid.UUID, payload: ApartmentUpdate, _: StaffUser, db: Session = Depends(get_db)) -> Apartment:
+def update_apartment(apartment_id: uuid.UUID, payload: ApartmentUpdate, _: AdminUser, db: Session = Depends(get_db)) -> Apartment:
     apartment = db.get(Apartment, apartment_id)
     if apartment is None:
         raise HTTPException(status_code=404, detail="Apartment not found")
-    for key, value in payload.model_dump(exclude_unset=True).items():
+    values = payload.model_dump(exclude_unset=True)
+    if "consultant_id" in values:
+        validate_consultant_id(db, values["consultant_id"])
+    for key, value in values.items():
         setattr(apartment, key, value)
     commit_or_400(db)
     db.refresh(apartment)

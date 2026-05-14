@@ -29,9 +29,11 @@ class Project(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     price_from: Mapped[int] = mapped_column(BigInteger)
     status: Mapped[ProjectStatus] = mapped_column(SqlEnum(ProjectStatus, name="project_status"), default=ProjectStatus.draft, index=True)
     created_by: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
+    consultant_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    creator = relationship("User", back_populates="projects")
+    creator = relationship("User", back_populates="projects", foreign_keys=[created_by])
+    consultant = relationship("User", foreign_keys=[consultant_id])
     apartments = relationship("Apartment", back_populates="project", cascade="all, delete-orphan")
     images = relationship("ProjectImage", back_populates="project", cascade="all, delete-orphan")
     floor_plans = relationship("FloorPlan", back_populates="project", cascade="all, delete-orphan")

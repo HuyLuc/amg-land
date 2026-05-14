@@ -18,6 +18,7 @@ export interface ProjectPayload {
   city: string;
   price_from: number;
   status: Project["status"];
+  consultant_id?: string | null;
 }
 
 export interface FloorPlanPayload {

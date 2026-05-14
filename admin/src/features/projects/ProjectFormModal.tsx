@@ -1,9 +1,10 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { XCircle } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 
 import { SelectMenu } from "@/components/SelectMenu";
 import { createProject, updateProject, type ProjectPayload } from "@/features/projects/projectsApi";
+import { listUsers } from "@/features/users/usersApi";
 import type { Project } from "@/services/types";
 
 const projectStatusOptions = [
@@ -21,6 +22,7 @@ const initialForm: ProjectPayload = {
   city: "Hà Nội",
   price_from: 1000000000,
   status: "draft",
+  consultant_id: null,
 };
 
 interface ProjectFormModalProps {
@@ -34,6 +36,13 @@ export function ProjectFormModal({ open, project, onClose, onSaved }: ProjectFor
   const queryClient = useQueryClient();
   const [form, setForm] = useState<ProjectPayload>(initialForm);
   const mode = project ? "edit" : "create";
+  const usersQuery = useQuery({ queryKey: ["users", "consultants-for-project-form"], queryFn: () => listUsers({ limit: 100 }) });
+  const consultantOptions = [
+    { value: "", label: "Chưa gán tư vấn" },
+    ...(usersQuery.data?.items ?? [])
+      .filter((user) => user.role === "consultant" || user.role === "editor")
+      .map((user) => ({ value: user.id, label: user.full_name })),
+  ];
 
   useEffect(() => {
     if (!open) {
@@ -51,6 +60,7 @@ export function ProjectFormModal({ open, project, onClose, onSaved }: ProjectFor
             city: project.city,
             price_from: project.price_from,
             status: project.status,
+            consultant_id: project.consultant_id,
           }
         : initialForm,
     );
@@ -121,6 +131,7 @@ export function ProjectFormModal({ open, project, onClose, onSaved }: ProjectFor
             </label>
             <SelectMenu label="Trạng thái" value={form.status} options={projectStatusOptions} onChange={(value) => setForm((current) => ({ ...current, status: value as Project["status"] }))} />
           </div>
+          <SelectMenu label="Nhân viên tư vấn phụ trách" value={form.consultant_id ?? ""} options={consultantOptions} onChange={(value) => setForm((current) => ({ ...current, consultant_id: value || null }))} />
           {saveMutation.error ? <div className="form-error">Không lưu được dự án. Vui lòng kiểm tra dữ liệu.</div> : null}
           <div className="modal-actions">
             <button className="secondary-button" type="button" onClick={onClose}>

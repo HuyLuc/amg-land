@@ -2,7 +2,7 @@ export interface AuthUser {
   id: string;
   email: string;
   full_name: string;
-  role: "admin" | "editor" | "viewer" | "customer";
+  role: "admin" | "editor" | "consultant" | "content" | "viewer" | "customer";
 }
 
 export interface LoginResponse {
@@ -21,6 +21,7 @@ export interface PageResponse<T> {
 
 export interface DashboardStats {
   period: string;
+  scope?: "admin" | "consultant";
   visits: number;
   new_contacts: number;
   total_contacts: number;
@@ -61,6 +62,7 @@ export interface Project {
   city: string;
   price_from: number;
   status: "draft" | "active" | "closed";
+  consultant_id: string | null;
 }
 
 export interface ProjectImage {
@@ -106,6 +108,7 @@ export interface Apartment {
   price: number;
   status: "available" | "reserved" | "sold";
   feng_shui_element: string | null;
+  consultant_id: string | null;
 }
 
 export interface ApartmentMedia {
@@ -141,7 +144,7 @@ export interface User {
   email: string;
   full_name: string;
   phone: string | null;
-  role: "admin" | "editor" | "viewer" | "customer";
+  role: AuthUser["role"];
   is_active: boolean;
   created_at: string;
   last_login: string | null;

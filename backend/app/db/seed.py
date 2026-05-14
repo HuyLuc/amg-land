@@ -61,7 +61,7 @@ def seed_users(db: Session) -> dict[str, User]:
             password_hash=hash_password(SEED_PASSWORD),
             full_name="Trần Khánh Linh",
             phone="0901000002",
-            role=UserRole.editor,
+            role=UserRole.consultant,
             is_active=True,
         ),
         "sales_2": User(
@@ -69,7 +69,7 @@ def seed_users(db: Session) -> dict[str, User]:
             password_hash=hash_password(SEED_PASSWORD),
             full_name="Phạm Việt Hoàng",
             phone="0901000003",
-            role=UserRole.editor,
+            role=UserRole.consultant,
             is_active=True,
         ),
         "content": User(
@@ -77,7 +77,7 @@ def seed_users(db: Session) -> dict[str, User]:
             password_hash=hash_password(SEED_PASSWORD),
             full_name="Đỗ Ngọc Mai",
             phone="0901000004",
-            role=UserRole.editor,
+            role=UserRole.content,
             is_active=True,
         ),
         "customer": User(
@@ -179,7 +179,8 @@ def seed_projects(db: Session, users: dict[str, User], amenities: dict[str, Amen
     for spec in project_specs:
         spec["short_description"] = spec.get("short_description") or spec.get("description")
         amenity_keys = spec.pop("amenities")
-        project = Project(**spec, created_by=users["director"].id)
+        consultant = users["sales_1"] if len(projects) % 2 == 0 else users["sales_2"]
+        project = Project(**spec, created_by=users["director"].id, consultant_id=consultant.id)
         db.add(project)
         db.flush()
         for index in range(1, 4):

@@ -50,6 +50,25 @@ def validate_post_images(
     return normalized
 
 
+def validate_post_link_targets(db: Session, project_id: uuid.UUID | None, apartment_id: uuid.UUID | None) -> Apartment | None:
+    if project_id:
+        project = db.get(Project, project_id)
+        if project is None or project.deleted_at is not None:
+            raise HTTPException(status_code=404, detail="Project not found")
+        if project.status != ProjectStatus.active:
+            raise HTTPException(status_code=400, detail="Posts can only link to active projects")
+    apartment = None
+    if apartment_id:
+        apartment = db.get(Apartment, apartment_id)
+        if apartment is None:
+            raise HTTPException(status_code=404, detail="Apartment not found")
+        if apartment.status != ApartmentStatus.available:
+            raise HTTPException(status_code=400, detail="Posts can only link to available apartments")
+        if project_id and apartment.project_id != project_id:
+            raise HTTPException(status_code=400, detail="Apartment does not belong to selected project")
+    return apartment
+
+
 def serialize_post(db: Session, post: Post) -> dict:
     apartment = db.get(Apartment, post.apartment_id) if post.apartment_id else None
     project_id = post.project_id or (apartment.project_id if apartment else None)
@@ -96,7 +115,7 @@ def list_posts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
 ) -> dict:
-    is_staff = current_user is not None and current_user.role in {UserRole.admin, UserRole.editor}
+    is_staff = can_manage_content(current_user)
     query = select(Post)
     if keyword:
         query = query.where(Post.title.ilike(f"%{keyword}%"))
@@ -118,23 +137,15 @@ def get_post(slug: str, db: Session = Depends(get_db), current_user: User | None
     post = db.scalar(select(Post).where(Post.slug == slug))
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
-    is_staff = current_user is not None and current_user.role in {UserRole.admin, UserRole.editor}
+    is_staff = can_manage_content(current_user)
     if post.status != PostStatus.published and not is_staff:
         raise HTTPException(status_code=404, detail="Post not found")
     return serialize_post(db, post)
 
 
 @router.post("/posts", response_model=PostOut, status_code=201, tags=["posts"])
-def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
-    if payload.project_id and db.get(Project, payload.project_id) is None:
-        raise HTTPException(status_code=404, detail="Project not found")
-    apartment = None
-    if payload.apartment_id:
-        apartment = db.get(Apartment, payload.apartment_id)
-        if apartment is None:
-            raise HTTPException(status_code=404, detail="Apartment not found")
-        if payload.project_id and apartment.project_id != payload.project_id:
-            raise HTTPException(status_code=400, detail="Apartment does not belong to selected project")
+def create_post(payload: PostCreate, current_user: ContentUser, db: Session = Depends(get_db)) -> dict:
+    apartment = validate_post_link_targets(db, payload.project_id, payload.apartment_id)
     images = validate_post_images(db, payload.images, payload.project_id, payload.apartment_id, apartment)
     published_at = payload.published_at or payload.scheduled_at
     if payload.status == PostStatus.published and published_at is None:
@@ -159,22 +170,14 @@ def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depe
 
 
 @router.put("/posts/{post_id}", response_model=PostOut, tags=["posts"])
-def update_post(post_id: uuid.UUID, payload: PostUpdate, _: StaffUser, db: Session = Depends(get_db)) -> dict:
+def update_post(post_id: uuid.UUID, payload: PostUpdate, _: ContentUser, db: Session = Depends(get_db)) -> dict:
     post = db.get(Post, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     values = payload.model_dump(exclude_unset=True)
     project_id = values.get("project_id", post.project_id)
     apartment_id = values.get("apartment_id", post.apartment_id)
-    if project_id and db.get(Project, project_id) is None:
-        raise HTTPException(status_code=404, detail="Project not found")
-    apartment = None
-    if apartment_id:
-        apartment = db.get(Apartment, apartment_id)
-        if apartment is None:
-            raise HTTPException(status_code=404, detail="Apartment not found")
-        if project_id and apartment.project_id != project_id:
-            raise HTTPException(status_code=400, detail="Apartment does not belong to selected project")
+    apartment = validate_post_link_targets(db, project_id, apartment_id)
     if "images" in values:
         values["images"] = validate_post_images(db, values["images"], project_id, apartment_id, apartment)
     elif "project_id" in values or "apartment_id" in values:
@@ -190,7 +193,7 @@ def update_post(post_id: uuid.UUID, payload: PostUpdate, _: StaffUser, db: Sessi
     return serialize_post(db, post)
 
 @router.delete("/posts/{post_id}", response_model=dict, tags=["posts"])
-def delete_post(post_id: uuid.UUID, _: AdminUser, db: Session = Depends(get_db)) -> dict:
+def delete_post(post_id: uuid.UUID, _: ContentUser, db: Session = Depends(get_db)) -> dict:
     post = db.get(Post, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")

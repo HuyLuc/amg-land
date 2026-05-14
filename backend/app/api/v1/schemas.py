@@ -92,7 +92,7 @@ class UserCreate(BaseModel):
     password: str = Field(min_length=6)
     full_name: str
     phone: str = Field(min_length=8, max_length=20)
-    role: UserRole = UserRole.editor
+    role: UserRole = UserRole.consultant
 
 
 class UserUpdate(BaseModel):
@@ -127,6 +127,7 @@ class ProjectCreate(BaseModel):
     city: str
     price_from: int = Field(gt=0)
     status: ProjectStatus = ProjectStatus.draft
+    consultant_id: UUID | None = None
 
 
 class ProjectUpdate(BaseModel):
@@ -138,6 +139,7 @@ class ProjectUpdate(BaseModel):
     city: str | None = None
     price_from: int | None = Field(default=None, gt=0)
     status: ProjectStatus | None = None
+    consultant_id: UUID | None = None
 
 
 class ProjectOut(ORMModel):
@@ -151,6 +153,7 @@ class ProjectOut(ORMModel):
     city: str
     price_from: int
     status: ProjectStatus
+    consultant_id: UUID | None = None
 
 
 class ApartmentCreate(BaseModel):
@@ -164,6 +167,7 @@ class ApartmentCreate(BaseModel):
     price: int = Field(gt=0)
     status: ApartmentStatus = ApartmentStatus.available
     feng_shui_element: str | None = None
+    consultant_id: UUID | None = None
 
 
 class ApartmentUpdate(BaseModel):
@@ -176,6 +180,7 @@ class ApartmentUpdate(BaseModel):
     price: int | None = Field(default=None, gt=0)
     status: ApartmentStatus | None = None
     feng_shui_element: str | None = None
+    consultant_id: UUID | None = None
 
 
 class ApartmentOut(ORMModel):
@@ -190,6 +195,7 @@ class ApartmentOut(ORMModel):
     price: int
     status: ApartmentStatus
     feng_shui_element: str | None = None
+    consultant_id: UUID | None = None
 
 
 class ApartmentMediaUpdate(BaseModel):

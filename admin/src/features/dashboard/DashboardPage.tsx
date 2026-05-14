@@ -6,6 +6,8 @@ import { MetricCard } from "@/components/MetricCard";
 import { PageHeader } from "@/components/PageHeader";
 import { StatusBadge } from "@/components/StatusBadge";
 import { getDashboardStats } from "@/features/dashboard/dashboardApi";
+import { getAuthUser } from "@/services/authStorage";
+import { isConsultantRole } from "@/services/permissions";
 import type { DashboardStats } from "@/services/types";
 
 const periodOptions = [
@@ -106,6 +108,7 @@ function RankList({
 
 export function DashboardPage(): JSX.Element {
   const [period, setPeriod] = useState("week");
+  const consultantDashboard = isConsultantRole(getAuthUser()?.role);
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard", period],
     queryFn: () => getDashboardStats(period),
@@ -124,7 +127,7 @@ export function DashboardPage(): JSX.Element {
     <section className="page-stack dashboard-page">
       <PageHeader
         title="Dashboard"
-        description="Tổng quan vận hành bán hàng, giỏ căn, nội dung và dữ liệu cần xử lý."
+        description={consultantDashboard ? "Tổng quan lead, dự án và căn hộ được giao phụ trách." : "Tổng quan vận hành bán hàng, giỏ căn, nội dung và dữ liệu cần xử lý."}
         action={
           <div className="dashboard-period-switcher" role="tablist" aria-label="Chu kỳ dashboard">
             {periodOptions.map((option) => (
@@ -139,10 +142,21 @@ export function DashboardPage(): JSX.Element {
       {error ? <div className="alert-error">Không tải được dashboard.</div> : null}
 
       <div className="metric-grid dashboard-metrics">
-        <MetricCard icon={MousePointer2} label="Lượt xem" value={isLoading ? "..." : data?.visits ?? 0} />
-        <MetricCard icon={MessageSquare} label="Lead mới" value={isLoading ? "..." : data?.new_contacts ?? 0} />
-        <MetricCard icon={Home} label="Căn còn trống" value={isLoading ? "..." : data?.apartment_counts.available ?? 0} />
-        <MetricCard icon={FileText} label="Bài đã đăng" value={isLoading ? "..." : data?.post_counts.published ?? 0} />
+        {consultantDashboard ? (
+          <>
+            <MetricCard icon={MessageSquare} label="Lead được giao" value={isLoading ? "..." : data?.total_contacts ?? 0} />
+            <MetricCard icon={PhoneCall} label="Lead mới" value={isLoading ? "..." : data?.new_contacts ?? 0} />
+            <MetricCard icon={Home} label="Căn còn trống" value={isLoading ? "..." : data?.apartment_counts.available ?? 0} />
+            <MetricCard icon={TrendingUp} label="Dự án phụ trách" value={isLoading ? "..." : data?.project_counts.total ?? 0} />
+          </>
+        ) : (
+          <>
+            <MetricCard icon={MousePointer2} label="Lượt xem" value={isLoading ? "..." : data?.visits ?? 0} />
+            <MetricCard icon={MessageSquare} label="Lead mới" value={isLoading ? "..." : data?.new_contacts ?? 0} />
+            <MetricCard icon={Home} label="Căn còn trống" value={isLoading ? "..." : data?.apartment_counts.available ?? 0} />
+            <MetricCard icon={FileText} label="Bài đã đăng" value={isLoading ? "..." : data?.post_counts.published ?? 0} />
+          </>
+        )}
       </div>
 
       <div className="dashboard-main-grid">
@@ -215,10 +229,10 @@ export function DashboardPage(): JSX.Element {
         </section>
       </div>
 
-      <div className="content-grid two-columns">
+      {!consultantDashboard ? <div className="content-grid two-columns">
         <RankList title="Dự án được xem nhiều" items={topProjects} />
         <RankList title="Căn hộ được xem nhiều" items={topApartments} />
-      </div>
+      </div> : null}
 
     </section>
   );

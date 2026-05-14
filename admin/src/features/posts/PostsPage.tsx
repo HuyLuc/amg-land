@@ -181,10 +181,10 @@ export function PostsPage(): JSX.Element {
     queryKey: ["posts", page, pageSize, keyword, status, projectId],
     queryFn: () => listPosts({ page, limit: pageSize, keyword, status, projectId }),
   });
-  const projectsQuery = useQuery({ queryKey: ["projects", "post-options"], queryFn: () => listProjects({ limit: 100 }) });
+  const projectsQuery = useQuery({ queryKey: ["projects", "post-options"], queryFn: () => listProjects({ limit: 100, status: "active" }) });
   const apartmentsQuery = useQuery({
     queryKey: ["apartments", "post-options", form.project_id],
-    queryFn: () => listApartments({ limit: 100, projectId: form.project_id }),
+    queryFn: () => listApartments({ limit: 100, projectId: form.project_id, status: "available" }),
     enabled: formOpen && Boolean(form.project_id),
   });
 

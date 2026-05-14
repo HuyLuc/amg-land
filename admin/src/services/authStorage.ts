@@ -1,4 +1,5 @@
 import type { AuthUser } from "@/services/types";
+import { isInternalRole } from "@/services/permissions";
 
 const TOKEN_KEY = "amg_admin_access_token";
 const REFRESH_TOKEN_KEY = "amg_admin_refresh_token";
@@ -36,7 +37,7 @@ export function isAuthenticated(): boolean {
 }
 
 export function isInternalUser(user: AuthUser | null): boolean {
-  return user?.role === "admin" || user?.role === "editor";
+  return isInternalRole(user?.role);
 }
 
 export function clearAuth(): void {

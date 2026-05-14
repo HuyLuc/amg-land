@@ -22,7 +22,7 @@ def create_contact(payload: ContactCreate, db: Session = Depends(get_db)) -> Con
 
 @router.get("/contacts", response_model=ContactPage, tags=["contacts"])
 def list_contacts(
-    _: StaffUser,
+    current_user: SalesUser,
     db: Session = Depends(get_db),
     status: ContactStatus | None = None,
     keyword: str | None = None,
@@ -35,9 +35,11 @@ def list_contacts(
     limit: int = Query(20, ge=1, le=100),
 ) -> dict:
     query = select(ContactRequest)
+    if is_consultant_user(current_user):
+        query = query.where(ContactRequest.assigned_to == current_user.id)
     if status:
         query = query.where(ContactRequest.status == status)
-    if assigned_to:
+    if assigned_to and not is_consultant_user(current_user):
         query = query.where(ContactRequest.assigned_to == assigned_to)
     if project_id:
         query = query.where(ContactRequest.project_id == project_id)
@@ -64,11 +66,15 @@ def list_contacts(
 
 
 @router.patch("/contacts/{contact_id}", response_model=ContactOut, tags=["contacts"])
-def update_contact(contact_id: uuid.UUID, payload: ContactUpdate, _: StaffUser, db: Session = Depends(get_db)) -> ContactRequest:
+def update_contact(contact_id: uuid.UUID, payload: ContactUpdate, current_user: SalesUser, db: Session = Depends(get_db)) -> ContactRequest:
     contact = db.get(ContactRequest, contact_id)
     if contact is None:
         raise HTTPException(status_code=404, detail="Contact request not found")
+    if is_consultant_user(current_user) and contact.assigned_to != current_user.id:
+        raise HTTPException(status_code=404, detail="Contact request not found")
     values = payload.model_dump(exclude_unset=True)
+    if is_consultant_user(current_user):
+        values.pop("assigned_to", None)
     if payload.apartment_id:
         apartment = db.get(Apartment, payload.apartment_id)
         if apartment is None:

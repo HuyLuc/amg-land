@@ -6,6 +6,7 @@ router = APIRouter()
 @router.get("/projects", response_model=ProjectPage, tags=["projects"])
 def list_projects(
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     district: str | None = None,
@@ -13,6 +14,8 @@ def list_projects(
     keyword: str | None = None,
 ) -> dict:
     query = select(Project).where(Project.deleted_at.is_(None))
+    if is_consultant_user(current_user):
+        query = query.where(Project.consultant_id == current_user.id)
     if status:
         query = query.where(Project.status == status)
     if district:
@@ -32,9 +35,11 @@ def list_projects(
 
 
 @router.get("/projects/{slug}", response_model=dict, tags=["projects"])
-def get_project(slug: str, db: Session = Depends(get_db)) -> dict:
+def get_project(slug: str, db: Session = Depends(get_db), current_user: User | None = Depends(get_optional_current_user)) -> dict:
     project = db.scalar(select(Project).where(Project.slug == slug, Project.deleted_at.is_(None)))
     if project is None:
+        raise HTTPException(status_code=404, detail="Project not found")
+    if is_consultant_user(current_user) and project.consultant_id != current_user.id:
         raise HTTPException(status_code=404, detail="Project not found")
     return {
         "project_detail": ProjectOut.model_validate(project).model_dump(mode="json"),
@@ -63,7 +68,8 @@ def get_project(slug: str, db: Session = Depends(get_db)) -> dict:
 
 
 @router.post("/projects", response_model=ProjectOut, status_code=201, tags=["projects"])
-def create_project(payload: ProjectCreate, current_user: StaffUser, db: Session = Depends(get_db)) -> Project:
+def create_project(payload: ProjectCreate, current_user: AdminUser, db: Session = Depends(get_db)) -> Project:
+    validate_consultant_id(db, payload.consultant_id)
     project = Project(**payload.model_dump(), slug=unique_slug(db, Project, payload.name), created_by=current_user.id)
     db.add(project)
     log_activity(db, current_user, "projects.create", "project", None, {"name": payload.name})
@@ -73,9 +79,11 @@ def create_project(payload: ProjectCreate, current_user: StaffUser, db: Session 
 
 
 @router.put("/projects/{project_id}", response_model=ProjectOut, tags=["projects"])
-def update_project(project_id: uuid.UUID, payload: ProjectUpdate, _: StaffUser, db: Session = Depends(get_db)) -> Project:
+def update_project(project_id: uuid.UUID, payload: ProjectUpdate, _: AdminUser, db: Session = Depends(get_db)) -> Project:
     project = get_project_or_404(db, project_id)
     values = payload.model_dump(exclude_unset=True)
+    if "consultant_id" in values:
+        validate_consultant_id(db, values["consultant_id"])
     if "name" in values and values["name"] != project.name:
         project.slug = unique_slug(db, Project, values["name"], exclude_id=project.id)
     for key, value in values.items():
@@ -96,7 +104,7 @@ def delete_project(project_id: uuid.UUID, _: AdminUser, db: Session = Depends(ge
 
 
 @router.post("/projects/{project_id}/images", response_model=list[dict], tags=["projects"])
-def upload_project_images(project_id: uuid.UUID, _: StaffUser, db: Session = Depends(get_db), files: list[UploadFile] = File(...)) -> list[dict]:
+def upload_project_images(project_id: uuid.UUID, _: AdminUser, db: Session = Depends(get_db), files: list[UploadFile] = File(...)) -> list[dict]:
     get_project_or_404(db, project_id)
     created: list[ProjectImage] = []
     for index, file in enumerate(files):
@@ -118,7 +126,7 @@ def upload_project_images(project_id: uuid.UUID, _: StaffUser, db: Session = Dep
 
 
 @router.put("/project-images/{image_id}", response_model=dict, tags=["projects"])
-def update_project_image(image_id: uuid.UUID, payload: ProjectImageUpdate, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+def update_project_image(image_id: uuid.UUID, payload: ProjectImageUpdate, current_user: AdminUser, db: Session = Depends(get_db)) -> dict:
     image = db.get(ProjectImage, image_id)
     if image is None:
         raise HTTPException(status_code=404, detail="Project image not found")
@@ -144,7 +152,7 @@ def update_project_image(image_id: uuid.UUID, payload: ProjectImageUpdate, curre
 
 
 @router.delete("/project-images/{image_id}", response_model=dict, tags=["projects"])
-def delete_project_image(image_id: uuid.UUID, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+def delete_project_image(image_id: uuid.UUID, current_user: AdminUser, db: Session = Depends(get_db)) -> dict:
     image = db.get(ProjectImage, image_id)
     if image is None:
         raise HTTPException(status_code=404, detail="Project image not found")
@@ -161,7 +169,7 @@ def delete_project_image(image_id: uuid.UUID, current_user: StaffUser, db: Sessi
 @router.post("/projects/{project_id}/floor-plans", response_model=FloorPlanOut, status_code=201, tags=["projects"])
 def create_floor_plan(
     project_id: uuid.UUID,
-    current_user: StaffUser,
+    current_user: AdminUser,
     db: Session = Depends(get_db),
     floor_number: int = Form(..., gt=0),
     description: str | None = Form(default=None),
@@ -184,7 +192,7 @@ def list_floor_plans(project_id: uuid.UUID, db: Session = Depends(get_db)) -> li
 
 
 @router.delete("/floor-plans/{floor_plan_id}", response_model=dict, tags=["projects"])
-def delete_floor_plan(floor_plan_id: uuid.UUID, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+def delete_floor_plan(floor_plan_id: uuid.UUID, current_user: AdminUser, db: Session = Depends(get_db)) -> dict:
     floor_plan = db.get(FloorPlan, floor_plan_id)
     if floor_plan is None:
         raise HTTPException(status_code=404, detail="Floor plan not found")
@@ -198,7 +206,7 @@ def delete_floor_plan(floor_plan_id: uuid.UUID, current_user: StaffUser, db: Ses
 
 
 @router.post("/projects/{project_id}/amenities", response_model=dict, tags=["projects"])
-def assign_project_amenity(project_id: uuid.UUID, payload: ProjectAmenityAssign, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+def assign_project_amenity(project_id: uuid.UUID, payload: ProjectAmenityAssign, current_user: AdminUser, db: Session = Depends(get_db)) -> dict:
     get_project_or_404(db, project_id)
     if db.get(Amenity, payload.amenity_id) is None:
         raise HTTPException(status_code=404, detail="Amenity not found")
@@ -213,7 +221,7 @@ def assign_project_amenity(project_id: uuid.UUID, payload: ProjectAmenityAssign,
 
 
 @router.delete("/projects/{project_id}/amenities/{amenity_id}", response_model=dict, tags=["projects"])
-def unassign_project_amenity(project_id: uuid.UUID, amenity_id: uuid.UUID, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
+def unassign_project_amenity(project_id: uuid.UUID, amenity_id: uuid.UUID, current_user: AdminUser, db: Session = Depends(get_db)) -> dict:
     link = db.get(ProjectAmenity, {"project_id": project_id, "amenity_id": amenity_id})
     if link is None:
         raise HTTPException(status_code=404, detail="Project amenity not found")

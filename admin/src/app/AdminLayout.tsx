@@ -3,6 +3,7 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 
 import { clearAuth, getAuthUser } from "@/services/authStorage";
+import { canAccessPath } from "@/services/permissions";
 
 const navItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -15,7 +16,9 @@ const navItems = [
 
 const roleLabels: Record<string, string> = {
   admin: "Quản lý",
-  editor: "Nhân viên",
+  editor: "Nhân viên tư vấn",
+  consultant: "Nhân viên tư vấn",
+  content: "Nhân viên đăng bài",
   viewer: "Chỉ xem",
   customer: "Khách hàng",
 };
@@ -24,6 +27,7 @@ export function AdminLayout(): JSX.Element {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const user = getAuthUser();
+  const visibleNavItems = navItems.filter((item) => canAccessPath(user?.role, item.to));
 
   function handleLogout(): void {
     clearAuth();
@@ -38,7 +42,7 @@ export function AdminLayout(): JSX.Element {
         </div>
 
         <nav className="nav-list" aria-label="Điều hướng nội bộ">
-          {navItems.map((item) => {
+          {visibleNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <NavLink key={item.to} to={item.to} className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} onClick={() => setSidebarOpen(false)}>

@@ -23,6 +23,8 @@ import {
   uploadProjectImages,
   type AmenityPayload,
 } from "@/features/projects/projectsApi";
+import { getAuthUser } from "@/services/authStorage";
+import { isAdminRole } from "@/services/permissions";
 import type { Amenity, Project, ProjectImage } from "@/services/types";
 
 type DetailTab = "overview" | "images" | "amenities" | "apartments";
@@ -69,6 +71,7 @@ export function ProjectDetailPage(): JSX.Element {
   const { slug = "" } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const canManageProjects = isAdminRole(getAuthUser()?.role);
   const [activeTab, setActiveTab] = useState<DetailTab>("overview");
   const [formOpen, setFormOpen] = useState(false);
   const [amenityFormOpen, setAmenityFormOpen] = useState(false);
@@ -221,7 +224,7 @@ export function ProjectDetailPage(): JSX.Element {
               {project.location}
             </p>
           </div>
-          <div className="project-actions">
+          {canManageProjects ? <div className="project-actions">
             <button className="icon-button" type="button" title="Sửa thông tin" aria-label="Sửa thông tin" onClick={() => setFormOpen(true)}>
               <Pencil size={16} />
             </button>
@@ -245,7 +248,7 @@ export function ProjectDetailPage(): JSX.Element {
             >
               <Trash2 size={16} />
             </button>
-          </div>
+          </div> : null}
         </div>
 
         <div className="tabs" role="tablist" aria-label="Chi tiết dự án">
@@ -310,12 +313,12 @@ export function ProjectDetailPage(): JSX.Element {
 
         {activeTab === "images" ? (
           <div className="project-tab-stack">
-            <label className="upload-dropzone">
+            {canManageProjects ? <label className="upload-dropzone">
               <ImagePlus size={22} />
               <strong>Tải ảnh dự án hoặc gallery</strong>
               <span>Hỗ trợ JPG, PNG, WEBP.</span>
               <input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={(event) => event.target.files && uploadImagesMutation.mutate(event.target.files)} />
-            </label>
+            </label> : null}
             <div className="image-grid">
               {(detail?.images ?? []).map((image) => (
                 <figure key={image.id} className="project-image-card" onClick={() => setPreviewImage(image)}>
@@ -325,7 +328,7 @@ export function ProjectDetailPage(): JSX.Element {
                       <strong>{image.caption || "Gallery"}</strong>
                       <span>Ảnh dự án</span>
                     </div>
-                    <div className="image-card-actions">
+                    {canManageProjects ? <div className="image-card-actions">
                       <button
                         type="button"
                         title="Sửa ảnh"
@@ -358,7 +361,7 @@ export function ProjectDetailPage(): JSX.Element {
                       >
                         <Trash2 size={14} />
                       </button>
-                    </div>
+                    </div> : null}
                   </figcaption>
                 </figure>
               ))}
@@ -369,11 +372,11 @@ export function ProjectDetailPage(): JSX.Element {
 
         {activeTab === "amenities" ? (
           <div className="project-tab-stack">
-            <div className="amenity-toolbar">
+            {canManageProjects ? <div className="amenity-toolbar">
               <button className="primary-button" type="button" onClick={openCreateAmenity}>
                 Thêm tiện ích
               </button>
-            </div>
+            </div> : null}
             <div className="table-wrap amenity-table-wrap">
               <table className="amenity-table">
                 <thead>
@@ -381,7 +384,7 @@ export function ProjectDetailPage(): JSX.Element {
                     <th>Tiện ích</th>
                     <th>Loại</th>
                     <th>Ghi chú</th>
-                    <th></th>
+                    {canManageProjects ? <th></th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -393,6 +396,7 @@ export function ProjectDetailPage(): JSX.Element {
                           <button
                             className="table-link-button"
                             type="button"
+                            disabled={!canManageProjects}
                             onClick={() => {
                               if (assigned) {
                                 unassignAmenityMutation.mutate(amenity.id);
@@ -406,7 +410,7 @@ export function ProjectDetailPage(): JSX.Element {
                         </td>
                         <td>{amenityCategoryLabel(amenity.category)}</td>
                         <td>{amenity.description ?? "Không có mô tả"}</td>
-                        <td>
+                        {canManageProjects ? <td>
                           <div className="amenity-actions">
                             <button type="button" title="Sửa tiện ích" aria-label="Sửa tiện ích" onClick={() => openEditAmenity(amenity)}>
                               <Pencil size={14} />
@@ -431,7 +435,7 @@ export function ProjectDetailPage(): JSX.Element {
                               <Trash2 size={14} />
                             </button>
                           </div>
-                        </td>
+                        </td> : null}
                       </tr>
                     );
                   })}
@@ -486,7 +490,7 @@ export function ProjectDetailPage(): JSX.Element {
         ) : null}
       </section>
 
-      <ProjectFormModal
+      {canManageProjects ? <ProjectFormModal
         open={formOpen}
         project={project}
         onClose={() => setFormOpen(false)}
@@ -496,9 +500,9 @@ export function ProjectDetailPage(): JSX.Element {
             navigate(`/projects/${savedProject.slug}`, { replace: true });
           }
         }}
-      />
+      /> : null}
 
-      {amenityFormOpen ? (
+      {amenityFormOpen && canManageProjects ? (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setAmenityFormOpen(false)}>
           <section className="modal-panel amenity-form-modal" role="dialog" aria-modal="true" aria-labelledby="amenity-form-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">

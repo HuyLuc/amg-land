@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { login } from "@/features/auth/authApi";
 import { isInternalUser, saveAuth } from "@/services/authStorage";
+import { getDefaultPath } from "@/services/permissions";
 
 export function LoginPage(): JSX.Element {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ export function LoginPage(): JSX.Element {
         return;
       }
       saveAuth(response.access_token, response.refresh_token, response.user_info);
-      navigate("/dashboard", { replace: true });
+      navigate(getDefaultPath(response.user_info.role), { replace: true });
     } catch (err) {
       setError("Email hoặc mật khẩu không đúng.");
     } finally {

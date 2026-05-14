@@ -9,7 +9,7 @@ def list_amenities(db: Session = Depends(get_db)) -> list[Amenity]:
 
 
 @router.post("/amenities", response_model=AmenityOut, status_code=201, tags=["amenities"])
-def create_amenity(payload: AmenityCreate, _: StaffUser, db: Session = Depends(get_db)) -> Amenity:
+def create_amenity(payload: AmenityCreate, _: AdminUser, db: Session = Depends(get_db)) -> Amenity:
     amenity = Amenity(**payload.model_dump())
     db.add(amenity)
     commit_or_400(db)
@@ -18,7 +18,7 @@ def create_amenity(payload: AmenityCreate, _: StaffUser, db: Session = Depends(g
 
 
 @router.put("/amenities/{amenity_id}", response_model=AmenityOut, tags=["amenities"])
-def update_amenity(amenity_id: uuid.UUID, payload: AmenityUpdate, _: StaffUser, db: Session = Depends(get_db)) -> Amenity:
+def update_amenity(amenity_id: uuid.UUID, payload: AmenityUpdate, _: AdminUser, db: Session = Depends(get_db)) -> Amenity:
     amenity = db.get(Amenity, amenity_id)
     if amenity is None:
         raise HTTPException(status_code=404, detail="Amenity not found")
@@ -30,7 +30,7 @@ def update_amenity(amenity_id: uuid.UUID, payload: AmenityUpdate, _: StaffUser, 
 
 
 @router.delete("/amenities/{amenity_id}", response_model=dict, tags=["amenities"])
-def delete_amenity(amenity_id: uuid.UUID, _: StaffUser, db: Session = Depends(get_db)) -> dict:
+def delete_amenity(amenity_id: uuid.UUID, _: AdminUser, db: Session = Depends(get_db)) -> dict:
     amenity = db.get(Amenity, amenity_id)
     if amenity is None:
         raise HTTPException(status_code=404, detail="Amenity not found")

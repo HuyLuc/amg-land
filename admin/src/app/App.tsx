@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { AdminLayout } from "@/app/AdminLayout";
 import { ApartmentDetailPage } from "@/features/apartments/ApartmentDetailPage";
@@ -11,6 +11,7 @@ import { ProjectDetailPage } from "@/features/projects/ProjectDetailPage";
 import { ProjectsPage } from "@/features/projects/ProjectsPage";
 import { UsersPage } from "@/features/users/UsersPage";
 import { clearAuth, getAuthUser, isAuthenticated, isInternalUser } from "@/services/authStorage";
+import { canAccessPath, getDefaultPath } from "@/services/permissions";
 
 function ProtectedRoute(): JSX.Element {
   if (!isAuthenticated()) {
@@ -24,20 +25,33 @@ function ProtectedRoute(): JSX.Element {
   return <AdminLayout />;
 }
 
+function RoleRoute({ children }: { children: JSX.Element }): JSX.Element {
+  const location = useLocation();
+  const user = getAuthUser();
+  if (!canAccessPath(user?.role, location.pathname)) {
+    return <Navigate to={getDefaultPath(user?.role)} replace />;
+  }
+  return children;
+}
+
+function RootRedirect(): JSX.Element {
+  return <Navigate to={getDefaultPath(getAuthUser()?.role)} replace />;
+}
+
 export function App(): JSX.Element {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/contacts" element={<ContactsPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/projects/:slug" element={<ProjectDetailPage />} />
-        <Route path="/apartments" element={<ApartmentsPage />} />
-        <Route path="/apartments/:id" element={<ApartmentDetailPage />} />
-        <Route path="/posts" element={<PostsPage />} />
-        <Route path="/users" element={<UsersPage />} />
+        <Route path="/" element={<RootRedirect />} />
+        <Route path="/dashboard" element={<RoleRoute><DashboardPage /></RoleRoute>} />
+        <Route path="/contacts" element={<RoleRoute><ContactsPage /></RoleRoute>} />
+        <Route path="/projects" element={<RoleRoute><ProjectsPage /></RoleRoute>} />
+        <Route path="/projects/:slug" element={<RoleRoute><ProjectDetailPage /></RoleRoute>} />
+        <Route path="/apartments" element={<RoleRoute><ApartmentsPage /></RoleRoute>} />
+        <Route path="/apartments/:id" element={<RoleRoute><ApartmentDetailPage /></RoleRoute>} />
+        <Route path="/posts" element={<RoleRoute><PostsPage /></RoleRoute>} />
+        <Route path="/users" element={<RoleRoute><UsersPage /></RoleRoute>} />
       </Route>
     </Routes>
   );

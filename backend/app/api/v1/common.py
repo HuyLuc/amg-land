@@ -70,7 +70,44 @@ from app.models.user import User, UserRole
 
 
 AdminUser = Annotated[User, Depends(require_roles(UserRole.admin))]
-StaffUser = Annotated[User, Depends(require_roles(UserRole.admin, UserRole.editor))]
+StaffUser = Annotated[User, Depends(require_roles(UserRole.admin, UserRole.editor, UserRole.consultant, UserRole.content))]
+SalesUser = Annotated[User, Depends(require_roles(UserRole.admin, UserRole.editor, UserRole.consultant))]
+ContentUser = Annotated[User, Depends(require_roles(UserRole.admin, UserRole.content))]
+
+
+def is_consultant_user(user: User | None) -> bool:
+    return user is not None and user.role in {UserRole.consultant, UserRole.editor}
+
+
+def is_internal_user(user: User | None) -> bool:
+    return user is not None and user.role in {UserRole.admin, UserRole.editor, UserRole.consultant, UserRole.content}
+
+
+def can_manage_content(user: User | None) -> bool:
+    return user is not None and user.role in {UserRole.admin, UserRole.content}
+
+
+def validate_consultant_id(db: Session, consultant_id: uuid.UUID | None) -> None:
+    if consultant_id is None:
+        return
+    user = db.get(User, consultant_id)
+    if user is None or user.role not in {UserRole.consultant, UserRole.editor} or not user.is_active:
+        raise HTTPException(status_code=400, detail="Consultant not found")
+
+
+def consultant_apartment_condition(user: User):
+    return or_(
+        Apartment.consultant_id == user.id,
+        and_(Apartment.consultant_id.is_(None), Project.consultant_id == user.id),
+    )
+
+
+def ensure_apartment_visible(db: Session, apartment: Apartment, user: User | None) -> None:
+    if not is_consultant_user(user):
+        return
+    project = db.get(Project, apartment.project_id)
+    if apartment.consultant_id != user.id and (apartment.consultant_id is not None or project is None or project.consultant_id != user.id):
+        raise HTTPException(status_code=404, detail="Apartment not found")
 
 
 def slugify(value: str) -> str:

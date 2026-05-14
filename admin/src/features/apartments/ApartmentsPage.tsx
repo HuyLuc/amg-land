@@ -16,6 +16,9 @@ import {
 } from "@/features/apartments/apartmentsApi";
 import { formatDirection } from "@/features/apartments/directions";
 import { listProjects } from "@/features/projects/projectsApi";
+import { listUsers } from "@/features/users/usersApi";
+import { getAuthUser } from "@/services/authStorage";
+import { isAdminRole } from "@/services/permissions";
 import type { Apartment } from "@/services/types";
 
 const statusOptions = [
@@ -58,6 +61,7 @@ const initialForm: ApartmentPayload = {
   price: 1000000000,
   status: "available",
   feng_shui_element: "",
+  consultant_id: null,
 };
 
 interface ConfirmState {
@@ -74,6 +78,7 @@ function formatCurrency(value: number): string {
 export function ApartmentsPage(): JSX.Element {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const canManageApartments = isAdminRole(getAuthUser()?.role);
   const [searchParams, setSearchParams] = useSearchParams();
   const initialProjectId = searchParams.get("projectId") ?? "";
   const [projectId, setProjectId] = useState(initialProjectId);
@@ -97,6 +102,11 @@ export function ApartmentsPage(): JSX.Element {
     queryKey: ["projects", "apartment-filter"],
     queryFn: () => listProjects({ limit: 100 }),
   });
+  const usersQuery = useQuery({
+    queryKey: ["users", "consultants-for-apartment-form"],
+    queryFn: () => listUsers({ limit: 100 }),
+    enabled: canManageApartments,
+  });
 
   const apartmentsQuery = useQuery({
     queryKey: ["apartments", page, pageSize, projectId, status, floor, bedrooms, direction, priceMin, priceMax, areaMin, areaMax],
@@ -116,6 +126,15 @@ export function ApartmentsPage(): JSX.Element {
   const projectOptions = useMemo(() => [{ value: "", label: "Tất cả dự án" }, ...projects.map((project) => ({ value: project.id, label: project.name }))], [projects]);
   const formProjectOptions = useMemo(() => projects.map((project) => ({ value: project.id, label: project.name })), [projects]);
   const projectNameById = useMemo(() => new Map(projects.map((project) => [project.id, project.name])), [projects]);
+  const consultantOptions = useMemo(
+    () => [
+      { value: "", label: "Theo nhân viên phụ trách dự án" },
+      ...(usersQuery.data?.items ?? [])
+        .filter((user) => user.role === "consultant" || user.role === "editor")
+        .map((user) => ({ value: user.id, label: user.full_name })),
+    ],
+    [usersQuery.data?.items],
+  );
 
   const summary = useMemo(
     () => ({
@@ -163,6 +182,7 @@ export function ApartmentsPage(): JSX.Element {
       price: apartment.price,
       status: apartment.status,
       feng_shui_element: apartment.feng_shui_element ?? "",
+      consultant_id: apartment.consultant_id,
     });
     setFormOpen(true);
   }
@@ -197,12 +217,12 @@ export function ApartmentsPage(): JSX.Element {
       <PageHeader
         title="Căn hộ"
         description="Quản lý toàn bộ giỏ hàng căn hộ theo dự án, trạng thái và thông tin bán hàng."
-        action={
+        action={canManageApartments ? (
           <button className="primary-button" type="button" onClick={openCreateForm}>
             <Plus size={17} />
             Thêm căn hộ
           </button>
-        }
+        ) : undefined}
       />
 
       <section className="filter-panel">
@@ -295,7 +315,7 @@ export function ApartmentsPage(): JSX.Element {
                 <th>Hướng</th>
                 <th>Giá</th>
                 <th>Trạng thái</th>
-                <th></th>
+                  {canManageApartments ? <th></th> : null}
               </tr>
             </thead>
             <tbody>
@@ -315,7 +335,7 @@ export function ApartmentsPage(): JSX.Element {
                   <td>
                     <StatusBadge value={apartment.status} />
                   </td>
-                  <td>
+                  {canManageApartments ? <td>
                     <div className="amenity-actions">
                       <button
                         type="button"
@@ -349,7 +369,7 @@ export function ApartmentsPage(): JSX.Element {
                         <Trash2 size={14} />
                       </button>
                     </div>
-                  </td>
+                  </td> : null}
                 </tr>
               ))}
             </tbody>
@@ -378,7 +398,7 @@ export function ApartmentsPage(): JSX.Element {
         </div>
       </section>
 
-      {formOpen ? (
+      {formOpen && canManageApartments ? (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setFormOpen(false)}>
           <section className="modal-panel apartment-form-modal" role="dialog" aria-modal="true" aria-labelledby="apartment-form-title" onMouseDown={(event) => event.stopPropagation()}>
             <div className="modal-header">
@@ -430,6 +450,7 @@ export function ApartmentsPage(): JSX.Element {
                 <span>Mệnh phong thủy</span>
                 <input value={form.feng_shui_element ?? ""} onChange={(event) => setForm((current) => ({ ...current, feng_shui_element: event.target.value }))} placeholder="Kim, Mộc, Thủy, Hỏa, Thổ" />
               </label>
+              <SelectMenu label="Nhân viên tư vấn phụ trách" value={form.consultant_id ?? ""} options={consultantOptions} onChange={(value) => setForm((current) => ({ ...current, consultant_id: value || null }))} />
               {!form.project_id ? <div className="form-error">Vui lòng chọn dự án trước khi lưu căn hộ.</div> : null}
               {saveMutation.error ? <div className="form-error">Không lưu được căn hộ. Vui lòng kiểm tra dữ liệu.</div> : null}
               <div className="modal-actions">
