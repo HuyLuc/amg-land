@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, ChevronLeft, ChevronRight, Edit3, Filter, LockKeyhole, Plus, Search, UserRound, X } from "lucide-react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Edit3, Filter, LockKeyhole, Plus, Search, X } from "lucide-react";
+import { FormEvent, useEffect, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
@@ -71,6 +71,16 @@ function getRoleLabel(role: UserRole): string {
   return roleOptions.find((option) => option.value === role)?.label ?? role;
 }
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) {
+    return "TK";
+  }
+  const first = parts[0]?.[0] ?? "";
+  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? "" : parts[0]?.[1] ?? "";
+  return `${first}${last}`.toUpperCase();
+}
+
 export function UsersPage(): JSX.Element {
   const queryClient = useQueryClient();
   const currentUser = getAuthUser();
@@ -100,24 +110,8 @@ export function UsersPage(): JSX.Element {
     queryFn: () => listUsers({ page, limit: pageSize, keyword, role, isActive }),
   });
 
-  const allUsersQuery = useQuery({
-    queryKey: ["users", "summary"],
-    queryFn: () => listUsers({ limit: 100 }),
-  });
-
   const users = usersQuery.data?.items ?? [];
   const totalPages = Math.max(1, Math.ceil((usersQuery.data?.total ?? 0) / (usersQuery.data?.limit ?? pageSize)));
-  const summaryUsers = allUsersQuery.data?.items ?? [];
-  const stats = useMemo(
-    () => ({
-      total: summaryUsers.length,
-      admin: summaryUsers.filter((item) => item.role === "admin").length,
-      staff: summaryUsers.filter((item) => item.role === "editor").length,
-      customer: summaryUsers.filter((item) => item.role === "customer").length,
-      inactive: summaryUsers.filter((item) => !item.is_active).length,
-    }),
-    [summaryUsers],
-  );
 
   function showToast(message: string): void {
     setToast(message);
@@ -222,24 +216,6 @@ export function UsersPage(): JSX.Element {
         }
       />
 
-      <div className="account-summary-strip" aria-label="Tổng quan tài khoản">
-        <button className={role === "" && isActive === "" ? "active" : ""} type="button" onClick={() => { setRole(""); setIsActive(""); }}>
-          Tổng <strong>{stats.total}</strong>
-        </button>
-        <button className={role === "admin" ? "active" : ""} type="button" onClick={() => setRole("admin")}>
-          Quản lý <strong>{stats.admin}</strong>
-        </button>
-        <button className={role === "editor" ? "active" : ""} type="button" onClick={() => setRole("editor")}>
-          Nhân viên <strong>{stats.staff}</strong>
-        </button>
-        <button className={role === "customer" ? "active" : ""} type="button" onClick={() => setRole("customer")}>
-          Khách hàng <strong>{stats.customer}</strong>
-        </button>
-        <button className={isActive === "false" ? "active" : ""} type="button" onClick={() => setIsActive("false")}>
-          Tạm khóa <strong>{stats.inactive}</strong>
-        </button>
-      </div>
-
       <section className="filter-panel">
         <div className="filter-title">
           <Filter size={18} />
@@ -296,7 +272,7 @@ export function UsersPage(): JSX.Element {
                   <tr key={user.id}>
                     <td>
                       <div className="account-identity">
-                        <span className="account-avatar"><UserRound size={17} /></span>
+                        <span className={`account-avatar account-avatar-${user.role}`} aria-hidden="true">{getInitials(user.full_name)}</span>
                         <div>
                           <strong>{user.full_name}</strong>
                           <span>{user.email}</span>
