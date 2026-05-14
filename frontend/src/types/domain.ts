@@ -44,8 +44,10 @@ export type Project = {
 
 export type Post = {
   id: string;
+  slug?: string;
   title: string;
   excerpt: string;
+  content?: string;
   images: string[];
   date: string;
 };

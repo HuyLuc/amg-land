@@ -5,7 +5,7 @@ import { HeroSection } from "../components/sections/HeroSection";
 import { NewsPreviewSection } from "../components/sections/NewsPreviewSection";
 import { QuickSearch } from "../features/projects/components/QuickSearch";
 import type { ProjectFilters } from "../features/projects/hooks/useProjectFilters";
-import type { Project } from "../types/domain";
+import type { Post, Project } from "../types/domain";
 
 type HomePageProps = {
   filters: ProjectFilters;
@@ -13,10 +13,11 @@ type HomePageProps = {
   onContact: () => void;
   onExploreProjects: () => void;
   onNavigateNews: () => void;
+  onOpenPost: (post: Post) => void;
   onOpenProject: (project: Project) => void;
 };
 
-export function HomePage({ filters, projects, onContact, onExploreProjects, onNavigateNews, onOpenProject }: HomePageProps) {
+export function HomePage({ filters, projects, onContact, onExploreProjects, onNavigateNews, onOpenPost, onOpenProject }: HomePageProps) {
   return (
     <>
       <HeroSection onContact={onContact} onExplore={onExploreProjects} />
@@ -32,7 +33,7 @@ export function HomePage({ filters, projects, onContact, onExploreProjects, onNa
       />
       <FeaturedProjectsSection projects={projects} onOpenProject={onOpenProject} />
       <FengShuiSection onExplore={onExploreProjects} />
-      <NewsPreviewSection onNavigateNews={onNavigateNews} />
+      <NewsPreviewSection onNavigateNews={onNavigateNews} onOpenPost={onOpenPost} />
       <ContactBand onContact={onContact} />
     </>
   );

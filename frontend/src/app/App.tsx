@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Chatbot } from "../features/chat/components/Chatbot";
 import type { AuthUser } from "../features/auth/types";
 import { fetchProjects } from "../features/projects/api";
+import { fetchPost } from "../features/posts/api";
 import { useProjectFilters } from "../features/projects/hooks/useProjectFilters";
 import { AboutPage } from "../pages/AboutPage";
 import { ApartmentDetailPage } from "../pages/ApartmentDetailPage";
@@ -11,11 +12,12 @@ import { CommunityPage } from "../pages/CommunityPage";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
 import { NewsPage } from "../pages/NewsPage";
+import { NewsDetailPage } from "../pages/NewsDetailPage";
 import { ProjectDetailPage } from "../pages/ProjectDetailPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { ProjectsPage } from "../pages/ProjectsPage";
 import { RegisterPage } from "../pages/RegisterPage";
-import type { Apartment, Project } from "../types/domain";
+import type { Apartment, Post, Project } from "../types/domain";
 import { AppLayout } from "../components/layout/AppLayout";
 import { PageTransition } from "../components/layout/PageTransition";
 import type { Page } from "./types";
@@ -51,6 +53,9 @@ function readInitialPage(): Page {
   if (hash.startsWith("projects/")) {
     return "projectDetail";
   }
+  if (hash.startsWith("news/")) {
+    return "newsDetail";
+  }
   return pageByHash[hash] ?? "home";
 }
 
@@ -66,20 +71,30 @@ function readApartmentIdFromHash() {
   return match?.[1] ?? null;
 }
 
+function readPostSlugFromHash() {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  const match = hash.match(/^news\/([^/]+)$/);
+  return match?.[1] ?? null;
+}
+
 function pageToHash(nextPage: Page) {
-  return nextPage === "projectDetail" || nextPage === "apartmentDetail" ? null : `#/${nextPage}`;
+  return nextPage === "projectDetail" || nextPage === "apartmentDetail" || nextPage === "newsDetail" ? null : `#/${nextPage}`;
 }
 
 export function App() {
   const [page, setPage] = useState<Page>(() => readInitialPage());
   const [routeProjectSlug, setRouteProjectSlug] = useState<string | null>(() => readProjectSlugFromHash());
   const [routeApartmentId, setRouteApartmentId] = useState<string | null>(() => readApartmentIdFromHash());
+  const [routePostSlug, setRoutePostSlug] = useState<string | null>(() => readPostSlugFromHash());
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
+  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
   const [contactContext, setContactContext] = useState<ContactContext | null>(null);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectsError, setProjectsError] = useState("");
+  const [postLoading, setPostLoading] = useState(false);
+  const [postError, setPostError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -92,8 +107,20 @@ export function App() {
     setPage(nextPage);
     setRouteProjectSlug(null);
     setRouteApartmentId(null);
+    setRoutePostSlug(null);
     const nextHash = pageToHash(nextPage);
     if (nextHash && window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
+    }
+  };
+
+  const openPost = (post: Post) => {
+    if (!post.slug) return;
+    setSelectedPost(post);
+    setRoutePostSlug(post.slug);
+    setPage("newsDetail");
+    const nextHash = `#/news/${post.slug}`;
+    if (window.location.hash !== nextHash) {
       window.history.pushState(null, "", nextHash);
     }
   };
@@ -172,6 +199,7 @@ export function App() {
       setPage(readInitialPage());
       setRouteProjectSlug(readProjectSlugFromHash());
       setRouteApartmentId(readApartmentIdFromHash());
+      setRoutePostSlug(readPostSlugFromHash());
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -212,6 +240,42 @@ export function App() {
   }, [page, projects, projectsLoading, routeApartmentId, routeProjectSlug]);
 
   useEffect(() => {
+    if (page !== "newsDetail") {
+      return;
+    }
+
+    if (!routePostSlug) {
+      setPage("news");
+      return;
+    }
+
+    if (selectedPost?.slug === routePostSlug && selectedPost.content !== undefined) {
+      return;
+    }
+
+    let mounted = true;
+    setPostLoading(true);
+    setPostError("");
+
+    fetchPost(routePostSlug)
+      .then((post) => {
+        if (!mounted) return;
+        setSelectedPost(post);
+      })
+      .catch((error) => {
+        if (!mounted) return;
+        setPostError(error instanceof Error ? error.message : "Không thể tải chi tiết tin tức.");
+      })
+      .finally(() => {
+        if (mounted) setPostLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [page, routePostSlug, selectedPost?.content, selectedPost?.slug]);
+
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page, selectedApartment?.id, selectedProject?.id]);
 
@@ -225,6 +289,7 @@ export function App() {
             onContact={() => openContact()}
             onExploreProjects={() => navigate("projects")}
             onNavigateNews={() => navigate("news")}
+            onOpenPost={openPost}
             onOpenProject={openProject}
           />
         )}
@@ -267,7 +332,14 @@ export function App() {
         )}
 
         {page === "about" && <AboutPage onContact={() => openContact()} />}
-        {page === "news" && <NewsPage />}
+        {page === "news" && <NewsPage onOpenPost={openPost} />}
+        {page === "newsDetail" && selectedPost && <NewsDetailPage post={selectedPost} onBack={() => navigate("news")} />}
+        {page === "newsDetail" && !selectedPost && (
+          <section className="section-wrap">
+            {postLoading ? <div className="surface-card rounded p-6 text-center text-slate-600">Đang tải chi tiết tin tức...</div> : null}
+            {postError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{postError}</div> : null}
+          </section>
+        )}
         {page === "community" && <CommunityPage />}
         {page === "contact" && <ContactPage context={contactContext} projects={projects} />}
         {page === "login" && <LoginPage onLogin={completeAuth} onNavigate={navigate} />}
