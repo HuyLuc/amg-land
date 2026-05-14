@@ -7,6 +7,7 @@ from app.api.v1.endpoints import apartments
 from app.api.v1.endpoints import amenities
 from app.api.v1.endpoints import search
 from app.api.v1.endpoints import chat
+from app.api.v1.endpoints import community
 from app.api.v1.endpoints import posts
 from app.api.v1.endpoints import contacts
 from app.api.v1.endpoints import analytics
@@ -22,6 +23,7 @@ api_router.include_router(apartments.router)
 api_router.include_router(amenities.router)
 api_router.include_router(search.router)
 api_router.include_router(chat.router)
+api_router.include_router(community.router)
 api_router.include_router(posts.router)
 api_router.include_router(contacts.router)
 api_router.include_router(analytics.router)

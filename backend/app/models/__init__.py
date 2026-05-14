@@ -4,6 +4,7 @@ from app.models.analytics_event import AnalyticsEvent
 from app.models.apartment import Apartment, ApartmentMedia
 from app.models.auth_token import PasswordResetToken, RefreshToken
 from app.models.chat_session import ChatSession
+from app.models.community import CommunityComment, CommunityPost, CommunityPostBookmark, CommunityPostLike
 from app.models.contact_request import ContactRequest
 from app.models.floor_plan import FloorPlan
 from app.models.post import Post
@@ -17,6 +18,10 @@ __all__ = [
     "Apartment",
     "ApartmentMedia",
     "ChatSession",
+    "CommunityComment",
+    "CommunityPost",
+    "CommunityPostBookmark",
+    "CommunityPostLike",
     "ContactRequest",
     "FloorPlan",
     "PasswordResetToken",

@@ -340,7 +340,7 @@ export function App() {
             {postError ? <div className="rounded border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{postError}</div> : null}
           </section>
         )}
-        {page === "community" && <CommunityPage />}
+        {page === "community" && <CommunityPage user={user} onNavigate={navigate} />}
         {page === "contact" && <ContactPage context={contactContext} projects={projects} />}
         {page === "login" && <LoginPage onLogin={completeAuth} onNavigate={navigate} />}
         {page === "register" && <RegisterPage onRegister={completeAuth} onNavigate={navigate} />}

@@ -32,6 +32,10 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     projects = relationship("Project", back_populates="creator", foreign_keys="Project.created_by")
     posts = relationship("Post", back_populates="author")
+    community_posts = relationship("CommunityPost", back_populates="author")
+    community_comments = relationship("CommunityComment", back_populates="author")
+    community_likes = relationship("CommunityPostLike", back_populates="user", cascade="all, delete-orphan")
+    community_bookmarks = relationship("CommunityPostBookmark", back_populates="user", cascade="all, delete-orphan")
     refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="user", cascade="all, delete-orphan")
     activity_logs = relationship("ActivityLog", back_populates="actor")

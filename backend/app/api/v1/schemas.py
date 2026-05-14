@@ -65,6 +65,13 @@ class ContactPage(BaseModel):
     limit: int
 
 
+class CommunityPostPage(BaseModel):
+    items: list["CommunityPostOut"]
+    total: int
+    page: int
+    limit: int
+
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
@@ -372,6 +379,46 @@ class ContactOut(ORMModel):
     assigned_to: UUID | None = None
     note: str | None = None
     created_at: datetime
+
+
+class CommunityPostCreate(BaseModel):
+    title: str = Field(min_length=5, max_length=180)
+    content: str = Field(min_length=10, max_length=4000)
+    category: str = Field(min_length=2, max_length=50)
+    image_url: str | None = Field(default=None, max_length=500)
+
+
+class CommunityCommentCreate(BaseModel):
+    content: str = Field(min_length=1, max_length=1000)
+
+
+class CommunityAuthorOut(BaseModel):
+    id: UUID | None = None
+    name: str
+    role: str
+    avatar: str
+
+
+class CommunityCommentOut(BaseModel):
+    id: UUID
+    author: CommunityAuthorOut
+    content: str
+    created_at: datetime
+
+
+class CommunityPostOut(BaseModel):
+    id: UUID
+    author: CommunityAuthorOut
+    title: str
+    content: str
+    category: str
+    image_url: str | None = None
+    created_at: datetime
+    likes: int
+    shares: int
+    liked: bool
+    bookmarked: bool
+    comments: list[CommunityCommentOut] = Field(default_factory=list)
 
 
 class ChatMessageRequest(BaseModel):
