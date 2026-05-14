@@ -18,19 +18,50 @@ import { AppLayout } from "../components/layout/AppLayout";
 import { PageTransition } from "../components/layout/PageTransition";
 import type { Page } from "./types";
 
+const AUTH_STORAGE_KEY = "amg_customer_auth";
+const pageByHash: Record<string, Page> = {
+  home: "home",
+  about: "about",
+  projects: "projects",
+  news: "news",
+  community: "community",
+  contact: "contact",
+  login: "login",
+  register: "register",
+  profile: "profile",
+};
+
+function readStoredUser() {
+  try {
+    const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    return null;
+  }
+}
+
+function readInitialPage(): Page {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  return pageByHash[hash] ?? "home";
+}
+
 export function App() {
-  const [page, setPage] = useState<Page>("home");
+  const [page, setPage] = useState<Page>(() => readInitialPage());
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectsError, setProjectsError] = useState("");
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
   const [chatOpen, setChatOpen] = useState(false);
 
   const projectFilters = useProjectFilters(projects);
 
   const navigate = (nextPage: Page) => {
     setPage(nextPage);
+    if (nextPage !== "projectDetail") {
+      window.history.replaceState(null, "", `#/${nextPage}`);
+    }
   };
 
   const openProject = (project: Project) => {
@@ -40,11 +71,13 @@ export function App() {
 
   const completeAuth = (nextUser: AuthUser) => {
     setUser(nextUser);
+    window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
     navigate("profile");
   };
 
   const logout = () => {
     setUser(null);
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
     navigate("home");
   };
 
