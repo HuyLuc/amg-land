@@ -244,7 +244,7 @@ export function PostsPage(): JSX.Element {
       project_id: form.project_id || null,
       apartment_id: form.apartment_id || null,
       status: form.status,
-      published_at: form.status === "published" ? new Date().toISOString() : null,
+      published_at: form.status === "published" ? editingPost?.published_at ?? new Date().toISOString() : null,
     };
     if (editingPost) {
       await updateMutation.mutateAsync({ postId: editingPost.id, payload });

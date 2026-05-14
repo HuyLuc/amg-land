@@ -9,7 +9,7 @@ from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db, require_roles
+from app.api.deps import get_current_user, get_db, get_optional_current_user, require_roles
 from app.api.v1.schemas import (
     AnalyticsEventCreate,
     AmenityCreate,

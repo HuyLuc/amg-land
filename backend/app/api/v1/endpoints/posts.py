@@ -6,6 +6,7 @@ router = APIRouter()
 @router.get("/posts", response_model=PostPage, tags=["posts"])
 def list_posts(
     db: Session = Depends(get_db),
+    current_user: User | None = Depends(get_optional_current_user),
     category: str | None = None,
     keyword: str | None = None,
     status: PostStatus | None = None,
@@ -14,6 +15,7 @@ def list_posts(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
 ) -> dict:
+    is_staff = current_user is not None and current_user.role in {UserRole.admin, UserRole.editor}
     query = select(Post)
     if category:
         query = query.join(Category).where(or_(Category.slug == category, Category.name.ilike(f"%{category}%")))
@@ -21,6 +23,8 @@ def list_posts(
         query = query.where(Post.title.ilike(f"%{keyword}%"))
     if status:
         query = query.where(Post.status == status)
+    elif not is_staff:
+        query = query.where(Post.status == PostStatus.published)
     if project_id:
         query = query.where(Post.project_id == project_id)
     if apartment_id:
@@ -31,9 +35,12 @@ def list_posts(
 
 
 @router.get("/posts/{slug}", response_model=PostOut, tags=["posts"])
-def get_post(slug: str, db: Session = Depends(get_db)) -> Post:
+def get_post(slug: str, db: Session = Depends(get_db), current_user: User | None = Depends(get_optional_current_user)) -> Post:
     post = db.scalar(select(Post).where(Post.slug == slug))
     if post is None:
+        raise HTTPException(status_code=404, detail="Post not found")
+    is_staff = current_user is not None and current_user.role in {UserRole.admin, UserRole.editor}
+    if post.status != PostStatus.published and not is_staff:
         raise HTTPException(status_code=404, detail="Post not found")
     return post
 
@@ -95,6 +102,8 @@ def update_post(post_id: uuid.UUID, payload: PostUpdate, _: StaffUser, db: Sessi
         post.slug = unique_slug(db, Post, values["title"], exclude_id=post.id)
     for key, value in values.items():
         setattr(post, key, value)
+    if post.status == PostStatus.published and post.published_at is None:
+        post.published_at = datetime.now(timezone.utc)
     commit_or_400(db)
     db.refresh(post)
     return post
