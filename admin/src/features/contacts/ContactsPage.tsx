@@ -342,6 +342,10 @@ export function ContactsPage(): JSX.Element {
                 <SelectMenu label="Trạng thái xử lý" value={draftStatus} options={statusOptions.slice(1)} onChange={(value) => setDraftStatus(value as Contact["status"])} />
                 {canAssignContacts ? <SelectMenu label="Người phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} /> : null}
                 <div className="readonly-field">
+                  <span>Dự án quan tâm</span>
+                  <strong>{selectedContact.project_id ? projectNameById.get(selectedContact.project_id) ?? "Dự án đã chọn" : "Chưa chọn dự án"}</strong>
+                </div>
+                <div className="readonly-field">
                   <span>Căn hộ quan tâm</span>
                   <strong>{selectedContact.apartment_code ?? "Chưa chọn căn hộ"}</strong>
                 </div>
