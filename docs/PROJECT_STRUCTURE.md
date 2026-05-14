@@ -6,7 +6,7 @@ Tai lieu nay mo ta cau truc thu muc chuan cho du an AMG News.
 
 ```text
 amg-land-web/
-  be/
+  backend/
     app/
       api/
         v1/
@@ -26,6 +26,7 @@ amg-land-web/
         apartments/
         amenities/
         posts/
+        community/
         contacts/
         chat/
         stats/
@@ -37,14 +38,17 @@ amg-land-web/
       unit/
       integration/
     README.md
-  fe/
+  frontend/
     src/
       app/
-        public/
-        admin/
+        App.tsx
+        navigation.ts
+        types.ts
       assets/
+        data/
       components/
         layout/
+        sections/
         ui/
       config/
       features/
@@ -56,6 +60,7 @@ amg-land-web/
         contacts/
         chat/
         stats/
+      pages/
       hooks/
       lib/
       services/
@@ -83,13 +88,13 @@ amg-land-web/
 
 ## Nguyen Tac Kien Truc
 
-- Tach frontend va backend thanh hai thu muc rieng: `fe/` va `be/`.
+- Tach frontend va backend thanh hai thu muc rieng: `frontend/` va `backend/`.
 - Backend di theo modular monolith: moi domain nam trong `app/modules`, cac lop dung chung nam trong `core`, `db`, `repositories`, `services`.
 - Frontend tach theo feature: moi nghiep vu lon co thu muc rieng trong `src/features`.
 - Contract/schema dung chung dat trong `packages/shared` de tranh lech kieu du lieu giua web va API.
 - Ha tang va tai lieu quyet dinh kien truc tach rieng trong `infra` va `docs/adr`.
 
-## Backend: `be`
+## Backend: `backend`
 
 | Thu muc | Muc dich |
 | --- | --- |
@@ -106,13 +111,16 @@ amg-land-web/
 | `alembic` | Database migrations |
 | `tests` | Unit va integration tests cho backend |
 
-## Frontend: `fe`
+## Frontend: `frontend`
 
 | Thu muc | Muc dich |
 | --- | --- |
-| `src/app` | Route/page layer cho React frontend |
+| `src/app` | App shell, navigation config va route state cho React frontend |
+| `src/pages` | Cac page public: Home, Projects, News, Community, Contact |
+| `src/assets/data` | Mock data va sau nay co the thay bang API/service layer |
 | `src/components/ui` | Component UI dung chung |
 | `src/components/layout` | Header, footer, sidebar, shell layout |
+| `src/components/sections` | Cac section dung lai tren public website |
 | `src/features` | Module UI theo nghiep vu |
 | `src/services` | API clients |
 | `src/lib` | Helper/framework adapters |

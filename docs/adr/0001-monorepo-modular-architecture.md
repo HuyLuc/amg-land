@@ -12,8 +12,8 @@ AMG News gom frontend public website, CMS, backend API, database migration, obje
 
 Su dung repository full-stack voi cac vung chinh:
 
-- `fe` cho frontend React.js.
-- `be` cho backend FastAPI.
+- `frontend` cho frontend React.js.
+- `backend` cho backend FastAPI.
 - `packages/shared` cho contract/type/schema dung chung.
 - `infra` cho Docker, nginx va script van hanh.
 - `docs/adr` cho quyet dinh kien truc.
