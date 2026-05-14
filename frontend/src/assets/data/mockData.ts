@@ -146,24 +146,21 @@ export const posts: Post[] = [
     id: "n1",
     title: "Căn hộ ven sông tiếp tục hút nhu cầu ở thực tại Hà Nội",
     excerpt: "Người mua ưu tiên không gian sống thoáng, kết nối giao thông và tiện ích gần nhà.",
-    image:
-      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80",
+    images: ["https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=900&q=80"],
     date: "18/03/2026"
   },
   {
     id: "n2",
     title: "Cách đọc bảng giá căn hộ để tránh bỏ sót chi phí",
     excerpt: "Ngoài giá niêm yết, khách hàng cần quan tâm phí bảo trì, nội thất và tiến độ thanh toán.",
-    image:
-      "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80",
+    images: ["https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=900&q=80"],
     date: "16/03/2026"
   },
   {
     id: "n3",
     title: "Hướng nhà và yếu tố phong thủy trong quyết định mua căn hộ",
     excerpt: "Hướng căn hộ nên được xem cùng ngân sách, nhu cầu sử dụng và khả năng thanh khoản.",
-    image:
-      "https://images.unsplash.com/photo-1604014237800-1c9102c219da?auto=format&fit=crop&w=900&q=80",
+    images: ["https://images.unsplash.com/photo-1604014237800-1c9102c219da?auto=format&fit=crop&w=900&q=80"],
     date: "12/03/2026"
   }
 ];

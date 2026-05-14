@@ -54,10 +54,6 @@ def upload_apartment_media(apartment_id: UUID, file: UploadFile, media_type: str
     return upload_media_object("apartments", apartment_id, file, media_type)
 
 
-def upload_post_thumbnail(post_id: UUID, file: UploadFile) -> StoredObject:
-    return upload_media_object("posts", post_id, file, "thumbnail", image_only=True)
-
-
 def upload_project_object(project_id: UUID, file: UploadFile, folder: str) -> StoredObject:
     return upload_media_object("projects", project_id, file, folder, image_only=True)
 

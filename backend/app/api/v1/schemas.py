@@ -91,7 +91,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
     full_name: str
-    phone: str | None = Field(default=None, max_length=20)
+    phone: str = Field(min_length=8, max_length=20)
     role: UserRole = UserRole.editor
 
 
@@ -259,7 +259,7 @@ class PostCreate(BaseModel):
     title: str
     excerpt: str | None = Field(default=None, max_length=500)
     content: str
-    thumbnail: str | None = None
+    images: list[str] = Field(default_factory=list)
     project_id: UUID | None = None
     apartment_id: UUID | None = None
     status: PostStatus = PostStatus.draft
@@ -271,7 +271,7 @@ class PostUpdate(BaseModel):
     title: str | None = None
     excerpt: str | None = Field(default=None, max_length=500)
     content: str | None = None
-    thumbnail: str | None = None
+    images: list[str] | None = None
     project_id: UUID | None = None
     apartment_id: UUID | None = None
     status: PostStatus | None = None
@@ -284,7 +284,7 @@ class PostOut(ORMModel):
     slug: str
     excerpt: str | None = None
     content: str | None = None
-    thumbnail: str | None = None
+    images: list[str] = Field(default_factory=list)
     project_id: UUID | None = None
     apartment_id: UUID | None = None
     author_id: UUID

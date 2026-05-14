@@ -14,7 +14,7 @@ export interface PostPayload {
   title: string;
   excerpt?: string | null;
   content: string;
-  thumbnail?: string | null;
+  images?: string[];
   project_id?: string | null;
   apartment_id?: string | null;
   status: Post["status"];
@@ -42,10 +42,4 @@ export function updatePost(postId: string, payload: Partial<PostPayload>): Promi
 
 export function deletePost(postId: string): Promise<{ message: string }> {
   return apiClient.delete<{ message: string }>(`/posts/${postId}`);
-}
-
-export function uploadPostThumbnail(postId: string, file: File): Promise<Post> {
-  const body = new FormData();
-  body.append("image", file);
-  return apiClient.post<Post>(`/posts/${postId}/thumbnail`, body);
 }

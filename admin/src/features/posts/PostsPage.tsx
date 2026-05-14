@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Edit3, FileText, Filter, Plus, Search, Trash2, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Edit3, FileText, Filter, Plus, Search, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -19,7 +19,7 @@ interface PostFormState {
   project_id: string;
   apartment_id: string;
   status: Post["status"];
-  thumbnail: string;
+  images: string[];
 }
 
 interface ConfirmState {
@@ -43,7 +43,7 @@ const emptyForm: PostFormState = {
   project_id: "",
   apartment_id: "",
   status: "draft",
-  thumbnail: "",
+  images: [],
 };
 
 const statusOptions = [
@@ -68,6 +68,10 @@ function summarizeContent(post: Post): string {
   if (post.excerpt?.trim()) return post.excerpt;
   const text = (post.content ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
   return text || "Chưa có mô tả ngắn.";
+}
+
+function toggleImageSelection(currentImages: string[], imageUrl: string): string[] {
+  return currentImages.includes(imageUrl) ? currentImages.filter((item) => item !== imageUrl) : [...currentImages, imageUrl];
 }
 
 export function PostsPage(): JSX.Element {
@@ -180,7 +184,7 @@ export function PostsPage(): JSX.Element {
       project_id: post.project_id ?? "",
       apartment_id: post.apartment_id ?? "",
       status: post.status,
-      thumbnail: post.thumbnail ?? "",
+      images: post.images ?? [],
     });
     setFormOpen(true);
   }
@@ -217,7 +221,7 @@ export function PostsPage(): JSX.Element {
       title: form.title.trim(),
       excerpt: form.excerpt.trim() || null,
       content: form.content.trim(),
-      thumbnail: form.thumbnail.trim() || null,
+      images: form.images,
       project_id: form.project_id || null,
       apartment_id: form.apartment_id || null,
       status: form.status,
@@ -293,7 +297,7 @@ export function PostsPage(): JSX.Element {
                 <tr key={post.id}>
                   <td>
                     <div className="post-title-cell">
-                      {post.thumbnail ? <img src={post.thumbnail} alt={post.title} /> : <span><FileText size={18} /></span>}
+                      {post.images?.[0] ? <img src={post.images[0]} alt={post.title} /> : <span><FileText size={18} /></span>}
                       <div>
                         <strong>{post.title}</strong>
                         <p>{summarizeContent(post)}</p>
@@ -375,38 +379,42 @@ export function PostsPage(): JSX.Element {
                   </label>
                 </div>
                 <aside className="post-form-side">
-                  <SelectMenu label="Dự án liên quan" value={form.project_id} options={formProjectOptions} onChange={(value) => setForm((current) => ({ ...current, project_id: value, apartment_id: "", thumbnail: "" }))} />
-                  <SelectMenu label="Căn hộ liên quan" value={form.apartment_id} options={apartmentOptions} onChange={(value) => setForm((current) => ({ ...current, apartment_id: value, thumbnail: "" }))} />
+                  <SelectMenu label="Dự án liên quan" value={form.project_id} options={formProjectOptions} onChange={(value) => setForm((current) => ({ ...current, project_id: value, apartment_id: "", images: [] }))} />
+                  <SelectMenu label="Căn hộ liên quan" value={form.apartment_id} options={apartmentOptions} onChange={(value) => setForm((current) => ({ ...current, apartment_id: value, images: [] }))} />
                   <SelectMenu label="Trạng thái" value={form.status} options={statusOptions.slice(1)} onChange={(value) => setForm((current) => ({ ...current, status: value as Post["status"] }))} />
                   <div className="post-image-library">
                     <div className="post-image-library-head">
-                      <strong>Ảnh bài viết</strong>
-                      <span>Chọn từ ảnh đã setup của dự án/căn hộ.</span>
-                    </div>
-                    {form.thumbnail ? (
-                      <div className="post-selected-image">
-                        <img src={form.thumbnail} alt="Ảnh đang chọn cho bài viết" />
-                        <button className="secondary-button" type="button" onClick={() => setForm((current) => ({ ...current, thumbnail: "" }))}>
-                          Bỏ chọn
-                        </button>
+                      <div>
+                        <strong>Ảnh bài viết</strong>
+                        <span>Chọn nhiều ảnh từ thư viện của dự án hoặc căn hộ.</span>
                       </div>
-                    ) : null}
-                    <div className="post-image-option-grid">
-                      {imageOptions.map((image) => (
-                        <button
-                          key={image.id}
-                          className={form.thumbnail === image.url ? "selected" : ""}
-                          type="button"
-                          onClick={() => setForm((current) => ({ ...current, thumbnail: image.url }))}
-                        >
-                          <img src={image.url} alt={image.label} />
-                          <span>{image.source === "project" ? "Dự án" : "Căn hộ"}</span>
+                      {form.images.length ? (
+                        <button type="button" onClick={() => setForm((current) => ({ ...current, images: [] }))}>
+                          Bỏ chọn tất cả
                         </button>
-                      ))}
+                      ) : null}
+                    </div>
+                    <div className="post-image-count">Đã chọn {form.images.length} ảnh</div>
+                    <div className="post-image-option-grid">
+                      {imageOptions.map((image) => {
+                        const selected = form.images.includes(image.url);
+                        return (
+                          <button
+                            key={image.id}
+                            className={selected ? "selected" : ""}
+                            type="button"
+                            onClick={() => setForm((current) => ({ ...current, images: toggleImageSelection(current.images, image.url) }))}
+                          >
+                            <img src={image.url} alt={image.label} />
+                            <span>{image.source === "project" ? "Dự án" : "Căn hộ"}</span>
+                            {selected ? <i aria-hidden="true"><Check size={13} /></i> : null}
+                          </button>
+                        );
+                      })}
                     </div>
                     {projectImagesQuery.isLoading || apartmentMediaQuery.isLoading ? <p>Đang tải thư viện ảnh...</p> : null}
                     {!projectImagesQuery.isLoading && !apartmentMediaQuery.isLoading && !imageOptions.length ? (
-                      <p>Chọn dự án/căn hộ đã có ảnh để dùng cho bài viết.</p>
+                      <p>Chọn dự án hoặc căn hộ đã có ảnh để dùng cho bài viết.</p>
                     ) : null}
                   </div>
                 </aside>

@@ -263,7 +263,7 @@ def seed_posts(db: Session, users: dict[str, User]) -> None:
                 title=title,
                 slug=title.lower().replace(" ", "-").replace("đ", "d"),
                 content=f"<p>{title}. Nội dung demo phục vụ kiểm thử CMS AMG Land.</p>",
-                thumbnail=f"http://localhost:9000/amg-land-media/demo/posts/{image_key}.jpg",
+                images=[f"http://localhost:9000/amg-land-media/demo/posts/{image_key}.jpg"],
                 author_id=users["content"].id,
                 status=PostStatus(status),
                 published_at=now - timedelta(days=days_ago) if status == "published" else None,

@@ -116,7 +116,7 @@ export interface Post {
   slug: string;
   excerpt: string | null;
   content: string | null;
-  thumbnail: string | null;
+  images: string[];
   project_id: string | null;
   apartment_id: string | null;
   author_id: string;

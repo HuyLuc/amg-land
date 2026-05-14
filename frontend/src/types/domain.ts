@@ -34,6 +34,6 @@ export type Post = {
   id: string;
   title: string;
   excerpt: string;
-  image: string;
+  images: string[];
   date: string;
 };
