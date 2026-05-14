@@ -135,14 +135,27 @@ export function ProjectDetailPage(): JSX.Element {
   });
 
   const saveAmenityMutation = useMutation({
-    mutationFn: () => {
+    mutationFn: async () => {
       const payload: AmenityPayload = {
         name: amenityForm.name.trim(),
         icon: amenityForm.icon?.trim() || null,
         category: amenityForm.category,
         description: amenityForm.description?.trim() || null,
       };
-      return editingAmenity ? updateAmenity(editingAmenity.id, payload) : createAmenity(payload);
+      if (editingAmenity) {
+        return updateAmenity(editingAmenity.id, payload);
+      }
+      if (!project) {
+        throw new Error("Chưa chọn dự án");
+      }
+      const existingAmenity = (amenitiesQuery.data ?? []).find((amenity) => amenity.name.trim().toLowerCase() === payload.name.toLowerCase());
+      if (existingAmenity) {
+        await assignAmenity(project.id, existingAmenity.id);
+        return existingAmenity;
+      }
+      const createdAmenity = await createAmenity(payload);
+      await assignAmenity(project.id, createdAmenity.id);
+      return createdAmenity;
     },
     onSuccess: () => {
       showToast(editingAmenity ? "Đã cập nhật tiện ích." : "Đã thêm tiện ích.");
@@ -206,6 +219,8 @@ export function ProjectDetailPage(): JSX.Element {
 
   const detail = detailQuery.data;
   const apartments = apartmentsQuery.data?.items ?? [];
+  const assignedAmenityIds = new Set((detail?.amenities ?? []).map((amenity) => amenity.id));
+  const assignedAmenities = (amenitiesQuery.data ?? []).filter((amenity) => assignedAmenityIds.has(amenity.id));
 
   return (
     <section className="page-stack projects-page">
@@ -373,8 +388,8 @@ export function ProjectDetailPage(): JSX.Element {
         {activeTab === "amenities" ? (
           <div className="project-tab-stack">
             {canManageProjects ? <div className="amenity-toolbar">
-              <button className="primary-button" type="button" onClick={openCreateAmenity}>
-                Thêm tiện ích
+              <button className="secondary-button" type="button" onClick={openCreateAmenity}>
+                Tạo tiện ích mới
               </button>
             </div> : null}
             <div className="table-wrap amenity-table-wrap">
@@ -388,25 +403,10 @@ export function ProjectDetailPage(): JSX.Element {
                   </tr>
                 </thead>
                 <tbody>
-                  {(amenitiesQuery.data ?? []).map((amenity) => {
-                    const assigned = Boolean(detail?.amenities.some((item) => item.id === amenity.id));
-                    return (
-                      <tr key={amenity.id} className={assigned ? "selected-row" : ""}>
+                  {assignedAmenities.map((amenity) => (
+                      <tr key={amenity.id}>
                         <td>
-                          <button
-                            className="table-link-button"
-                            type="button"
-                            disabled={!canManageProjects}
-                            onClick={() => {
-                              if (assigned) {
-                                unassignAmenityMutation.mutate(amenity.id);
-                              } else {
-                                assignAmenityMutation.mutate(amenity.id);
-                              }
-                            }}
-                          >
-                            {amenity.name}
-                          </button>
+                          <span className="table-link-button">{amenity.name}</span>
                         </td>
                         <td>{amenityCategoryLabel(amenity.category)}</td>
                         <td>{amenity.description ?? "Không có mô tả"}</td>
@@ -418,16 +418,16 @@ export function ProjectDetailPage(): JSX.Element {
                             <button
                               className="danger-text-button"
                               type="button"
-                              title="Xóa tiện ích"
-                              aria-label="Xóa tiện ích"
+                              title="Bỏ gán khỏi dự án"
+                              aria-label="Bỏ gán khỏi dự án"
                               onClick={() =>
                                 setConfirmDialog({
-                                  title: "Xóa tiện ích",
-                                  description: `Bạn chắc chắn muốn xóa tiện ích "${amenity.name}"? Tiện ích này sẽ bị bỏ khỏi các dự án đang gán.`,
-                                  confirmLabel: "Xóa tiện ích",
+                                  title: "Bỏ gán tiện ích",
+                                  description: `Bạn chắc chắn muốn bỏ tiện ích "${amenity.name}" khỏi dự án này?`,
+                                  confirmLabel: "Bỏ gán",
                                   onConfirm: () => {
                                     setConfirmDialog(null);
-                                    deleteAmenityMutation.mutate(amenity.id);
+                                    unassignAmenityMutation.mutate(amenity.id);
                                   },
                                 })
                               }
@@ -437,11 +437,11 @@ export function ProjectDetailPage(): JSX.Element {
                           </div>
                         </td> : null}
                       </tr>
-                    );
-                  })}
+                  ))}
                 </tbody>
               </table>
             </div>
+            {!amenitiesQuery.isLoading && !assignedAmenities.length ? <div className="empty-state">Dự án này chưa được gán tiện ích.</div> : null}
           </div>
         ) : null}
 
