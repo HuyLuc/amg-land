@@ -263,7 +263,7 @@ export function ContactsPage(): JSX.Element {
                       <span>{contact.email ?? "Chưa có email"}</span>
                     </td>
                     <td>{contact.apartment_code ?? "Chưa chọn căn hộ"}</td>
-                    <td>{contact.project_id ? projectNameById.get(contact.project_id) ?? "Dự án đã chọn" : "Chưa chọn dự án"}</td>
+                    <td>{contact.project_name ?? (contact.project_id ? projectNameById.get(contact.project_id) ?? "Dự án đã chọn" : "Chưa chọn dự án")}</td>
                     <td>{contact.assigned_to ? userNameById.get(contact.assigned_to) ?? "Đã gán" : "Chưa gán"}</td>
                     <td>
                       <StatusBadge value={contact.status} />
@@ -343,7 +343,7 @@ export function ContactsPage(): JSX.Element {
                 {canAssignContacts ? <SelectMenu label="Người phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} /> : null}
                 <div className="readonly-field">
                   <span>Dự án quan tâm</span>
-                  <strong>{selectedContact.project_id ? projectNameById.get(selectedContact.project_id) ?? "Dự án đã chọn" : "Chưa chọn dự án"}</strong>
+                  <strong>{selectedContact.project_name ?? (selectedContact.project_id ? projectNameById.get(selectedContact.project_id) ?? "Dự án đã chọn" : "Chưa chọn dự án")}</strong>
                 </div>
                 <div className="readonly-field">
                   <span>Căn hộ quan tâm</span>

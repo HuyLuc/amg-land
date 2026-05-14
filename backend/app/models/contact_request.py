@@ -34,3 +34,7 @@ class ContactRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     @property
     def apartment_code(self) -> str | None:
         return self.apartment.code if self.apartment else None
+
+    @property
+    def project_name(self) -> str | None:
+        return self.project.name if self.project else None

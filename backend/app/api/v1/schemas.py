@@ -357,6 +357,7 @@ class ContactOut(ORMModel):
     phone: str
     email: EmailStr | None = None
     project_id: UUID | None = None
+    project_name: str | None = None
     apartment_id: UUID | None = None
     apartment_code: str | None = None
     message: str | None = None
