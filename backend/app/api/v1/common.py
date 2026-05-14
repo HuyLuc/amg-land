@@ -95,18 +95,52 @@ def validate_consultant_id(db: Session, consultant_id: uuid.UUID | None) -> None
         raise HTTPException(status_code=400, detail="Consultant not found")
 
 
+def consultant_project_condition(user: User):
+    assigned_project_ids = select(ContactRequest.project_id).where(
+        ContactRequest.assigned_to == user.id,
+        ContactRequest.project_id.is_not(None),
+    )
+    assigned_apartment_project_ids = (
+        select(Apartment.project_id)
+        .join(ContactRequest, ContactRequest.apartment_id == Apartment.id)
+        .where(ContactRequest.assigned_to == user.id)
+    )
+    return or_(
+        Project.consultant_id == user.id,
+        Project.id.in_(assigned_project_ids),
+        Project.id.in_(assigned_apartment_project_ids),
+    )
+
+
 def consultant_apartment_condition(user: User):
+    assigned_apartment_ids = select(ContactRequest.apartment_id).where(
+        ContactRequest.assigned_to == user.id,
+        ContactRequest.apartment_id.is_not(None),
+    )
     return or_(
         Apartment.consultant_id == user.id,
         and_(Apartment.consultant_id.is_(None), Project.consultant_id == user.id),
+        Apartment.id.in_(assigned_apartment_ids),
     )
+
+
+def ensure_project_visible(db: Session, project: Project, user: User | None) -> None:
+    if not is_consultant_user(user):
+        return
+    visible_project_id = db.scalar(select(Project.id).where(Project.id == project.id, consultant_project_condition(user)))
+    if visible_project_id is None:
+        raise HTTPException(status_code=404, detail="Project not found")
 
 
 def ensure_apartment_visible(db: Session, apartment: Apartment, user: User | None) -> None:
     if not is_consultant_user(user):
         return
-    project = db.get(Project, apartment.project_id)
-    if apartment.consultant_id != user.id and (apartment.consultant_id is not None or project is None or project.consultant_id != user.id):
+    visible_apartment_id = db.scalar(
+        select(Apartment.id)
+        .join(Project)
+        .where(Apartment.id == apartment.id, Project.deleted_at.is_(None), consultant_apartment_condition(user))
+    )
+    if visible_apartment_id is None:
         raise HTTPException(status_code=404, detail="Apartment not found")
 
 

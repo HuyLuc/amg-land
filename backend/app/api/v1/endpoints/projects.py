@@ -15,7 +15,7 @@ def list_projects(
 ) -> dict:
     query = select(Project).where(Project.deleted_at.is_(None))
     if is_consultant_user(current_user):
-        query = query.where(Project.consultant_id == current_user.id)
+        query = query.where(consultant_project_condition(current_user))
     if status:
         query = query.where(Project.status == status)
     if district:
@@ -39,8 +39,7 @@ def get_project(slug: str, db: Session = Depends(get_db), current_user: User | N
     project = db.scalar(select(Project).where(Project.slug == slug, Project.deleted_at.is_(None)))
     if project is None:
         raise HTTPException(status_code=404, detail="Project not found")
-    if is_consultant_user(current_user) and project.consultant_id != current_user.id:
-        raise HTTPException(status_code=404, detail="Project not found")
+    ensure_project_visible(db, project, current_user)
     return {
         "project_detail": ProjectOut.model_validate(project).model_dump(mode="json"),
         "amenities": [{"id": str(item.amenity.id), "name": item.amenity.name, "category": item.amenity.category.value} for item in project.amenities],
