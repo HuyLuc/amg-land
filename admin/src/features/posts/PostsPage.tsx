@@ -74,6 +74,47 @@ function toggleImageSelection(currentImages: string[], imageUrl: string): string
   return currentImages.includes(imageUrl) ? currentImages.filter((item) => item !== imageUrl) : [...currentImages, imageUrl];
 }
 
+function PostCover({ post }: { post: Post }): JSX.Element {
+  const [failed, setFailed] = useState(false);
+  const imageUrl = post.images?.[0];
+
+  if (!imageUrl || failed) {
+    return (
+      <span className="post-cover-placeholder" title="Chưa có ảnh bài viết">
+        <FileText size={18} />
+      </span>
+    );
+  }
+
+  return <img src={imageUrl} alt="" loading="lazy" onError={() => setFailed(true)} />;
+}
+
+function ImageOptionButton({
+  image,
+  selected,
+  onClick,
+}: {
+  image: PostImageOption;
+  selected: boolean;
+  onClick: () => void;
+}): JSX.Element {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <button className={selected ? "selected" : ""} type="button" onClick={onClick}>
+      {failed ? (
+        <span className="post-image-option-fallback">
+          <FileText size={16} />
+        </span>
+      ) : (
+        <img src={image.url} alt={image.label} loading="lazy" onError={() => setFailed(true)} />
+      )}
+      <span>{image.source === "project" ? "Dự án" : "Căn hộ"}</span>
+      {selected ? <i aria-hidden="true"><Check size={13} /></i> : null}
+    </button>
+  );
+}
+
 export function PostsPage(): JSX.Element {
   const queryClient = useQueryClient();
   const [keywordInput, setKeywordInput] = useState("");
@@ -101,7 +142,6 @@ export function PostsPage(): JSX.Element {
     queryKey: ["posts", page, pageSize, keyword, status, projectId],
     queryFn: () => listPosts({ page, limit: pageSize, keyword, status, projectId }),
   });
-  const allPostsQuery = useQuery({ queryKey: ["posts", "summary"], queryFn: () => listPosts({ limit: 100 }) });
   const projectsQuery = useQuery({ queryKey: ["projects", "post-options"], queryFn: () => listProjects({ limit: 100 }) });
   const apartmentsQuery = useQuery({
     queryKey: ["apartments", "post-options", form.project_id],
@@ -110,7 +150,6 @@ export function PostsPage(): JSX.Element {
   });
 
   const posts = postsQuery.data?.items ?? [];
-  const allPosts = allPostsQuery.data?.items ?? [];
   const projects = projectsQuery.data?.items ?? [];
   const apartments = apartmentsQuery.data?.items ?? [];
   const selectedProject = projects.find((item) => item.id === form.project_id) ?? null;
@@ -153,17 +192,6 @@ export function PostsPage(): JSX.Element {
         })) ?? [];
     return [...projectImages, ...apartmentImages];
   }, [apartmentMediaQuery.data, projectImagesQuery.data]);
-  const stats = useMemo(
-    () => ({
-      total: allPosts.length,
-      draft: allPosts.filter((item) => item.status === "draft").length,
-      published: allPosts.filter((item) => item.status === "published").length,
-      archived: allPosts.filter((item) => item.status === "archived").length,
-      linked: allPosts.filter((item) => item.project_id || item.apartment_id).length,
-    }),
-    [allPosts],
-  );
-
   function showToast(message: string): void {
     setToast(message);
     window.setTimeout(() => setToast(null), 2600);
@@ -249,14 +277,6 @@ export function PostsPage(): JSX.Element {
         }
       />
 
-      <div className="post-summary-strip" aria-label="Tổng quan bài viết">
-        <button className={status === "" ? "active" : ""} type="button" onClick={() => setStatus("")}>Tổng <strong>{stats.total}</strong></button>
-        <button className={status === "published" ? "active" : ""} type="button" onClick={() => setStatus("published")}>Đã đăng <strong>{stats.published}</strong></button>
-        <button className={status === "draft" ? "active" : ""} type="button" onClick={() => setStatus("draft")}>Bản nháp <strong>{stats.draft}</strong></button>
-        <button className={status === "archived" ? "active" : ""} type="button" onClick={() => setStatus("archived")}>Lưu trữ <strong>{stats.archived}</strong></button>
-        <span>Gắn dự án/căn hộ <strong>{stats.linked}</strong></span>
-      </div>
-
       <section className="filter-panel">
         <div className="filter-title">
           <Filter size={18} />
@@ -297,7 +317,7 @@ export function PostsPage(): JSX.Element {
                 <tr key={post.id}>
                   <td>
                     <div className="post-title-cell">
-                      {post.images?.[0] ? <img src={post.images[0]} alt={post.title} /> : <span><FileText size={18} /></span>}
+                      <PostCover post={post} />
                       <div>
                         <strong>{post.title}</strong>
                         <p>{summarizeContent(post)}</p>
@@ -399,16 +419,12 @@ export function PostsPage(): JSX.Element {
                       {imageOptions.map((image) => {
                         const selected = form.images.includes(image.url);
                         return (
-                          <button
+                          <ImageOptionButton
                             key={image.id}
-                            className={selected ? "selected" : ""}
-                            type="button"
+                            image={image}
+                            selected={selected}
                             onClick={() => setForm((current) => ({ ...current, images: toggleImageSelection(current.images, image.url) }))}
-                          >
-                            <img src={image.url} alt={image.label} />
-                            <span>{image.source === "project" ? "Dự án" : "Căn hộ"}</span>
-                            {selected ? <i aria-hidden="true"><Check size={13} /></i> : null}
-                          </button>
+                          />
                         );
                       })}
                     </div>
