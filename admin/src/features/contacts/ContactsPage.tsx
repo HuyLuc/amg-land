@@ -61,7 +61,6 @@ export function ContactsPage(): JSX.Element {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draftStatus, setDraftStatus] = useState<Contact["status"]>("new");
   const [draftAssignee, setDraftAssignee] = useState("");
-  const [draftApartmentId, setDraftApartmentId] = useState("");
   const [draftNote, setDraftNote] = useState("");
   const [toast, setToast] = useState<string | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
@@ -127,14 +126,12 @@ export function ContactsPage(): JSX.Element {
     }
     setDraftStatus(selectedContact.status);
     setDraftAssignee(selectedContact.assigned_to ?? "");
-    setDraftApartmentId(selectedContact.apartment_id ?? "");
     setDraftNote(selectedContact.note ?? "");
   }, [selectedContact]);
 
   const isDirty = selectedContact
     ? draftStatus !== selectedContact.status ||
       draftAssignee !== (selectedContact.assigned_to ?? "") ||
-      draftApartmentId !== (selectedContact.apartment_id ?? "") ||
       draftNote !== (selectedContact.note ?? "")
     : false;
 
@@ -150,23 +147,12 @@ export function ContactsPage(): JSX.Element {
     () => [{ value: "", label: "Chưa gán" }, ...users.map((user) => ({ value: user.id, label: user.full_name }))],
     [users],
   );
-  const apartmentOptions = useMemo(() => {
-    const byId = new Map<string, string>();
-    for (const contact of contacts) {
-      if (contact.apartment_id && contact.apartment_code) {
-        byId.set(contact.apartment_id, contact.apartment_code);
-      }
-    }
-    return [{ value: "", label: "Chưa chọn căn hộ" }, ...Array.from(byId.entries()).map(([value, label]) => ({ value, label }))];
-  }, [contacts]);
-
   const mutation = useMutation({
     mutationFn: () =>
       selectedContact
         ? updateContact(selectedContact.id, {
             status: draftStatus,
             ...(canAssignContacts ? { assigned_to: draftAssignee || null } : {}),
-            apartment_id: draftApartmentId || null,
             note: draftNote.trim() || null,
           })
         : Promise.reject(new Error("Chưa chọn khách tư vấn")),
@@ -183,7 +169,6 @@ export function ContactsPage(): JSX.Element {
     setSelectedId(contact.id);
     setDraftStatus(contact.status);
     setDraftAssignee(contact.assigned_to ?? "");
-    setDraftApartmentId(contact.apartment_id ?? "");
     setDraftNote(contact.note ?? "");
   }
 
@@ -356,7 +341,10 @@ export function ContactsPage(): JSX.Element {
               <div className="detail-form">
                 <SelectMenu label="Trạng thái xử lý" value={draftStatus} options={statusOptions.slice(1)} onChange={(value) => setDraftStatus(value as Contact["status"])} />
                 {canAssignContacts ? <SelectMenu label="Người phụ trách" value={draftAssignee} options={detailUserOptions} onChange={setDraftAssignee} /> : null}
-                <SelectMenu label="Căn hộ quan tâm" value={draftApartmentId} options={apartmentOptions} onChange={setDraftApartmentId} />
+                <div className="readonly-field">
+                  <span>Căn hộ quan tâm</span>
+                  <strong>{selectedContact.apartment_code ?? "Chưa chọn căn hộ"}</strong>
+                </div>
 
                 <label className="textarea-control">
                   <span>Ghi chú nội bộ</span>

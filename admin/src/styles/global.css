@@ -1576,6 +1576,29 @@ td select {
   gap: 14px;
 }
 
+.readonly-field {
+  display: grid;
+  gap: 7px;
+}
+
+.readonly-field span {
+  color: #344054;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.readonly-field strong {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafc;
+  color: var(--ink);
+  font-size: 14px;
+}
+
 .projects-page .page-header {
   align-items: center;
 }
