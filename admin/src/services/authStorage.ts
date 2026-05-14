@@ -35,6 +35,10 @@ export function isAuthenticated(): boolean {
   return Boolean(getAccessToken());
 }
 
+export function isInternalUser(user: AuthUser | null): boolean {
+  return user?.role === "admin" || user?.role === "editor";
+}
+
 export function clearAuth(): void {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_TOKEN_KEY);

@@ -3,7 +3,7 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { login } from "@/features/auth/authApi";
-import { saveAuth } from "@/services/authStorage";
+import { isInternalUser, saveAuth } from "@/services/authStorage";
 
 export function LoginPage(): JSX.Element {
   const [email, setEmail] = useState("");
@@ -20,6 +20,10 @@ export function LoginPage(): JSX.Element {
 
     try {
       const response = await login(email, password);
+      if (!isInternalUser(response.user_info)) {
+        setError("Tài khoản này không có quyền truy cập web nội bộ.");
+        return;
+      }
       saveAuth(response.access_token, response.refresh_token, response.user_info);
       navigate("/dashboard", { replace: true });
     } catch (err) {
