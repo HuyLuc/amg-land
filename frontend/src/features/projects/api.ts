@@ -100,6 +100,7 @@ function mapProject(detail: ApiProjectDetail, apartments: ApiApartment[]): Proje
     priceFrom: project.price_from,
     status: projectStatusLabel[project.status],
     summary: project.short_description || project.description || "Thông tin dự án đang được AMG Land cập nhật.",
+    description: project.description ?? null,
     image: thumbnail,
     gallery,
     amenities: detail.amenities.map((amenity) => amenity.name),

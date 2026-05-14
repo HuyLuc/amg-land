@@ -19,6 +19,8 @@ export function ProjectDetailPage({ project, projects, onBack, onContact, onOpen
   const bedroomCounts = project.apartments.map((item) => item.bedrooms);
   const areaRange = areas.length ? `${Math.min(...areas)}-${Math.max(...areas)} m2` : "Đang cập nhật";
   const bedroomRange = bedroomCounts.length ? `${Math.min(...bedroomCounts)}-${Math.max(...bedroomCounts)} phòng ngủ` : "Đang cập nhật";
+  const directionSummary = [...new Set(project.apartments.map((item) => item.direction))].join(", ") || "Đang cập nhật";
+  const overviewText = project.description?.trim() || project.summary;
   const gallery = project.gallery;
 
   return (
@@ -82,13 +84,11 @@ export function ProjectDetailPage({ project, projects, onBack, onContact, onOpen
 
             <div className="mt-8 rounded bg-white p-6 shadow-soft">
               <h2 className="font-display text-3xl font-bold text-brand-900">Tổng quan dự án</h2>
-              <p className="mt-4 leading-8 text-slate-700">
-                {project.summary} Dự án được chọn lọc theo các tiêu chí về vị trí, khả năng kết nối, chất lượng không gian sống và tiềm năng khai thác dài hạn.
-              </p>
+              <p className="mt-4 leading-8 text-slate-700">{overviewText}</p>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <ProjectStat icon={<Ruler size={20} />} label="Diện tích căn" value={areaRange} />
                 <ProjectStat icon={<BedDouble size={20} />} label="Cấu hình" value={bedroomRange} />
-                <ProjectStat icon={<Compass size={20} />} label="Hướng đẹp" value={project.apartments[0]?.direction ?? "Đang cập nhật"} />
+                <ProjectStat icon={<Compass size={20} />} label="Hướng căn hộ" value={directionSummary} />
               </div>
             </div>
           </div>
