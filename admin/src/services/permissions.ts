@@ -21,6 +21,9 @@ export function isInternalRole(role: AppRole | undefined): boolean {
 }
 
 export function getDefaultPath(role: AppRole | undefined): string {
+  if (isConsultantRole(role)) {
+    return "/contacts";
+  }
   if (role === "content") {
     return "/projects";
   }
@@ -32,7 +35,7 @@ export function canAccessPath(role: AppRole | undefined, path: string): boolean 
     return true;
   }
   if (isConsultantRole(role)) {
-    return ["/dashboard", "/contacts", "/projects", "/apartments"].some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
+    return ["/contacts", "/projects", "/apartments"].some((prefix) => path === prefix || path.startsWith(`${prefix}/`));
   }
   if (role === "content") {
     return ["/projects", "/apartments", "/posts"].some((prefix) => path === prefix || path.startsWith(`${prefix}/`));

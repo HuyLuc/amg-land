@@ -75,6 +75,8 @@ def update_contact(contact_id: uuid.UUID, payload: ContactUpdate, current_user: 
     values = payload.model_dump(exclude_unset=True)
     if is_consultant_user(current_user):
         values.pop("assigned_to", None)
+    elif "assigned_to" in values:
+        validate_consultant_id(db, values["assigned_to"])
     if payload.apartment_id:
         apartment = db.get(Apartment, payload.apartment_id)
         if apartment is None:

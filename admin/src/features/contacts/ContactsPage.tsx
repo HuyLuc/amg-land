@@ -90,7 +90,11 @@ export function ContactsPage(): JSX.Element {
         limit: pageSize,
       }),
   });
-  const usersQuery = useQuery({ queryKey: ["users"], queryFn: () => listUsers({ limit: 100 }), enabled: canAssignContacts });
+  const usersQuery = useQuery({
+    queryKey: ["users", "consultants-for-contact-assignment"],
+    queryFn: () => listUsers({ limit: 100, role: "consultant", isActive: "true" }),
+    enabled: canAssignContacts,
+  });
   const projectsQuery = useQuery({ queryKey: ["projects"], queryFn: () => listProjects({ limit: 100 }) });
 
   const contacts = contactsQuery.data?.items ?? [];

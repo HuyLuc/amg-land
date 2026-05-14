@@ -104,7 +104,7 @@ export function ApartmentsPage(): JSX.Element {
   });
   const usersQuery = useQuery({
     queryKey: ["users", "consultants-for-apartment-form"],
-    queryFn: () => listUsers({ limit: 100 }),
+    queryFn: () => listUsers({ limit: 100, role: "consultant", isActive: "true" }),
     enabled: canManageApartments,
   });
 
@@ -130,7 +130,7 @@ export function ApartmentsPage(): JSX.Element {
     () => [
       { value: "", label: "Theo nhân viên phụ trách dự án" },
       ...(usersQuery.data?.items ?? [])
-        .filter((user) => user.role === "consultant" || user.role === "editor")
+        .filter((user) => user.role === "consultant")
         .map((user) => ({ value: user.id, label: user.full_name })),
     ],
     [usersQuery.data?.items],

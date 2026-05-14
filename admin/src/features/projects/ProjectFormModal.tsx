@@ -36,11 +36,14 @@ export function ProjectFormModal({ open, project, onClose, onSaved }: ProjectFor
   const queryClient = useQueryClient();
   const [form, setForm] = useState<ProjectPayload>(initialForm);
   const mode = project ? "edit" : "create";
-  const usersQuery = useQuery({ queryKey: ["users", "consultants-for-project-form"], queryFn: () => listUsers({ limit: 100 }) });
+  const usersQuery = useQuery({
+    queryKey: ["users", "consultants-for-project-form"],
+    queryFn: () => listUsers({ limit: 100, role: "consultant", isActive: "true" }),
+  });
   const consultantOptions = [
     { value: "", label: "Chưa gán tư vấn" },
     ...(usersQuery.data?.items ?? [])
-      .filter((user) => user.role === "consultant" || user.role === "editor")
+      .filter((user) => user.role === "consultant")
       .map((user) => ({ value: user.id, label: user.full_name })),
   ];
 

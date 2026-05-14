@@ -91,7 +91,7 @@ def validate_consultant_id(db: Session, consultant_id: uuid.UUID | None) -> None
     if consultant_id is None:
         return
     user = db.get(User, consultant_id)
-    if user is None or user.role not in {UserRole.consultant, UserRole.editor} or not user.is_active:
+    if user is None or user.role != UserRole.consultant or not user.is_active:
         raise HTTPException(status_code=400, detail="Consultant not found")
 
 
