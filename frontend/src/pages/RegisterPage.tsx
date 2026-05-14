@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { ArrowRight } from "lucide-react";
 import { TextInput } from "../components/ui/TextInput";
 import { AuthShell } from "../features/auth/components/AuthShell";
+import { registerCustomer } from "../features/auth/api";
 import type { AuthUser } from "../features/auth/types";
 import type { Page } from "../app/types";
 
@@ -12,12 +13,15 @@ type RegisterPageProps = {
 
 export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+  const [formError, setFormError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const submitRegister = (event: FormEvent<HTMLFormElement>) => {
+  const submitRegister = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (password !== confirmPassword) {
@@ -26,12 +30,22 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
     }
 
     setPasswordError("");
-    onRegister({
-      name: name || "Khách hàng AMG",
-      email: email || "khachhang@amgland.vn",
-      phone: "Chưa cập nhật",
-      role: "Nhà đầu tư"
-    });
+    setFormError("");
+    setSubmitting(true);
+
+    try {
+      const user = await registerCustomer({
+        full_name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        password,
+      });
+      onRegister(user);
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Không thể tạo tài khoản lúc này. Vui lòng thử lại.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -40,7 +54,14 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
       description="Tạo tài khoản để lưu dự án quan tâm và theo dõi lịch hẹn với AMG Land."
     >
       <form className="mx-auto grid max-w-md gap-4" onSubmit={submitRegister}>
+        {formError && (
+          <div className="rounded border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {formError}
+          </div>
+        )}
+
         <TextInput autoComplete="name" label="Họ và tên" onChange={setName} placeholder="Nhập họ tên" required value={name} />
+        <TextInput autoComplete="tel" label="Số điện thoại" minLength={8} onChange={setPhone} placeholder="0912345678" required type="tel" value={phone} />
         <TextInput autoComplete="email" label="Email" onChange={setEmail} placeholder="email@example.com" required type="email" value={email} />
         <TextInput
           autoComplete="new-password"
@@ -69,8 +90,8 @@ export function RegisterPage({ onRegister, onNavigate }: RegisterPageProps) {
           type="password"
           value={confirmPassword}
         />
-        <button className="btn-primary h-12 justify-center" type="submit">
-          Tạo tài khoản
+        <button className="btn-primary h-12 justify-center disabled:cursor-not-allowed disabled:opacity-70" disabled={submitting} type="submit">
+          {submitting ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
           <ArrowRight size={17} />
         </button>
 

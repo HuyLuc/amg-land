@@ -120,6 +120,38 @@ def test_auth_locks_after_repeated_failed_attempts() -> None:
     assert locked_response.status_code == 423
 
 
+def test_customer_registration_creates_customer_account() -> None:
+    email = f"customer-{uuid.uuid4().hex}@example.com"
+    response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "full_name": "Customer User",
+            "email": email,
+            "phone": "0912345678",
+            "password": "secret123",
+        },
+    )
+
+    assert response.status_code == 201, response.text
+    body = response.json()
+    assert body["access_token"]
+    assert body["refresh_token"]
+    assert body["user_info"]["email"] == email
+    assert body["user_info"]["phone"] == "0912345678"
+    assert body["user_info"]["role"] == "customer"
+
+    duplicate_response = client.post(
+        "/api/v1/auth/register",
+        json={
+            "full_name": "Customer User",
+            "email": email,
+            "phone": "0987654321",
+            "password": "secret123",
+        },
+    )
+    assert duplicate_response.status_code == 400
+
+
 def test_query_validation_and_dashboard_period() -> None:
     headers = auth_headers()
 

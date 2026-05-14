@@ -42,6 +42,7 @@ from app.api.v1.schemas import (
     ProjectPage,
     ProjectOut,
     ProjectUpdate,
+    RegisterRequest,
     RefreshRequest,
     ResetPasswordRequest,
     TokenResponse,

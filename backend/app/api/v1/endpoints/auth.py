@@ -36,7 +36,56 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
     return TokenResponse(
         access_token=access_token,
         refresh_token=refresh_plain,
-        user_info={"id": str(user.id), "email": user.email, "full_name": user.full_name, "role": user.role.value},
+        user_info={"id": str(user.id), "email": user.email, "full_name": user.full_name, "phone": user.phone, "role": user.role.value},
+    )
+
+
+@router.post("/auth/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED, tags=["auth"])
+def register(payload: RegisterRequest, db: Session = Depends(get_db)) -> TokenResponse:
+    email = payload.email.lower()
+    existing_user = db.scalar(select(User).where(User.email == email))
+    if existing_user is not None:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    now = datetime.now(timezone.utc)
+    user = User(
+        email=email,
+        password_hash=hash_password(payload.password),
+        full_name=payload.full_name.strip(),
+        phone=payload.phone.strip(),
+        role=UserRole.customer,
+        is_active=True,
+    )
+    db.add(user)
+    try:
+        db.flush()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email already registered") from exc
+
+    refresh_plain = generate_opaque_token()
+    db.add(
+        RefreshToken(
+            user_id=user.id,
+            token_hash=hash_token(refresh_plain),
+            expires_at=now + timedelta(days=30),
+            created_at=now,
+        )
+    )
+    log_activity(db, user, "auth.register", "user", user.id)
+    db.commit()
+
+    access_token = create_access_token(str(user.id), {"role": user.role.value})
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_plain,
+        user_info={
+            "id": str(user.id),
+            "email": user.email,
+            "full_name": user.full_name,
+            "phone": user.phone,
+            "role": user.role.value,
+        },
     )
 
 
