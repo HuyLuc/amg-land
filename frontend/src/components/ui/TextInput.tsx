@@ -33,11 +33,13 @@ export function TextInput({
     <div className="block">
       <label className="text-sm font-semibold text-slate-700" htmlFor={inputId}>
         {label}
+        {required && <span className="ml-1 text-red-500">*</span>}
       </label>
       <div className="relative mt-2">
         <input
           aria-describedby={error ? `${inputId}-error` : undefined}
           aria-invalid={error ? true : undefined}
+          aria-required={required}
           autoComplete={autoComplete}
           className={`h-12 w-full rounded border bg-slate-50 py-0 pl-4 text-sm outline-none transition focus:border-brand-500 ${
             error ? "border-red-300 focus:border-red-500" : "border-slate-200"
