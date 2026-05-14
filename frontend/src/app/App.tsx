@@ -6,6 +6,7 @@ import { useProjectFilters } from "../features/projects/hooks/useProjectFilters"
 import { AboutPage } from "../pages/AboutPage";
 import { ApartmentDetailPage } from "../pages/ApartmentDetailPage";
 import { ContactPage } from "../pages/ContactPage";
+import type { ContactContext } from "../pages/ContactPage";
 import { CommunityPage } from "../pages/CommunityPage";
 import { HomePage } from "../pages/HomePage";
 import { LoginPage } from "../pages/LoginPage";
@@ -76,6 +77,7 @@ export function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
+  const [contactContext, setContactContext] = useState<ContactContext | null>(null);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectsError, setProjectsError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
@@ -83,7 +85,10 @@ export function App() {
 
   const projectFilters = useProjectFilters(projects);
 
-  const navigate = (nextPage: Page) => {
+  const navigate = (nextPage: Page, keepContactContext = false) => {
+    if (!keepContactContext) {
+      setContactContext(null);
+    }
     setPage(nextPage);
     setRouteProjectSlug(null);
     setRouteApartmentId(null);
@@ -91,6 +96,11 @@ export function App() {
     if (nextHash && window.location.hash !== nextHash) {
       window.history.pushState(null, "", nextHash);
     }
+  };
+
+  const openContact = (context: ContactContext | null = null) => {
+    setContactContext(context);
+    navigate("contact", true);
   };
 
   const openProject = (project: Project) => {
@@ -212,7 +222,7 @@ export function App() {
           <HomePage
             filters={projectFilters}
             projects={projects}
-            onContact={() => navigate("contact")}
+            onContact={() => openContact()}
             onExploreProjects={() => navigate("projects")}
             onNavigateNews={() => navigate("news")}
             onOpenProject={openProject}
@@ -233,7 +243,7 @@ export function App() {
             project={selectedProject}
             projects={projects}
             onBack={() => navigate("projects")}
-            onContact={() => navigate("contact")}
+            onContact={() => openContact({ project: selectedProject, apartment: null })}
             onOpenApartment={openApartment}
             onOpenProject={openProject}
           />
@@ -248,7 +258,7 @@ export function App() {
             project={selectedProject}
             apartment={selectedApartment}
             onBack={() => openProject(selectedProject)}
-            onContact={() => navigate("contact")}
+            onContact={() => openContact({ project: selectedProject, apartment: selectedApartment })}
           />
         )}
 
@@ -256,10 +266,10 @@ export function App() {
           <ProjectsPage filters={projectFilters} loading={projectsLoading} error={projectsError} onOpenProject={openProject} />
         )}
 
-        {page === "about" && <AboutPage onContact={() => navigate("contact")} />}
+        {page === "about" && <AboutPage onContact={() => openContact()} />}
         {page === "news" && <NewsPage />}
         {page === "community" && <CommunityPage />}
-        {page === "contact" && <ContactPage />}
+        {page === "contact" && <ContactPage context={contactContext} />}
         {page === "login" && <LoginPage onLogin={completeAuth} onNavigate={navigate} />}
         {page === "register" && <RegisterPage onRegister={completeAuth} onNavigate={navigate} />}
         {page === "profile" && <ProfilePage user={user} onLogout={logout} onNavigate={navigate} />}

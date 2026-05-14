@@ -2,8 +2,18 @@ import type { ReactNode } from "react";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { companyInfo } from "../app/company";
 import { ContactForm } from "../features/contacts/components/ContactForm";
+import type { Apartment, Project } from "../types/domain";
 
-export function ContactPage() {
+export type ContactContext = {
+  project: Project | null;
+  apartment: Apartment | null;
+};
+
+type ContactPageProps = {
+  context?: ContactContext | null;
+};
+
+export function ContactPage({ context }: ContactPageProps) {
   return (
     <section className="section-wrap">
       <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
@@ -34,7 +44,7 @@ export function ContactPage() {
           </p>
         </div>
 
-        <ContactForm />
+        <ContactForm context={context} />
       </div>
     </section>
   );
