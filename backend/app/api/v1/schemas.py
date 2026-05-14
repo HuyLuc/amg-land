@@ -277,6 +277,7 @@ class PostCreate(BaseModel):
     apartment_id: UUID | None = None
     status: PostStatus = PostStatus.draft
     scheduled_at: datetime | None = None
+    published_at: datetime | None = None
 
 
 class PostUpdate(BaseModel):

@@ -2419,6 +2419,95 @@ td select {
   cursor: pointer;
 }
 
+.post-image-library {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.post-image-library-head {
+  display: grid;
+  gap: 3px;
+}
+
+.post-image-library-head strong {
+  color: var(--ink);
+  font-size: 13px;
+}
+
+.post-image-library-head span,
+.post-image-library p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.post-selected-image {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.post-selected-image img {
+  display: block;
+  width: 100%;
+  height: 118px;
+  object-fit: cover;
+}
+
+.post-selected-image .secondary-button {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  min-height: 30px;
+  padding: 0 10px;
+}
+
+.post-image-option-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.post-image-option-grid button {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1.35;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.post-image-option-grid button.selected {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 2px rgba(38, 63, 107, 0.16);
+}
+
+.post-image-option-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-image-option-grid span {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 3px 6px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+}
+
 .category-form-modal {
   width: min(520px, 100%);
 }

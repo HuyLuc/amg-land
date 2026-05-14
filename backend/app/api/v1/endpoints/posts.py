@@ -50,6 +50,10 @@ def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depe
             raise HTTPException(status_code=404, detail="Apartment not found")
         if payload.project_id and apartment.project_id != payload.project_id:
             raise HTTPException(status_code=400, detail="Apartment does not belong to selected project")
+    published_at = payload.published_at or payload.scheduled_at
+    if payload.status == PostStatus.published and published_at is None:
+        published_at = datetime.now(timezone.utc)
+
     post = Post(
         title=payload.title,
         slug=unique_slug(db, Post, payload.title),
@@ -60,7 +64,7 @@ def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depe
         project_id=payload.project_id,
         apartment_id=payload.apartment_id,
         status=payload.status,
-        published_at=payload.scheduled_at,
+        published_at=published_at,
         author_id=current_user.id,
     )
     db.add(post)

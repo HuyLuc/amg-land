@@ -1,16 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ChevronLeft, ChevronRight, Edit3, FileText, Filter, ImagePlus, Plus, Search, Trash2, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit3, FileText, Filter, Plus, Search, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { PageHeader } from "@/components/PageHeader";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
-import { listApartments } from "@/features/apartments/apartmentsApi";
-import { createCategory, createPost, deletePost, listCategories, listPosts, updatePost, uploadPostThumbnail } from "@/features/posts/postsApi";
+import { listApartmentMedia, listApartments } from "@/features/apartments/apartmentsApi";
+import { createCategory, createPost, deletePost, listCategories, listPosts, updatePost } from "@/features/posts/postsApi";
 import type { PostPayload } from "@/features/posts/postsApi";
-import { listProjects } from "@/features/projects/projectsApi";
-import type { Apartment, Post } from "@/services/types";
+import { getProjectDetail, listProjects } from "@/features/projects/projectsApi";
+import type { Apartment, ApartmentMedia, Post, ProjectImage } from "@/services/types";
 
 interface PostFormState {
   title: string;
@@ -28,6 +28,13 @@ interface ConfirmState {
   description: string;
   confirmLabel?: string;
   onConfirm: () => void;
+}
+
+interface PostImageOption {
+  id: string;
+  url: string;
+  label: string;
+  source: "project" | "apartment";
 }
 
 const emptyForm: PostFormState = {
@@ -77,7 +84,6 @@ export function PostsPage(): JSX.Element {
   const [formOpen, setFormOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [form, setForm] = useState<PostFormState>(emptyForm);
-  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [categoryModalOpen, setCategoryModalOpen] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
@@ -99,13 +105,28 @@ export function PostsPage(): JSX.Element {
   const allPostsQuery = useQuery({ queryKey: ["posts", "summary"], queryFn: () => listPosts({ limit: 100 }) });
   const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: listCategories });
   const projectsQuery = useQuery({ queryKey: ["projects", "post-options"], queryFn: () => listProjects({ limit: 100 }) });
-  const apartmentsQuery = useQuery({ queryKey: ["apartments", "post-options", form.project_id], queryFn: () => listApartments({ limit: 100, projectId: form.project_id || undefined }), enabled: formOpen });
+  const apartmentsQuery = useQuery({
+    queryKey: ["apartments", "post-options", form.project_id],
+    queryFn: () => listApartments({ limit: 100, projectId: form.project_id }),
+    enabled: formOpen && Boolean(form.project_id),
+  });
 
   const posts = postsQuery.data?.items ?? [];
   const allPosts = allPostsQuery.data?.items ?? [];
   const categories = categoriesQuery.data ?? [];
   const projects = projectsQuery.data?.items ?? [];
   const apartments = apartmentsQuery.data?.items ?? [];
+  const selectedProject = projects.find((item) => item.id === form.project_id) ?? null;
+  const projectImagesQuery = useQuery({
+    queryKey: ["project-detail", selectedProject?.slug, "post-images"],
+    queryFn: () => getProjectDetail(selectedProject?.slug ?? ""),
+    enabled: formOpen && Boolean(selectedProject?.slug),
+  });
+  const apartmentMediaQuery = useQuery({
+    queryKey: ["apartment-media", form.apartment_id, "post-images"],
+    queryFn: () => listApartmentMedia(form.apartment_id),
+    enabled: formOpen && Boolean(form.apartment_id),
+  });
   const totalPages = Math.max(1, Math.ceil((postsQuery.data?.total ?? 0) / (postsQuery.data?.limit ?? pageSize)));
 
   const categoryOptions = useMemo(() => [{ value: "", label: "Tất cả danh mục" }, ...categories.map((item) => ({ value: item.slug, label: item.name }))], [categories]);
@@ -119,6 +140,25 @@ export function PostsPage(): JSX.Element {
   const categoryNameById = useMemo(() => new Map(categories.map((item) => [item.id, item.name])), [categories]);
   const projectNameById = useMemo(() => new Map(projects.map((item) => [item.id, item.name])), [projects]);
   const apartmentCodeById = useMemo(() => new Map(apartments.map((item) => [item.id, item.code])), [apartments]);
+  const imageOptions = useMemo<PostImageOption[]>(() => {
+    const projectImages =
+      projectImagesQuery.data?.images.map((image: ProjectImage) => ({
+        id: `project-${image.id}`,
+        url: image.image_url,
+        label: image.caption || "Ảnh dự án",
+        source: "project" as const,
+      })) ?? [];
+    const apartmentImages =
+      apartmentMediaQuery.data
+        ?.filter((media: ApartmentMedia) => media.media_type === "image")
+        .map((media: ApartmentMedia) => ({
+          id: `apartment-${media.id}`,
+          url: media.url,
+          label: media.caption || "Ảnh căn hộ",
+          source: "apartment" as const,
+        })) ?? [];
+    return [...projectImages, ...apartmentImages];
+  }, [apartmentMediaQuery.data, projectImagesQuery.data]);
   const stats = useMemo(
     () => ({
       total: allPosts.length,
@@ -137,14 +177,12 @@ export function PostsPage(): JSX.Element {
 
   function openCreateForm(): void {
     setEditingPost(null);
-    setThumbnailFile(null);
     setForm({ ...emptyForm, category_id: categories[0]?.id ?? "" });
     setFormOpen(true);
   }
 
   function openEditForm(post: Post): void {
     setEditingPost(post);
-    setThumbnailFile(null);
     setForm({
       title: post.title,
       excerpt: post.excerpt ?? "",
@@ -160,8 +198,7 @@ export function PostsPage(): JSX.Element {
 
   const createMutation = useMutation({
     mutationFn: createPost,
-    onSuccess: async (post) => {
-      if (thumbnailFile) await uploadThumbnailMutation.mutateAsync({ postId: post.id, file: thumbnailFile });
+    onSuccess: () => {
       setFormOpen(false);
       showToast("Đã tạo bài viết.");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -170,17 +207,11 @@ export function PostsPage(): JSX.Element {
 
   const updateMutation = useMutation({
     mutationFn: ({ postId, payload }: { postId: string; payload: Partial<PostPayload> }) => updatePost(postId, payload),
-    onSuccess: async (post) => {
-      if (thumbnailFile) await uploadThumbnailMutation.mutateAsync({ postId: post.id, file: thumbnailFile });
+    onSuccess: () => {
       setFormOpen(false);
       showToast("Đã cập nhật bài viết.");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-  });
-
-  const uploadThumbnailMutation = useMutation({
-    mutationFn: ({ postId, file }: { postId: string; file: File }) => uploadPostThumbnail(postId, file),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["posts"] }),
   });
 
   const deleteMutation = useMutation({
@@ -222,7 +253,7 @@ export function PostsPage(): JSX.Element {
     }
   }
 
-  const saving = createMutation.isPending || updateMutation.isPending || uploadThumbnailMutation.isPending;
+  const saving = createMutation.isPending || updateMutation.isPending;
 
   return (
     <section className="page-stack posts-page">
@@ -370,19 +401,45 @@ export function PostsPage(): JSX.Element {
                   </label>
                 </div>
                 <aside className="post-form-side">
-                  <label className="post-thumbnail-upload">
-                    {thumbnailFile ? <strong>{thumbnailFile.name}</strong> : form.thumbnail ? <img src={form.thumbnail} alt="Ảnh đại diện bài viết" /> : <ImagePlus size={24} />}
-                    <span>Upload ảnh đại diện</span>
-                    <input type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => setThumbnailFile(event.target.files?.[0] ?? null)} />
-                  </label>
                   <SelectMenu label="Danh mục" value={form.category_id} options={formCategoryOptions.length ? formCategoryOptions : [{ value: "", label: "Chưa có danh mục" }]} onChange={(value) => setForm((current) => ({ ...current, category_id: value }))} />
                   <button className="secondary-button" type="button" onClick={() => setCategoryModalOpen(true)}>Thêm danh mục</button>
-                  <SelectMenu label="Dự án liên quan" value={form.project_id} options={formProjectOptions} onChange={(value) => setForm((current) => ({ ...current, project_id: value, apartment_id: "" }))} />
-                  <SelectMenu label="Căn hộ liên quan" value={form.apartment_id} options={apartmentOptions} onChange={(value) => setForm((current) => ({ ...current, apartment_id: value }))} />
+                  <SelectMenu label="Dự án liên quan" value={form.project_id} options={formProjectOptions} onChange={(value) => setForm((current) => ({ ...current, project_id: value, apartment_id: "", thumbnail: "" }))} />
+                  <SelectMenu label="Căn hộ liên quan" value={form.apartment_id} options={apartmentOptions} onChange={(value) => setForm((current) => ({ ...current, apartment_id: value, thumbnail: "" }))} />
                   <SelectMenu label="Trạng thái" value={form.status} options={statusOptions.slice(1)} onChange={(value) => setForm((current) => ({ ...current, status: value as Post["status"] }))} />
+                  <div className="post-image-library">
+                    <div className="post-image-library-head">
+                      <strong>Ảnh bài viết</strong>
+                      <span>Chọn từ ảnh đã setup của dự án/căn hộ.</span>
+                    </div>
+                    {form.thumbnail ? (
+                      <div className="post-selected-image">
+                        <img src={form.thumbnail} alt="Ảnh đang chọn cho bài viết" />
+                        <button className="secondary-button" type="button" onClick={() => setForm((current) => ({ ...current, thumbnail: "" }))}>
+                          Bỏ chọn
+                        </button>
+                      </div>
+                    ) : null}
+                    <div className="post-image-option-grid">
+                      {imageOptions.map((image) => (
+                        <button
+                          key={image.id}
+                          className={form.thumbnail === image.url ? "selected" : ""}
+                          type="button"
+                          onClick={() => setForm((current) => ({ ...current, thumbnail: image.url }))}
+                        >
+                          <img src={image.url} alt={image.label} />
+                          <span>{image.source === "project" ? "Dự án" : "Căn hộ"}</span>
+                        </button>
+                      ))}
+                    </div>
+                    {projectImagesQuery.isLoading || apartmentMediaQuery.isLoading ? <p>Đang tải thư viện ảnh...</p> : null}
+                    {!projectImagesQuery.isLoading && !apartmentMediaQuery.isLoading && !imageOptions.length ? (
+                      <p>Chọn dự án/căn hộ đã có ảnh để dùng cho bài viết.</p>
+                    ) : null}
+                  </div>
                 </aside>
               </div>
-              {createMutation.error || updateMutation.error || uploadThumbnailMutation.error ? <div className="form-error">Không lưu được bài viết. Vui lòng kiểm tra danh mục, dự án/căn hộ liên quan hoặc ảnh upload.</div> : null}
+              {createMutation.error || updateMutation.error ? <div className="form-error">Không lưu được bài viết. Vui lòng kiểm tra danh mục hoặc dự án/căn hộ liên quan.</div> : null}
               <div className="modal-actions">
                 <button className="secondary-button" type="button" onClick={() => setFormOpen(false)} disabled={saving}>Hủy</button>
                 <button className="primary-button" type="submit" disabled={saving || !form.category_id}>{saving ? "Đang lưu..." : "Lưu bài viết"}</button>
