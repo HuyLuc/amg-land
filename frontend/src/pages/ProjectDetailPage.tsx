@@ -56,10 +56,6 @@ export function ProjectDetailPage({ project, projects, onBack, onContact, onOpen
               <ProjectMetric icon={<ShieldCheck size={18} />} label="Trạng thái" value={project.status} />
               <ProjectMetric icon={<Sparkles size={18} />} label="Căn còn mở" value={`${availableApartments} căn`} />
             </div>
-            <button className="btn-primary mt-6 w-full justify-center" onClick={onContact} type="button">
-              Đăng ký tư vấn dự án
-              <ArrowRight size={17} />
-            </button>
           </aside>
         </div>
       </section>
