@@ -79,7 +79,11 @@ export function ProfilePage({ user, onLogout, onNavigate }: ProfilePageProps) {
             <div className="mt-6 grid gap-4">
               {projects.slice(0, 3).map((project) => (
                 <article className="grid gap-4 rounded border border-slate-200 p-4 md:grid-cols-[128px_1fr_auto] md:items-center" key={project.id}>
-                  <img alt={project.name} className="h-24 w-full rounded object-cover md:w-32" src={project.image} />
+                  {project.image ? (
+                    <img alt={project.name} className="h-24 w-full rounded object-cover md:w-32" src={project.image} />
+                  ) : (
+                    <div className="h-24 w-full rounded bg-slate-100 md:w-32" />
+                  )}
                   <div>
                     <h3 className="font-semibold text-slate-950">{project.name}</h3>
                     <p className="mt-1 text-sm text-slate-600">{project.location}</p>

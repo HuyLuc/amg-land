@@ -24,7 +24,7 @@ export type Project = {
   priceFrom: number;
   status: ProjectStatus;
   summary: string;
-  image: string;
+  image: string | null;
   gallery: string[];
   amenities: string[];
   apartments: Apartment[];

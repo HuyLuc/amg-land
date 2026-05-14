@@ -1,4 +1,4 @@
-import { ArrowRight, MapPin } from "lucide-react";
+import { ArrowRight, Building2, MapPin } from "lucide-react";
 import type { Project } from "../../../types/domain";
 import { formatPrice } from "../utils/projectFormatters";
 
@@ -11,7 +11,16 @@ export function ProjectCard({ project, onOpen }: ProjectCardProps) {
   return (
     <article className="surface-card group overflow-hidden rounded">
       <div className="image-sheen aspect-[4/3] overflow-hidden">
-        <img alt={project.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" src={project.image} />
+        {project.image ? (
+          <img alt={project.name} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" src={project.image} />
+        ) : (
+          <div className="grid h-full place-items-center bg-slate-100 text-brand-900">
+            <div className="text-center">
+              <Building2 className="mx-auto" size={42} />
+              <p className="mt-3 text-sm font-semibold">Chưa có ảnh dự án</p>
+            </div>
+          </div>
+        )}
       </div>
       <div className="p-5">
         <div className="flex items-center justify-between gap-3">

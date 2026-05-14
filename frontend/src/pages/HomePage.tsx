@@ -9,13 +9,14 @@ import type { Project } from "../types/domain";
 
 type HomePageProps = {
   filters: ProjectFilters;
+  projects: Project[];
   onContact: () => void;
   onExploreProjects: () => void;
   onNavigateNews: () => void;
   onOpenProject: (project: Project) => void;
 };
 
-export function HomePage({ filters, onContact, onExploreProjects, onNavigateNews, onOpenProject }: HomePageProps) {
+export function HomePage({ filters, projects, onContact, onExploreProjects, onNavigateNews, onOpenProject }: HomePageProps) {
   return (
     <>
       <HeroSection onContact={onContact} onExplore={onExploreProjects} />
@@ -29,11 +30,10 @@ export function HomePage({ filters, onContact, onExploreProjects, onNavigateNews
         onDistrictChange={filters.setDistrict}
         onSearch={onExploreProjects}
       />
-      <FeaturedProjectsSection onOpenProject={onOpenProject} />
+      <FeaturedProjectsSection projects={projects} onOpenProject={onOpenProject} />
       <FengShuiSection onExplore={onExploreProjects} />
       <NewsPreviewSection onNavigateNews={onNavigateNews} />
       <ContactBand onContact={onContact} />
     </>
   );
 }
-

@@ -7,10 +7,12 @@ import type { Project } from "../types/domain";
 
 type ProjectsPageProps = {
   filters: ProjectFilters;
+  loading?: boolean;
+  error?: string;
   onOpenProject: (project: Project) => void;
 };
 
-export function ProjectsPage({ filters, onOpenProject }: ProjectsPageProps) {
+export function ProjectsPage({ filters, loading, error, onOpenProject }: ProjectsPageProps) {
   return (
     <section className="section-wrap">
       <div className="section-heading">
@@ -32,8 +34,23 @@ export function ProjectsPage({ filters, onOpenProject }: ProjectsPageProps) {
 
         <div>
           <div className="mb-4 flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-slate-600">{filters.filteredProjects.length} dự án phù hợp</p>
+            <p className="text-sm font-semibold text-slate-600">
+              {loading ? "Đang tải dự án..." : `${filters.filteredProjects.length} dự án phù hợp`}
+            </p>
           </div>
+
+          {error && (
+            <div className="rounded border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && filters.filteredProjects.length === 0 && (
+            <div className="rounded border border-slate-200 bg-white p-8 text-center text-sm font-medium text-slate-600 shadow-soft">
+              Chưa có dự án phù hợp với bộ lọc hiện tại.
+            </div>
+          )}
+
           <div className="grid gap-6 md:grid-cols-2">
             {filters.filteredProjects.map((project) => (
               <ProjectCard key={project.id} project={project} onOpen={() => onOpenProject(project)} />

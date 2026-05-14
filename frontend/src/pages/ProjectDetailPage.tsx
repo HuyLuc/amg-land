@@ -1,26 +1,31 @@
 import type { ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Bath, BedDouble, Building2, Check, Compass, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
-import { projects } from "../assets/data/mockData";
 import { ProjectCard } from "../features/projects/components/ProjectCard";
 import { apartmentStatusLabel, formatPrice } from "../features/projects/utils/projectFormatters";
 import type { Project } from "../types/domain";
 
 type ProjectDetailPageProps = {
   project: Project;
+  projects: Project[];
   onBack: () => void;
   onContact: () => void;
   onOpenProject: (project: Project) => void;
 };
 
-export function ProjectDetailPage({ project, onBack, onContact, onOpenProject }: ProjectDetailPageProps) {
+export function ProjectDetailPage({ project, projects, onBack, onContact, onOpenProject }: ProjectDetailPageProps) {
   const relatedProjects = projects.filter((item) => item.id !== project.id).slice(0, 2);
   const availableApartments = project.apartments.filter((apartment) => apartment.status === "available").length;
+  const areas = project.apartments.map((item) => item.area);
+  const bedroomCounts = project.apartments.map((item) => item.bedrooms);
+  const areaRange = areas.length ? `${Math.min(...areas)}-${Math.max(...areas)} m2` : "Đang cập nhật";
+  const bedroomRange = bedroomCounts.length ? `${Math.min(...bedroomCounts)}-${Math.max(...bedroomCounts)} phòng ngủ` : "Đang cập nhật";
+  const gallery = project.gallery;
 
   return (
     <main>
       <section className="relative overflow-hidden bg-brand-900 text-white">
         <div className="absolute inset-0 opacity-[0.08] luxury-grid" />
-        <img alt={project.name} className="absolute inset-0 h-full w-full object-cover opacity-35" src={project.image} />
+        {project.image && <img alt={project.name} className="absolute inset-0 h-full w-full object-cover opacity-35" src={project.image} />}
         <div className="absolute inset-0 bg-gradient-to-r from-brand-900 via-brand-900/82 to-brand-900/40" />
 
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 py-12 lg:grid-cols-[1fr_390px] lg:px-8 lg:py-16">
@@ -63,12 +68,20 @@ export function ProjectDetailPage({ project, onBack, onContact, onOpenProject }:
         <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <img alt={project.name} className="h-80 w-full rounded object-cover shadow-soft sm:col-span-2" src={project.gallery[0]} />
-              <div className="grid gap-3">
-                {project.gallery.slice(1, 3).map((image) => (
-                  <img alt={project.name} className="h-[154px] w-full rounded object-cover shadow-soft" key={image} src={image} />
-                ))}
-              </div>
+              {gallery.length > 0 ? (
+                <>
+                  <img alt={project.name} className="h-80 w-full rounded object-cover shadow-soft sm:col-span-2" src={gallery[0]} />
+                  <div className="grid gap-3">
+                    {gallery.slice(1, 3).map((image) => (
+                      <img alt={project.name} className="h-[154px] w-full rounded object-cover shadow-soft" key={image} src={image} />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="grid h-80 place-items-center rounded border border-dashed border-slate-300 bg-white text-sm font-semibold text-slate-500 shadow-soft sm:col-span-3">
+                  Chưa có ảnh dự án
+                </div>
+              )}
             </div>
 
             <div className="mt-8 rounded bg-white p-6 shadow-soft">
@@ -77,8 +90,8 @@ export function ProjectDetailPage({ project, onBack, onContact, onOpenProject }:
                 {project.summary} Dự án được chọn lọc theo các tiêu chí về vị trí, khả năng kết nối, chất lượng không gian sống và tiềm năng khai thác dài hạn.
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                <ProjectStat icon={<Ruler size={20} />} label="Diện tích căn" value={`${Math.min(...project.apartments.map((item) => item.area))}-${Math.max(...project.apartments.map((item) => item.area))} m2`} />
-                <ProjectStat icon={<BedDouble size={20} />} label="Cấu hình" value={`${Math.min(...project.apartments.map((item) => item.bedrooms))}-${Math.max(...project.apartments.map((item) => item.bedrooms))} phòng ngủ`} />
+                <ProjectStat icon={<Ruler size={20} />} label="Diện tích căn" value={areaRange} />
+                <ProjectStat icon={<BedDouble size={20} />} label="Cấu hình" value={bedroomRange} />
                 <ProjectStat icon={<Compass size={20} />} label="Hướng đẹp" value={project.apartments[0]?.direction ?? "Đang cập nhật"} />
               </div>
             </div>

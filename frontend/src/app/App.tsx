@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { projects } from "../assets/data/mockData";
 import { Chatbot } from "../features/chat/components/Chatbot";
 import type { AuthUser } from "../features/auth/types";
+import { fetchProjects } from "../features/projects/api";
 import { useProjectFilters } from "../features/projects/hooks/useProjectFilters";
 import { AboutPage } from "../pages/AboutPage";
 import { ContactPage } from "../pages/ContactPage";
@@ -20,7 +20,10 @@ import type { Page } from "./types";
 
 export function App() {
   const [page, setPage] = useState<Page>("home");
-  const [selectedProject, setSelectedProject] = useState<Project>(projects[0]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+  const [projectsError, setProjectsError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
 
@@ -46,8 +49,37 @@ export function App() {
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    fetchProjects()
+      .then((items) => {
+        if (!mounted) {
+          return;
+        }
+        setProjects(items);
+        setSelectedProject((current) => current ?? items[0] ?? null);
+        setProjectsError("");
+      })
+      .catch((error) => {
+        if (!mounted) {
+          return;
+        }
+        setProjectsError(error instanceof Error ? error.message : "Không thể tải dữ liệu dự án.");
+      })
+      .finally(() => {
+        if (mounted) {
+          setProjectsLoading(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page, selectedProject.id]);
+  }, [page, selectedProject?.id]);
 
   return (
     <AppLayout currentPage={page} user={user} onLogout={logout} onNavigate={navigate}>
@@ -55,6 +87,7 @@ export function App() {
         {page === "home" && (
           <HomePage
             filters={projectFilters}
+            projects={projects}
             onContact={() => navigate("contact")}
             onExploreProjects={() => navigate("projects")}
             onNavigateNews={() => navigate("news")}
@@ -65,17 +98,24 @@ export function App() {
         {page === "projects" && (
           <ProjectsPage
             filters={projectFilters}
+            loading={projectsLoading}
+            error={projectsError}
             onOpenProject={openProject}
           />
         )}
 
-        {page === "projectDetail" && (
+        {page === "projectDetail" && selectedProject && (
           <ProjectDetailPage
             project={selectedProject}
+            projects={projects}
             onBack={() => navigate("projects")}
             onContact={() => navigate("contact")}
             onOpenProject={openProject}
           />
+        )}
+
+        {page === "projectDetail" && !selectedProject && (
+          <ProjectsPage filters={projectFilters} loading={projectsLoading} error={projectsError} onOpenProject={openProject} />
         )}
 
         {page === "about" && <AboutPage onContact={() => navigate("contact")} />}

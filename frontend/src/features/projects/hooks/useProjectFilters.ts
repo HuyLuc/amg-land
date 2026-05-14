@@ -37,4 +37,3 @@ export function useProjectFilters(projects: Project[]) {
 }
 
 export type ProjectFilters = ReturnType<typeof useProjectFilters>;
-
