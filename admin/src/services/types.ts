@@ -123,6 +123,9 @@ export interface Post {
   status: "draft" | "published" | "archived";
   published_at: string | null;
   created_at: string;
+  linked_project: Project | null;
+  linked_apartment: Apartment | null;
+  linked_amenities: Array<{ id: string; name: string; icon: string | null; category: Amenity["category"] }>;
 }
 
 export interface User {

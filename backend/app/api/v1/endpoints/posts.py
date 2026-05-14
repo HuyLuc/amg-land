@@ -50,6 +50,41 @@ def validate_post_images(
     return normalized
 
 
+def serialize_post(db: Session, post: Post) -> dict:
+    apartment = db.get(Apartment, post.apartment_id) if post.apartment_id else None
+    project_id = post.project_id or (apartment.project_id if apartment else None)
+    project = db.get(Project, project_id) if project_id else None
+    if project and project.deleted_at is not None:
+        project = None
+    amenities = []
+    if project:
+        amenities = list(
+            db.scalars(
+                select(Amenity)
+                .join(ProjectAmenity, ProjectAmenity.amenity_id == Amenity.id)
+                .where(ProjectAmenity.project_id == project.id)
+                .order_by(Amenity.name)
+            )
+        )
+    return {
+        "id": post.id,
+        "title": post.title,
+        "slug": post.slug,
+        "excerpt": post.excerpt,
+        "content": post.content,
+        "images": post.images,
+        "project_id": post.project_id,
+        "apartment_id": post.apartment_id,
+        "author_id": post.author_id,
+        "status": post.status,
+        "published_at": post.published_at,
+        "created_at": post.created_at,
+        "linked_project": project,
+        "linked_apartment": apartment,
+        "linked_amenities": amenities,
+    }
+
+
 @router.get("/posts", response_model=PostPage, tags=["posts"])
 def list_posts(
     db: Session = Depends(get_db),
@@ -75,22 +110,22 @@ def list_posts(
         query = query.where(Post.apartment_id == apartment_id)
     total = db.scalar(select(func.count()).select_from(query.subquery()))
     items = list(db.scalars(query.order_by(Post.created_at.desc()).offset((page - 1) * limit).limit(limit)))
-    return page_response(items, total, page, limit)
+    return page_response([serialize_post(db, item) for item in items], total, page, limit)
 
 
 @router.get("/posts/{slug}", response_model=PostOut, tags=["posts"])
-def get_post(slug: str, db: Session = Depends(get_db), current_user: User | None = Depends(get_optional_current_user)) -> Post:
+def get_post(slug: str, db: Session = Depends(get_db), current_user: User | None = Depends(get_optional_current_user)) -> dict:
     post = db.scalar(select(Post).where(Post.slug == slug))
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
     is_staff = current_user is not None and current_user.role in {UserRole.admin, UserRole.editor}
     if post.status != PostStatus.published and not is_staff:
         raise HTTPException(status_code=404, detail="Post not found")
-    return post
+    return serialize_post(db, post)
 
 
 @router.post("/posts", response_model=PostOut, status_code=201, tags=["posts"])
-def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depends(get_db)) -> Post:
+def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depends(get_db)) -> dict:
     if payload.project_id and db.get(Project, payload.project_id) is None:
         raise HTTPException(status_code=404, detail="Project not found")
     apartment = None
@@ -120,11 +155,11 @@ def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depe
     db.add(post)
     commit_or_400(db)
     db.refresh(post)
-    return post
+    return serialize_post(db, post)
 
 
 @router.put("/posts/{post_id}", response_model=PostOut, tags=["posts"])
-def update_post(post_id: uuid.UUID, payload: PostUpdate, _: StaffUser, db: Session = Depends(get_db)) -> Post:
+def update_post(post_id: uuid.UUID, payload: PostUpdate, _: StaffUser, db: Session = Depends(get_db)) -> dict:
     post = db.get(Post, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Post not found")
@@ -152,7 +187,7 @@ def update_post(post_id: uuid.UUID, payload: PostUpdate, _: StaffUser, db: Sessi
         post.published_at = datetime.now(timezone.utc)
     commit_or_400(db)
     db.refresh(post)
-    return post
+    return serialize_post(db, post)
 
 @router.delete("/posts/{post_id}", response_model=dict, tags=["posts"])
 def delete_post(post_id: uuid.UUID, _: AdminUser, db: Session = Depends(get_db)) -> dict:

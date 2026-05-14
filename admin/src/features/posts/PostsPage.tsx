@@ -64,6 +64,14 @@ function formatDate(value: string | null): string {
   return new Intl.DateTimeFormat("vi-VN", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 }
 
+function formatMoney(value: number): string {
+  return value.toLocaleString("vi-VN") + " VND";
+}
+
+function formatArea(value: string | number): string {
+  return `${Number(value).toLocaleString("vi-VN")} m2`;
+}
+
 function summarizeContent(post: Post): string {
   if (post.excerpt?.trim()) return post.excerpt;
   const text = htmlToPlainText(post.content ?? "").replace(/\s+/g, " ").trim();
@@ -184,6 +192,7 @@ export function PostsPage(): JSX.Element {
   const projects = projectsQuery.data?.items ?? [];
   const apartments = apartmentsQuery.data?.items ?? [];
   const selectedProject = projects.find((item) => item.id === form.project_id) ?? null;
+  const selectedApartment = apartments.find((item) => item.id === form.apartment_id) ?? null;
   const projectImagesQuery = useQuery({
     queryKey: ["project-detail", selectedProject?.slug, "post-images"],
     queryFn: () => getProjectDetail(selectedProject?.slug ?? ""),
@@ -204,6 +213,11 @@ export function PostsPage(): JSX.Element {
   );
   const projectNameById = useMemo(() => new Map(projects.map((item) => [item.id, item.name])), [projects]);
   const apartmentCodeById = useMemo(() => new Map(apartments.map((item) => [item.id, item.code])), [apartments]);
+  const liveProject = form.project_id ? selectedProject ?? (editingPost?.linked_project?.id === form.project_id ? editingPost.linked_project : null) : null;
+  const liveApartment = form.apartment_id ? selectedApartment ?? (editingPost?.linked_apartment?.id === form.apartment_id ? editingPost.linked_apartment : null) : null;
+  const liveAmenities = form.project_id && editingPost?.linked_project?.id === form.project_id && !projectImagesQuery.data
+    ? editingPost.linked_amenities
+    : projectImagesQuery.data?.amenities ?? [];
   const imageOptions = useMemo<PostImageOption[]>(() => {
     const projectImages =
       projectImagesQuery.data?.images.map((image: ProjectImage) => ({
@@ -240,7 +254,7 @@ export function PostsPage(): JSX.Element {
       title: post.title,
       excerpt: post.excerpt ?? "",
       content: htmlToPlainText(post.content ?? ""),
-      project_id: post.project_id ?? "",
+      project_id: post.project_id ?? post.linked_project?.id ?? "",
       apartment_id: post.apartment_id ?? "",
       status: post.status,
       images: post.images ?? [],
@@ -357,8 +371,8 @@ export function PostsPage(): JSX.Element {
                   </td>
                   <td>
                     <div className="post-link-cell">
-                      <strong>{post.project_id ? projectNameById.get(post.project_id) ?? "Dự án liên quan" : "Không gắn dự án"}</strong>
-                      <span>{post.apartment_id ? `Căn ${apartmentCodeById.get(post.apartment_id) ?? post.apartment_id.slice(0, 8)}` : "Không gắn căn hộ"}</span>
+                      <strong>{post.linked_project?.name ?? (post.project_id ? projectNameById.get(post.project_id) ?? "Dự án liên quan" : "Không gắn dự án")}</strong>
+                      <span>{post.linked_apartment ? `Căn ${post.linked_apartment.code}` : post.apartment_id ? `Căn ${apartmentCodeById.get(post.apartment_id) ?? post.apartment_id.slice(0, 8)}` : "Không gắn căn hộ"}</span>
                     </div>
                   </td>
                   <td><StatusBadge value={post.status} /></td>
@@ -433,6 +447,65 @@ export function PostsPage(): JSX.Element {
                   <SelectMenu label="Dự án liên quan" value={form.project_id} options={formProjectOptions} onChange={(value) => setForm((current) => ({ ...current, project_id: value, apartment_id: "", images: [] }))} />
                   <SelectMenu label="Căn hộ liên quan" value={form.apartment_id} options={apartmentOptions} onChange={(value) => setForm((current) => ({ ...current, apartment_id: value, images: [] }))} />
                   <SelectMenu label="Trạng thái" value={form.status} options={statusOptions.slice(1)} onChange={(value) => setForm((current) => ({ ...current, status: value as Post["status"] }))} />
+                  <div className="post-linked-preview">
+                    <div className="post-linked-preview-head">
+                      <strong>Dữ liệu liên kết</strong>
+                      <span>Tự cập nhật theo dự án/căn hộ gốc.</span>
+                    </div>
+                    {liveProject ? (
+                      <dl>
+                        <div>
+                          <dt>Dự án</dt>
+                          <dd>{liveProject.name}</dd>
+                        </div>
+                        <div>
+                          <dt>Khu vực</dt>
+                          <dd>{liveProject.district}, {liveProject.city}</dd>
+                        </div>
+                        <div>
+                          <dt>Giá từ</dt>
+                          <dd>{formatMoney(liveProject.price_from)}</dd>
+                        </div>
+                        <div>
+                          <dt>Trạng thái dự án</dt>
+                          <dd><StatusBadge value={liveProject.status === "active" ? "active_project" : liveProject.status} /></dd>
+                        </div>
+                      </dl>
+                    ) : (
+                      <p>Chọn dự án để bài viết tự lấy thông tin vị trí, giá, tiện ích và gallery.</p>
+                    )}
+                    {liveApartment ? (
+                      <dl>
+                        <div>
+                          <dt>Căn hộ</dt>
+                          <dd>{liveApartment.code}</dd>
+                        </div>
+                        <div>
+                          <dt>Tầng / diện tích</dt>
+                          <dd>Tầng {liveApartment.floor} · {formatArea(liveApartment.area)}</dd>
+                        </div>
+                        <div>
+                          <dt>Phòng / hướng</dt>
+                          <dd>{liveApartment.bedrooms}PN · {liveApartment.bathrooms}WC · {liveApartment.direction}</dd>
+                        </div>
+                        <div>
+                          <dt>Giá hiện tại</dt>
+                          <dd>{formatMoney(liveApartment.price)}</dd>
+                        </div>
+                        <div>
+                          <dt>Trạng thái căn</dt>
+                          <dd><StatusBadge value={liveApartment.status} /></dd>
+                        </div>
+                      </dl>
+                    ) : null}
+                    {liveAmenities.length ? (
+                      <div className="post-linked-amenities">
+                        {liveAmenities.slice(0, 6).map((amenity) => (
+                          <span key={amenity.id}>{amenity.name}</span>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
                   <div className="post-image-library">
                     <div className="post-image-library-head">
                       <div>

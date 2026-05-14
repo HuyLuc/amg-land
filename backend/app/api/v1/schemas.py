@@ -278,6 +278,39 @@ class PostUpdate(BaseModel):
     published_at: datetime | None = None
 
 
+class PostLinkedProjectOut(ORMModel):
+    id: UUID
+    name: str
+    slug: str
+    short_description: str | None = None
+    location: str
+    district: str
+    city: str
+    price_from: int
+    status: ProjectStatus
+
+
+class PostLinkedApartmentOut(ORMModel):
+    id: UUID
+    project_id: UUID
+    code: str
+    floor: int
+    area: Decimal
+    bedrooms: int
+    bathrooms: int
+    direction: Direction
+    price: int
+    status: ApartmentStatus
+    feng_shui_element: str | None = None
+
+
+class PostLinkedAmenityOut(ORMModel):
+    id: UUID
+    name: str
+    icon: str | None = None
+    category: AmenityCategory
+
+
 class PostOut(ORMModel):
     id: UUID
     title: str
@@ -291,6 +324,9 @@ class PostOut(ORMModel):
     status: PostStatus
     published_at: datetime | None = None
     created_at: datetime
+    linked_project: PostLinkedProjectOut | None = None
+    linked_apartment: PostLinkedApartmentOut | None = None
+    linked_amenities: list[PostLinkedAmenityOut] = Field(default_factory=list)
 
 
 class ContactCreate(BaseModel):
