@@ -23,8 +23,16 @@ export interface DashboardStats {
   period: string;
   visits: number;
   new_contacts: number;
+  total_contacts: number;
+  project_counts: { total: number; active: number; draft: number; closed: number };
+  apartment_counts: { total: number; available: number; reserved: number; sold: number };
+  contact_counts: { new: number; processing: number; done: number };
+  post_counts: { total: number; published: number; draft: number; archived: number };
+  lead_series: Array<{ date: string; total: number; new: number; processing: number; done: number }>;
   top_projects: Array<{ id: string; name: string; views: number }>;
-  top_apartments: Array<{ id: string; code: string; views: number }>;
+  top_apartments: Array<{ id: string; code: string; project_name: string; views: number }>;
+  recent_contacts: Array<{ id: string; full_name: string; phone: string; status: Contact["status"]; project_name: string | null; apartment_code: string | null; created_at: string }>;
+  work_items: Array<{ label: string; value: number; tone: "urgent" | "warning" | "ok" }>;
 }
 
 export interface Contact {
