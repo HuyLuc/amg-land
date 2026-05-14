@@ -66,8 +66,39 @@ function formatDate(value: string | null): string {
 
 function summarizeContent(post: Post): string {
   if (post.excerpt?.trim()) return post.excerpt;
-  const text = (post.content ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  const text = htmlToPlainText(post.content ?? "").replace(/\s+/g, " ").trim();
   return text || "Chưa có mô tả ngắn.";
+}
+
+function htmlToPlainText(value: string): string {
+  return value
+    .replace(/<\/p>\s*<p>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/?p>/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .trim();
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function plainTextToHtml(value: string): string {
+  return value
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br />")}</p>`)
+    .join("");
 }
 
 function toggleImageSelection(currentImages: string[], imageUrl: string): string[] {
@@ -208,7 +239,7 @@ export function PostsPage(): JSX.Element {
     setForm({
       title: post.title,
       excerpt: post.excerpt ?? "",
-      content: post.content ?? "",
+      content: htmlToPlainText(post.content ?? ""),
       project_id: post.project_id ?? "",
       apartment_id: post.apartment_id ?? "",
       status: post.status,
@@ -248,7 +279,7 @@ export function PostsPage(): JSX.Element {
     const payload = {
       title: form.title.trim(),
       excerpt: form.excerpt.trim() || null,
-      content: form.content.trim(),
+      content: plainTextToHtml(form.content),
       images: form.images,
       project_id: form.project_id || null,
       apartment_id: form.apartment_id || null,
