@@ -122,7 +122,7 @@ export function ProjectDetailPage({ project, projects, onBack, onContact, onOpen
 
       <section className="section-wrap pt-0">
         <div className="section-heading">
-          <h2>Bảng căn đang cập nhật</h2>
+          <h2>Danh sách căn hộ</h2>
           <p>Thông tin căn hộ mẫu để khách hàng tham khảo nhanh trước khi liên hệ tư vấn chi tiết.</p>
         </div>
         <div className="overflow-hidden rounded bg-white shadow-soft">
