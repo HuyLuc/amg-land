@@ -11,9 +11,10 @@ export type ContactContext = {
 
 type ContactPageProps = {
   context?: ContactContext | null;
+  projects?: Project[];
 };
 
-export function ContactPage({ context }: ContactPageProps) {
+export function ContactPage({ context, projects = [] }: ContactPageProps) {
   return (
     <section className="section-wrap">
       <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
@@ -44,7 +45,7 @@ export function ContactPage({ context }: ContactPageProps) {
           </p>
         </div>
 
-        <ContactForm context={context} />
+        <ContactForm context={context} projects={projects} />
       </div>
     </section>
   );

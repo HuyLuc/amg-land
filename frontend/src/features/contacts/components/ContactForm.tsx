@@ -3,15 +3,18 @@ import { Send } from "lucide-react";
 import { TextInput } from "../../../components/ui/TextInput";
 import { createContact } from "../api";
 import type { ContactContext } from "../../../pages/ContactPage";
+import type { Project } from "../../../types/domain";
 
 type ContactFormProps = {
   context?: ContactContext | null;
+  projects?: Project[];
 };
 
-export function ContactForm({ context }: ContactFormProps) {
+export function ContactForm({ context, projects = [] }: ContactFormProps) {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
@@ -27,6 +30,8 @@ export function ContactForm({ context }: ContactFormProps) {
     return "";
   }, [context]);
 
+  const selectedProject = context?.project ?? projects.find((project) => project.id === selectedProjectId) ?? null;
+
   const submitContact = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError("");
@@ -38,7 +43,7 @@ export function ContactForm({ context }: ContactFormProps) {
         full_name: fullName.trim(),
         phone: phone.trim(),
         email: email.trim() || null,
-        project_id: context?.project?.id ?? null,
+        project_id: selectedProject?.id ?? null,
         apartment_id: context?.apartment?.id ?? null,
         message: message.trim() || defaultMessage || null,
       });
@@ -70,7 +75,32 @@ export function ContactForm({ context }: ContactFormProps) {
         <TextInput label="Họ tên" onChange={setFullName} placeholder="Nguyễn Văn A" required value={fullName} />
         <TextInput label="Số điện thoại" minLength={8} onChange={setPhone} placeholder="0942 319 933" required type="tel" value={phone} />
         <TextInput label="Email" onChange={setEmail} placeholder="email@example.com" type="email" value={email} />
-        <TextInput label="Dự án quan tâm" onChange={() => undefined} placeholder="Dự án quan tâm" value={context?.project?.name ?? ""} />
+        {context?.project ? (
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-700">Dự án quan tâm</span>
+            <input
+              className="mt-2 h-12 w-full rounded border border-slate-200 bg-slate-100 px-4 text-sm font-semibold text-slate-700 outline-none"
+              readOnly
+              value={`${context.project.name}${context.apartment ? ` - Căn ${context.apartment.code.toUpperCase()}` : ""}`}
+            />
+          </label>
+        ) : (
+          <label className="block">
+            <span className="text-sm font-semibold text-slate-700">Dự án quan tâm</span>
+            <select
+              className="mt-2 h-12 w-full rounded border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-brand-500"
+              onChange={(event) => setSelectedProjectId(event.target.value)}
+              value={selectedProjectId}
+            >
+              <option value="">Chưa chọn dự án</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
       <label className="mt-4 block">
         <span className="text-sm font-semibold text-slate-700">Nhu cầu</span>

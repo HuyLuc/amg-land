@@ -269,7 +269,7 @@ export function App() {
         {page === "about" && <AboutPage onContact={() => openContact()} />}
         {page === "news" && <NewsPage />}
         {page === "community" && <CommunityPage />}
-        {page === "contact" && <ContactPage context={contactContext} />}
+        {page === "contact" && <ContactPage context={contactContext} projects={projects} />}
         {page === "login" && <LoginPage onLogin={completeAuth} onNavigate={navigate} />}
         {page === "register" && <RegisterPage onRegister={completeAuth} onNavigate={navigate} />}
         {page === "profile" && <ProfilePage user={user} onLogout={logout} onNavigate={navigate} />}
