@@ -43,11 +43,24 @@ function readStoredUser() {
 
 function readInitialPage(): Page {
   const hash = window.location.hash.replace(/^#\/?/, "");
+  if (hash.startsWith("projects/")) {
+    return "projectDetail";
+  }
   return pageByHash[hash] ?? "home";
+}
+
+function readProjectSlugFromHash() {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  return hash.startsWith("projects/") ? hash.replace("projects/", "") : null;
+}
+
+function pageToHash(nextPage: Page) {
+  return nextPage === "projectDetail" ? null : `#/${nextPage}`;
 }
 
 export function App() {
   const [page, setPage] = useState<Page>(() => readInitialPage());
+  const [routeProjectSlug, setRouteProjectSlug] = useState<string | null>(() => readProjectSlugFromHash());
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectsLoading, setProjectsLoading] = useState(true);
@@ -59,14 +72,21 @@ export function App() {
 
   const navigate = (nextPage: Page) => {
     setPage(nextPage);
-    if (nextPage !== "projectDetail") {
-      window.history.replaceState(null, "", `#/${nextPage}`);
+    setRouteProjectSlug(null);
+    const nextHash = pageToHash(nextPage);
+    if (nextHash && window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
     }
   };
 
   const openProject = (project: Project) => {
     setSelectedProject(project);
+    setRouteProjectSlug(project.slug);
     setPage("projectDetail");
+    const nextHash = `#/projects/${project.slug}`;
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
+    }
   };
 
   const completeAuth = (nextUser: AuthUser) => {
@@ -90,7 +110,6 @@ export function App() {
           return;
         }
         setProjects(items);
-        setSelectedProject((current) => current ?? items[0] ?? null);
         setProjectsError("");
       })
       .catch((error) => {
@@ -109,6 +128,40 @@ export function App() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setPage(readInitialPage());
+      setRouteProjectSlug(readProjectSlugFromHash());
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    if (page !== "projectDetail") {
+      return;
+    }
+
+    if (!routeProjectSlug) {
+      setPage("projects");
+      return;
+    }
+
+    const project = projects.find((item) => item.slug === routeProjectSlug);
+    if (project) {
+      setSelectedProject(project);
+      return;
+    }
+
+    if (!projectsLoading && projects.length > 0) {
+      setSelectedProject(null);
+      setPage("projects");
+      setRouteProjectSlug(null);
+      window.history.replaceState(null, "", "#/projects");
+    }
+  }, [page, projects, projectsLoading, routeProjectSlug]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
