@@ -142,7 +142,7 @@ export function ProjectDetailPage({ project, projects, onBack, onContact, onOpen
               type="button"
             >
               <div>
-                <div className="font-semibold text-slate-950">{apartment.code}</div>
+                <div className="font-semibold text-slate-950">{apartment.code.toUpperCase()}</div>
                 <div className="mt-1 text-xs text-slate-500">Tầng {apartment.floor}</div>
               </div>
               <span>{apartment.area} m2</span>

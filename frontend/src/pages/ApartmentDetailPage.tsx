@@ -46,6 +46,7 @@ export function ApartmentDetailPage({ project, apartment, onBack, onContact }: A
 
   const images = media.filter((item) => item.mediaType === "image");
   const heroImage = images.find((item) => item.isThumbnail)?.url ?? images[0]?.url ?? project.image;
+  const apartmentCode = apartment.code.toUpperCase();
 
   return (
     <main>
@@ -64,7 +65,7 @@ export function ApartmentDetailPage({ project, apartment, onBack, onContact }: A
               <span className="inline-flex rounded bg-white/12 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-gold-300 ring-1 ring-white/15">
                 {project.name}
               </span>
-              <h1 className="font-display mt-5 text-5xl font-bold leading-tight md:text-6xl">Căn {apartment.code}</h1>
+              <h1 className="font-display mt-5 text-5xl font-bold leading-tight md:text-6xl">Căn {apartmentCode}</h1>
               <p className="mt-5 max-w-2xl text-lg leading-8 text-brand-50">
                 {apartment.bedrooms} phòng ngủ, diện tích {apartment.area} m2, hướng {apartment.direction}.
               </p>
@@ -97,7 +98,7 @@ export function ApartmentDetailPage({ project, apartment, onBack, onContact }: A
                 <ApartmentStat icon={<BedDouble size={20} />} label="Phòng ngủ" value={`${apartment.bedrooms} phòng`} />
                 <ApartmentStat icon={<Bath size={20} />} label="Phòng tắm" value={`${apartment.bathrooms} phòng`} />
                 <ApartmentStat icon={<Compass size={20} />} label="Hướng" value={apartment.direction} />
-                <ApartmentStat icon={<Home size={20} />} label="Mã căn" value={apartment.code} />
+                <ApartmentStat icon={<Home size={20} />} label="Mã căn" value={apartmentCode} />
                 <ApartmentStat icon={<Sparkles size={20} />} label="Phong thủy" value={apartment.fengShui.join(", ") || "Đang cập nhật"} />
               </div>
             </div>
@@ -119,7 +120,7 @@ export function ApartmentDetailPage({ project, apartment, onBack, onContact }: A
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 {images.map((item) => (
                   <figure className="overflow-hidden rounded border border-slate-200" key={item.id}>
-                    <img alt={item.caption ?? apartment.code} className="h-48 w-full object-cover" src={item.url} />
+                    <img alt={item.caption ?? apartmentCode} className="h-48 w-full object-cover" src={item.url} />
                     {item.caption ? <figcaption className="px-3 py-2 text-sm font-medium text-slate-600">{item.caption}</figcaption> : null}
                   </figure>
                 ))}

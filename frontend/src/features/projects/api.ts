@@ -114,7 +114,7 @@ function mapProject(detail: ApiProjectDetail, apartments: ApiApartment[]): Proje
     image: thumbnail,
     gallery,
     amenities: detail.amenities.map((amenity) => amenity.name),
-    apartments: apartments.map(mapApartment),
+    apartments: apartments.filter((apartment) => apartment.status === "available").map(mapApartment),
   };
 }
 
