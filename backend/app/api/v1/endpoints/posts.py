@@ -16,6 +16,12 @@ def normalize_post_images(images: list[str] | None) -> list[str]:
     return normalized
 
 
+def is_uploaded_post_image(image_url: str) -> bool:
+    bucket = os.getenv("MINIO_BUCKET", "amg-land-media")
+    public_base = os.getenv("MINIO_PUBLIC_URL", f"http://localhost:9000/{bucket}").rstrip("/")
+    return image_url.startswith(f"{public_base}/posts/")
+
+
 def validate_post_images(
     db: Session,
     images: list[str],
@@ -26,13 +32,12 @@ def validate_post_images(
     normalized = normalize_post_images(images)
     if not normalized:
         return []
+    uploaded_post_images = {image for image in normalized if is_uploaded_post_image(image)}
     if apartment_id and apartment is None:
         apartment = db.get(Apartment, apartment_id)
     effective_project_id = project_id or (apartment.project_id if apartment is not None else None)
-    if effective_project_id is None and apartment_id is None:
-        raise HTTPException(status_code=400, detail="Post images must belong to selected project or apartment")
 
-    allowed_urls: set[str] = set()
+    allowed_urls: set[str] = set(uploaded_post_images)
     if effective_project_id:
         allowed_urls.update(db.scalars(select(ProjectImage.image_url).where(ProjectImage.project_id == effective_project_id)))
     if apartment_id:
@@ -46,7 +51,7 @@ def validate_post_images(
         )
     invalid_urls = [image for image in normalized if image not in allowed_urls]
     if invalid_urls:
-        raise HTTPException(status_code=400, detail="Post images must be selected from project or apartment media")
+        raise HTTPException(status_code=400, detail="Post images must be uploaded for the post or selected from linked project/apartment media")
     return normalized
 
 
@@ -141,6 +146,15 @@ def get_post(slug: str, db: Session = Depends(get_db), current_user: User | None
     if post.status != PostStatus.published and not is_staff:
         raise HTTPException(status_code=404, detail="Post not found")
     return serialize_post(db, post)
+
+
+@router.post("/posts/images", status_code=201, tags=["posts"])
+def upload_post_images(_: ContentUser, files: list[UploadFile] = File(...)) -> list[dict]:
+    uploaded = []
+    for file in files:
+        stored = upload_post_image(file)
+        uploaded.append({"image_url": stored.public_url})
+    return uploaded
 
 
 @router.post("/posts", response_model=PostOut, status_code=201, tags=["posts"])

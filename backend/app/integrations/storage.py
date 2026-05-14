@@ -1,7 +1,7 @@
 import os
 import re
 from dataclasses import dataclass
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import HTTPException, UploadFile
 from minio import Minio
@@ -52,6 +52,10 @@ def upload_floor_plan_image(project_id: UUID, file: UploadFile) -> StoredObject:
 
 def upload_apartment_media(apartment_id: UUID, file: UploadFile, media_type: str) -> StoredObject:
     return upload_media_object("apartments", apartment_id, file, media_type)
+
+
+def upload_post_image(file: UploadFile) -> StoredObject:
+    return upload_media_object("posts", uuid4(), file, "images", image_only=True)
 
 
 def upload_project_object(project_id: UUID, file: UploadFile, folder: str) -> StoredObject:

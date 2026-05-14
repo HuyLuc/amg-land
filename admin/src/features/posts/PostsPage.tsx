@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronLeft, ChevronRight, Edit3, FileText, Filter, Plus, Search, Trash2, X } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, Edit3, FileText, Filter, ImagePlus, Plus, Search, Trash2, X } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { ConfirmDialog } from "@/components/ConfirmDialog";
@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listApartmentMedia, listApartments } from "@/features/apartments/apartmentsApi";
-import { createPost, deletePost, listPosts, updatePost } from "@/features/posts/postsApi";
+import { createPost, deletePost, listPosts, updatePost, uploadPostImages } from "@/features/posts/postsApi";
 import type { PostPayload } from "@/features/posts/postsApi";
 import { getProjectDetail, listProjects } from "@/features/projects/projectsApi";
 import type { Apartment, ApartmentMedia, Post, ProjectImage } from "@/services/types";
@@ -288,6 +288,18 @@ export function PostsPage(): JSX.Element {
     },
   });
 
+  const uploadImagesMutation = useMutation({
+    mutationFn: uploadPostImages,
+    onSuccess: (uploadedImages) => {
+      const uploadedUrls = uploadedImages.map((image) => image.image_url);
+      setForm((current) => ({ ...current, images: Array.from(new Set([...current.images, ...uploadedUrls])) }));
+      showToast(`Đã tải ${uploadedUrls.length} ảnh bài viết.`);
+    },
+    onError: () => {
+      showToast("Không tải được ảnh bài viết.");
+    },
+  });
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     const payload = {
@@ -510,7 +522,7 @@ export function PostsPage(): JSX.Element {
                     <div className="post-image-library-head">
                       <div>
                         <strong>Ảnh bài viết</strong>
-                        <span>Chọn nhiều ảnh từ thư viện của dự án hoặc căn hộ.</span>
+                        <span>{form.project_id || form.apartment_id ? "Chọn nhiều ảnh từ thư viện của dự án hoặc căn hộ." : "Tải ảnh riêng cho bài viết không gắn dự án/căn hộ."}</span>
                       </div>
                       {form.images.length ? (
                         <button type="button" onClick={() => setForm((current) => ({ ...current, images: [] }))}>
@@ -518,7 +530,40 @@ export function PostsPage(): JSX.Element {
                         </button>
                       ) : null}
                     </div>
+                    {!form.project_id && !form.apartment_id ? (
+                      <label className="post-upload-control">
+                        <ImagePlus size={18} />
+                        <span>{uploadImagesMutation.isPending ? "Đang tải ảnh..." : "Tải ảnh bài viết"}</span>
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          multiple
+                          disabled={uploadImagesMutation.isPending}
+                          onChange={(event) => {
+                            if (event.target.files?.length) {
+                              uploadImagesMutation.mutate(Array.from(event.target.files));
+                              event.currentTarget.value = "";
+                            }
+                          }}
+                        />
+                      </label>
+                    ) : null}
                     <div className="post-image-count">Đã chọn {form.images.length} ảnh</div>
+                    {form.images.length ? (
+                      <div className="post-selected-images">
+                        {form.images.map((imageUrl) => (
+                          <figure key={imageUrl}>
+                            <img src={imageUrl} alt="" loading="lazy" />
+                            <button
+                              type="button"
+                              onClick={() => setForm((current) => ({ ...current, images: current.images.filter((item) => item !== imageUrl) }))}
+                            >
+                              Bỏ ảnh
+                            </button>
+                          </figure>
+                        ))}
+                      </div>
+                    ) : null}
                     <div className="post-image-option-grid">
                       {imageOptions.map((image) => {
                         const selected = form.images.includes(image.url);
@@ -534,7 +579,7 @@ export function PostsPage(): JSX.Element {
                     </div>
                     {projectImagesQuery.isLoading || apartmentMediaQuery.isLoading ? <p>Đang tải thư viện ảnh...</p> : null}
                     {!projectImagesQuery.isLoading && !apartmentMediaQuery.isLoading && !imageOptions.length ? (
-                      <p>Chọn dự án hoặc căn hộ đã có ảnh để dùng cho bài viết.</p>
+                      <p>{form.project_id || form.apartment_id ? "Chọn dự án hoặc căn hộ đã có ảnh để dùng cho bài viết." : "Bài viết độc lập có thể dùng ảnh vừa tải lên."}</p>
                     ) : null}
                   </div>
                 </aside>

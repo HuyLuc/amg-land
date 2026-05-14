@@ -21,6 +21,10 @@ export interface PostPayload {
   published_at?: string | null;
 }
 
+export interface PostImageUpload {
+  image_url: string;
+}
+
 export function listPosts(filters: PostFilters = {}): Promise<PageResponse<Post>> {
   const params = new URLSearchParams();
   params.set("page", String(filters.page ?? 1));
@@ -34,6 +38,12 @@ export function listPosts(filters: PostFilters = {}): Promise<PageResponse<Post>
 
 export function createPost(payload: PostPayload): Promise<Post> {
   return apiClient.post<Post>("/posts", payload);
+}
+
+export function uploadPostImages(files: FileList | File[]): Promise<PostImageUpload[]> {
+  const formData = new FormData();
+  Array.from(files).forEach((file) => formData.append("files", file));
+  return apiClient.post<PostImageUpload[]>("/posts/images", formData);
 }
 
 export function updatePost(postId: string, payload: Partial<PostPayload>): Promise<Post> {

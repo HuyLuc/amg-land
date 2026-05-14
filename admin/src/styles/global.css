@@ -2877,6 +2877,30 @@ td select {
   font-weight: 800;
 }
 
+.post-upload-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1px dashed #b8c9e6;
+  border-radius: 10px;
+  background: #f7faff;
+  color: var(--brand);
+  font-size: 13px;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.post-upload-control:hover {
+  border-color: var(--brand);
+  background: #eef4ff;
+}
+
+.post-upload-control input {
+  display: none;
+}
+
 .post-selected-images {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
