@@ -4,6 +4,7 @@ import type { AuthUser } from "../features/auth/types";
 import { fetchProjects } from "../features/projects/api";
 import { useProjectFilters } from "../features/projects/hooks/useProjectFilters";
 import { AboutPage } from "../pages/AboutPage";
+import { ApartmentDetailPage } from "../pages/ApartmentDetailPage";
 import { ContactPage } from "../pages/ContactPage";
 import { CommunityPage } from "../pages/CommunityPage";
 import { HomePage } from "../pages/HomePage";
@@ -13,7 +14,7 @@ import { ProjectDetailPage } from "../pages/ProjectDetailPage";
 import { ProfilePage } from "../pages/ProfilePage";
 import { ProjectsPage } from "../pages/ProjectsPage";
 import { RegisterPage } from "../pages/RegisterPage";
-import type { Project } from "../types/domain";
+import type { Apartment, Project } from "../types/domain";
 import { AppLayout } from "../components/layout/AppLayout";
 import { PageTransition } from "../components/layout/PageTransition";
 import type { Page } from "./types";
@@ -43,6 +44,9 @@ function readStoredUser() {
 
 function readInitialPage(): Page {
   const hash = window.location.hash.replace(/^#\/?/, "");
+  if (/^projects\/[^/]+\/apartments\/[^/]+$/.test(hash)) {
+    return "apartmentDetail";
+  }
   if (hash.startsWith("projects/")) {
     return "projectDetail";
   }
@@ -51,18 +55,27 @@ function readInitialPage(): Page {
 
 function readProjectSlugFromHash() {
   const hash = window.location.hash.replace(/^#\/?/, "");
-  return hash.startsWith("projects/") ? hash.replace("projects/", "") : null;
+  const match = hash.match(/^projects\/([^/]+)/);
+  return match?.[1] ?? null;
+}
+
+function readApartmentIdFromHash() {
+  const hash = window.location.hash.replace(/^#\/?/, "");
+  const match = hash.match(/^projects\/[^/]+\/apartments\/([^/]+)$/);
+  return match?.[1] ?? null;
 }
 
 function pageToHash(nextPage: Page) {
-  return nextPage === "projectDetail" ? null : `#/${nextPage}`;
+  return nextPage === "projectDetail" || nextPage === "apartmentDetail" ? null : `#/${nextPage}`;
 }
 
 export function App() {
   const [page, setPage] = useState<Page>(() => readInitialPage());
   const [routeProjectSlug, setRouteProjectSlug] = useState<string | null>(() => readProjectSlugFromHash());
+  const [routeApartmentId, setRouteApartmentId] = useState<string | null>(() => readApartmentIdFromHash());
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [selectedApartment, setSelectedApartment] = useState<Apartment | null>(null);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectsError, setProjectsError] = useState("");
   const [user, setUser] = useState<AuthUser | null>(() => readStoredUser());
@@ -73,6 +86,7 @@ export function App() {
   const navigate = (nextPage: Page) => {
     setPage(nextPage);
     setRouteProjectSlug(null);
+    setRouteApartmentId(null);
     const nextHash = pageToHash(nextPage);
     if (nextHash && window.location.hash !== nextHash) {
       window.history.pushState(null, "", nextHash);
@@ -81,9 +95,23 @@ export function App() {
 
   const openProject = (project: Project) => {
     setSelectedProject(project);
+    setSelectedApartment(null);
     setRouteProjectSlug(project.slug);
+    setRouteApartmentId(null);
     setPage("projectDetail");
     const nextHash = `#/projects/${project.slug}`;
+    if (window.location.hash !== nextHash) {
+      window.history.pushState(null, "", nextHash);
+    }
+  };
+
+  const openApartment = (project: Project, apartment: Apartment) => {
+    setSelectedProject(project);
+    setSelectedApartment(apartment);
+    setRouteProjectSlug(project.slug);
+    setRouteApartmentId(apartment.id);
+    setPage("apartmentDetail");
+    const nextHash = `#/projects/${project.slug}/apartments/${apartment.id}`;
     if (window.location.hash !== nextHash) {
       window.history.pushState(null, "", nextHash);
     }
@@ -133,6 +161,7 @@ export function App() {
     const handlePopState = () => {
       setPage(readInitialPage());
       setRouteProjectSlug(readProjectSlugFromHash());
+      setRouteApartmentId(readApartmentIdFromHash());
     };
 
     window.addEventListener("popstate", handlePopState);
@@ -140,7 +169,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    if (page !== "projectDetail") {
+    if (page !== "projectDetail" && page !== "apartmentDetail") {
       return;
     }
 
@@ -152,6 +181,15 @@ export function App() {
     const project = projects.find((item) => item.slug === routeProjectSlug);
     if (project) {
       setSelectedProject(project);
+      if (page === "apartmentDetail") {
+        const apartment = project.apartments.find((item) => item.id === routeApartmentId);
+        setSelectedApartment(apartment ?? null);
+        if (!apartment && !projectsLoading) {
+          setPage("projectDetail");
+          setRouteApartmentId(null);
+          window.history.replaceState(null, "", `#/projects/${project.slug}`);
+        }
+      }
       return;
     }
 
@@ -161,11 +199,11 @@ export function App() {
       setRouteProjectSlug(null);
       window.history.replaceState(null, "", "#/projects");
     }
-  }, [page, projects, projectsLoading, routeProjectSlug]);
+  }, [page, projects, projectsLoading, routeApartmentId, routeProjectSlug]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [page, selectedProject?.id]);
+  }, [page, selectedApartment?.id, selectedProject?.id]);
 
   return (
     <AppLayout currentPage={page} user={user} onLogout={logout} onNavigate={navigate}>
@@ -196,11 +234,25 @@ export function App() {
             projects={projects}
             onBack={() => navigate("projects")}
             onContact={() => navigate("contact")}
+            onOpenApartment={openApartment}
             onOpenProject={openProject}
           />
         )}
 
         {page === "projectDetail" && !selectedProject && (
+          <ProjectsPage filters={projectFilters} loading={projectsLoading} error={projectsError} onOpenProject={openProject} />
+        )}
+
+        {page === "apartmentDetail" && selectedProject && selectedApartment && (
+          <ApartmentDetailPage
+            project={selectedProject}
+            apartment={selectedApartment}
+            onBack={() => openProject(selectedProject)}
+            onContact={() => navigate("contact")}
+          />
+        )}
+
+        {page === "apartmentDetail" && (!selectedProject || !selectedApartment) && (
           <ProjectsPage filters={projectFilters} loading={projectsLoading} error={projectsError} onOpenProject={openProject} />
         )}
 

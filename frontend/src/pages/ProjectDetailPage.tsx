@@ -2,17 +2,18 @@ import type { ReactNode } from "react";
 import { ArrowLeft, ArrowRight, Bath, BedDouble, Building2, Check, Compass, MapPin, Ruler, ShieldCheck, Sparkles } from "lucide-react";
 import { ProjectCard } from "../features/projects/components/ProjectCard";
 import { apartmentStatusLabel, formatPrice } from "../features/projects/utils/projectFormatters";
-import type { Project } from "../types/domain";
+import type { Apartment, Project } from "../types/domain";
 
 type ProjectDetailPageProps = {
   project: Project;
   projects: Project[];
   onBack: () => void;
   onContact: () => void;
+  onOpenApartment: (project: Project, apartment: Apartment) => void;
   onOpenProject: (project: Project) => void;
 };
 
-export function ProjectDetailPage({ project, projects, onBack, onContact, onOpenProject }: ProjectDetailPageProps) {
+export function ProjectDetailPage({ project, projects, onBack, onContact, onOpenApartment, onOpenProject }: ProjectDetailPageProps) {
   const relatedProjects = projects.filter((item) => item.id !== project.id).slice(0, 2);
   const availableApartments = project.apartments.filter((apartment) => apartment.status === "available").length;
   const areas = project.apartments.map((item) => item.area);
@@ -134,7 +135,12 @@ export function ProjectDetailPage({ project, projects, onBack, onContact, onOpen
             <span>Tình trạng</span>
           </div>
           {project.apartments.map((apartment) => (
-            <div className="grid gap-3 border-t border-slate-200 px-5 py-5 text-sm md:grid-cols-[1fr_0.8fr_0.8fr_0.8fr_0.8fr] md:items-center" key={apartment.id}>
+            <button
+              className="grid w-full gap-3 border-t border-slate-200 px-5 py-5 text-left text-sm transition hover:bg-brand-50/70 md:grid-cols-[1fr_0.8fr_0.8fr_0.8fr_0.8fr] md:items-center"
+              key={apartment.id}
+              onClick={() => onOpenApartment(project, apartment)}
+              type="button"
+            >
               <div>
                 <div className="font-semibold text-slate-950">{apartment.code}</div>
                 <div className="mt-1 text-xs text-slate-500">Tầng {apartment.floor}</div>
@@ -154,7 +160,7 @@ export function ProjectDetailPage({ project, projects, onBack, onContact, onOpen
               }`}>
                 {apartmentStatusLabel[apartment.status]}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       </section>

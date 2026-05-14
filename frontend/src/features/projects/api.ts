@@ -1,4 +1,4 @@
-import type { Apartment, ApartmentStatus, Project, ProjectStatus } from "../../types/domain";
+import type { Apartment, ApartmentMedia, ApartmentStatus, Project, ProjectStatus } from "../../types/domain";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1").replace(/\/$/, "");
 
@@ -39,6 +39,16 @@ type ApiApartment = {
   price: number;
   status: ApartmentStatus;
   feng_shui_element?: string | null;
+};
+
+type ApiApartmentMedia = {
+  id: string;
+  apartment_id: string;
+  media_type: "image" | "video";
+  url: string;
+  caption?: string | null;
+  sort_order: number;
+  is_thumbnail: boolean;
 };
 
 const projectStatusLabel: Record<ApiProject["status"], ProjectStatus> = {
@@ -120,4 +130,17 @@ async function fetchProject(project: ApiProject): Promise<Project> {
 export async function fetchProjects(): Promise<Project[]> {
   const page = await fetchJson<ApiPage<ApiProject>>("/projects?status=active&limit=100");
   return Promise.all(page.items.map(fetchProject));
+}
+
+export async function fetchApartmentMedia(apartmentId: string): Promise<ApartmentMedia[]> {
+  const items = await fetchJson<ApiApartmentMedia[]>(`/apartments/${apartmentId}/media`);
+  return items.map((item) => ({
+    id: item.id,
+    apartmentId: item.apartment_id,
+    mediaType: item.media_type,
+    url: item.url,
+    caption: item.caption ?? null,
+    sortOrder: item.sort_order,
+    isThumbnail: item.is_thumbnail,
+  }));
 }

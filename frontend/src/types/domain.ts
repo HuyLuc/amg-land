@@ -1,5 +1,6 @@
 export type ProjectStatus = "Đang mở bán" | "Sắp mở bán" | "Đã bàn giao";
 export type ApartmentStatus = "available" | "reserved" | "sold";
+export type ApartmentMediaType = "image" | "video";
 
 export type Apartment = {
   id: string;
@@ -12,6 +13,16 @@ export type Apartment = {
   price: number;
   status: ApartmentStatus;
   fengShui: string[];
+};
+
+export type ApartmentMedia = {
+  id: string;
+  apartmentId: string;
+  mediaType: ApartmentMediaType;
+  url: string;
+  caption: string | null;
+  sortOrder: number;
+  isThumbnail: boolean;
 };
 
 export type Project = {
