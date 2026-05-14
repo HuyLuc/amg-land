@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { SelectMenu } from "@/components/SelectMenu";
 import { StatusBadge } from "@/components/StatusBadge";
 import { listApartmentMedia, listApartments } from "@/features/apartments/apartmentsApi";
-import { createCategory, createPost, deletePost, listCategories, listPosts, updatePost } from "@/features/posts/postsApi";
+import { createPost, deletePost, listPosts, updatePost } from "@/features/posts/postsApi";
 import type { PostPayload } from "@/features/posts/postsApi";
 import { getProjectDetail, listProjects } from "@/features/projects/projectsApi";
 import type { Apartment, ApartmentMedia, Post, ProjectImage } from "@/services/types";
@@ -16,7 +16,6 @@ interface PostFormState {
   title: string;
   excerpt: string;
   content: string;
-  category_id: string;
   project_id: string;
   apartment_id: string;
   status: Post["status"];
@@ -41,7 +40,6 @@ const emptyForm: PostFormState = {
   title: "",
   excerpt: "",
   content: "",
-  category_id: "",
   project_id: "",
   apartment_id: "",
   status: "draft",
@@ -77,15 +75,12 @@ export function PostsPage(): JSX.Element {
   const [keywordInput, setKeywordInput] = useState("");
   const [keyword, setKeyword] = useState("");
   const [status, setStatus] = useState("");
-  const [category, setCategory] = useState("");
   const [projectId, setProjectId] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [formOpen, setFormOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [form, setForm] = useState<PostFormState>(emptyForm);
-  const [categoryModalOpen, setCategoryModalOpen] = useState(false);
-  const [categoryName, setCategoryName] = useState("");
   const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -96,14 +91,13 @@ export function PostsPage(): JSX.Element {
 
   useEffect(() => {
     setPage(1);
-  }, [keyword, status, category, projectId, pageSize]);
+  }, [keyword, status, projectId, pageSize]);
 
   const postsQuery = useQuery({
-    queryKey: ["posts", page, pageSize, keyword, status, category, projectId],
-    queryFn: () => listPosts({ page, limit: pageSize, keyword, status, category, projectId }),
+    queryKey: ["posts", page, pageSize, keyword, status, projectId],
+    queryFn: () => listPosts({ page, limit: pageSize, keyword, status, projectId }),
   });
   const allPostsQuery = useQuery({ queryKey: ["posts", "summary"], queryFn: () => listPosts({ limit: 100 }) });
-  const categoriesQuery = useQuery({ queryKey: ["categories"], queryFn: listCategories });
   const projectsQuery = useQuery({ queryKey: ["projects", "post-options"], queryFn: () => listProjects({ limit: 100 }) });
   const apartmentsQuery = useQuery({
     queryKey: ["apartments", "post-options", form.project_id],
@@ -113,7 +107,6 @@ export function PostsPage(): JSX.Element {
 
   const posts = postsQuery.data?.items ?? [];
   const allPosts = allPostsQuery.data?.items ?? [];
-  const categories = categoriesQuery.data ?? [];
   const projects = projectsQuery.data?.items ?? [];
   const apartments = apartmentsQuery.data?.items ?? [];
   const selectedProject = projects.find((item) => item.id === form.project_id) ?? null;
@@ -129,15 +122,12 @@ export function PostsPage(): JSX.Element {
   });
   const totalPages = Math.max(1, Math.ceil((postsQuery.data?.total ?? 0) / (postsQuery.data?.limit ?? pageSize)));
 
-  const categoryOptions = useMemo(() => [{ value: "", label: "Tất cả danh mục" }, ...categories.map((item) => ({ value: item.slug, label: item.name }))], [categories]);
-  const formCategoryOptions = useMemo(() => categories.map((item) => ({ value: item.id, label: item.name })), [categories]);
   const projectOptions = useMemo(() => [{ value: "", label: "Tất cả dự án" }, ...projects.map((item) => ({ value: item.id, label: item.name }))], [projects]);
   const formProjectOptions = useMemo(() => [{ value: "", label: "Không gắn dự án" }, ...projects.map((item) => ({ value: item.id, label: item.name }))], [projects]);
   const apartmentOptions = useMemo(
     () => [{ value: "", label: form.project_id ? "Không gắn căn hộ" : "Chọn dự án trước" }, ...apartments.map((item: Apartment) => ({ value: item.id, label: `${item.code} - Tầng ${item.floor}` }))],
     [apartments, form.project_id],
   );
-  const categoryNameById = useMemo(() => new Map(categories.map((item) => [item.id, item.name])), [categories]);
   const projectNameById = useMemo(() => new Map(projects.map((item) => [item.id, item.name])), [projects]);
   const apartmentCodeById = useMemo(() => new Map(apartments.map((item) => [item.id, item.code])), [apartments]);
   const imageOptions = useMemo<PostImageOption[]>(() => {
@@ -177,7 +167,7 @@ export function PostsPage(): JSX.Element {
 
   function openCreateForm(): void {
     setEditingPost(null);
-    setForm({ ...emptyForm, category_id: categories[0]?.id ?? "" });
+    setForm(emptyForm);
     setFormOpen(true);
   }
 
@@ -187,7 +177,6 @@ export function PostsPage(): JSX.Element {
       title: post.title,
       excerpt: post.excerpt ?? "",
       content: post.content ?? "",
-      category_id: post.category_id,
       project_id: post.project_id ?? "",
       apartment_id: post.apartment_id ?? "",
       status: post.status,
@@ -222,24 +211,12 @@ export function PostsPage(): JSX.Element {
     },
   });
 
-  const createCategoryMutation = useMutation({
-    mutationFn: createCategory,
-    onSuccess: (created) => {
-      setCategoryModalOpen(false);
-      setCategoryName("");
-      setForm((current) => ({ ...current, category_id: created.id }));
-      showToast("Đã thêm danh mục.");
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-    },
-  });
-
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     const payload = {
       title: form.title.trim(),
       excerpt: form.excerpt.trim() || null,
       content: form.content.trim(),
-      category_id: form.category_id,
       thumbnail: form.thumbnail.trim() || null,
       project_id: form.project_id || null,
       apartment_id: form.apartment_id || null,
@@ -286,10 +263,9 @@ export function PostsPage(): JSX.Element {
             <Search size={17} />
             <input value={keywordInput} onChange={(event) => setKeywordInput(event.target.value)} placeholder="Tìm theo tiêu đề bài viết..." />
           </label>
-          <SelectMenu label="Danh mục" value={category} options={categoryOptions} onChange={setCategory} />
           <SelectMenu label="Dự án liên quan" value={projectId} options={projectOptions} onChange={setProjectId} />
           <SelectMenu label="Trạng thái" value={status} options={statusOptions} onChange={setStatus} />
-          <button className="secondary-button filter-reset" type="button" onClick={() => { setKeywordInput(""); setKeyword(""); setCategory(""); setProjectId(""); setStatus(""); }}>Xóa lọc</button>
+          <button className="secondary-button filter-reset" type="button" onClick={() => { setKeywordInput(""); setKeyword(""); setProjectId(""); setStatus(""); }}>Xóa lọc</button>
         </div>
       </section>
 
@@ -306,7 +282,6 @@ export function PostsPage(): JSX.Element {
             <thead>
               <tr>
                 <th>Bài viết</th>
-                <th>Danh mục</th>
                 <th>Liên quan</th>
                 <th>Trạng thái</th>
                 <th>Ngày đăng</th>
@@ -325,7 +300,6 @@ export function PostsPage(): JSX.Element {
                       </div>
                     </div>
                   </td>
-                  <td>{categoryNameById.get(post.category_id) ?? "Chưa rõ"}</td>
                   <td>
                     <div className="post-link-cell">
                       <strong>{post.project_id ? projectNameById.get(post.project_id) ?? "Dự án liên quan" : "Không gắn dự án"}</strong>
@@ -401,8 +375,6 @@ export function PostsPage(): JSX.Element {
                   </label>
                 </div>
                 <aside className="post-form-side">
-                  <SelectMenu label="Danh mục" value={form.category_id} options={formCategoryOptions.length ? formCategoryOptions : [{ value: "", label: "Chưa có danh mục" }]} onChange={(value) => setForm((current) => ({ ...current, category_id: value }))} />
-                  <button className="secondary-button" type="button" onClick={() => setCategoryModalOpen(true)}>Thêm danh mục</button>
                   <SelectMenu label="Dự án liên quan" value={form.project_id} options={formProjectOptions} onChange={(value) => setForm((current) => ({ ...current, project_id: value, apartment_id: "", thumbnail: "" }))} />
                   <SelectMenu label="Căn hộ liên quan" value={form.apartment_id} options={apartmentOptions} onChange={(value) => setForm((current) => ({ ...current, apartment_id: value, thumbnail: "" }))} />
                   <SelectMenu label="Trạng thái" value={form.status} options={statusOptions.slice(1)} onChange={(value) => setForm((current) => ({ ...current, status: value as Post["status"] }))} />
@@ -439,34 +411,10 @@ export function PostsPage(): JSX.Element {
                   </div>
                 </aside>
               </div>
-              {createMutation.error || updateMutation.error ? <div className="form-error">Không lưu được bài viết. Vui lòng kiểm tra danh mục hoặc dự án/căn hộ liên quan.</div> : null}
+              {createMutation.error || updateMutation.error ? <div className="form-error">Không lưu được bài viết. Vui lòng kiểm tra dự án/căn hộ liên quan.</div> : null}
               <div className="modal-actions">
                 <button className="secondary-button" type="button" onClick={() => setFormOpen(false)} disabled={saving}>Hủy</button>
-                <button className="primary-button" type="submit" disabled={saving || !form.category_id}>{saving ? "Đang lưu..." : "Lưu bài viết"}</button>
-              </div>
-            </form>
-          </section>
-        </div>
-      ) : null}
-
-      {categoryModalOpen ? (
-        <div className="modal-backdrop" role="presentation" onMouseDown={() => setCategoryModalOpen(false)}>
-          <section className="modal-panel category-form-modal" role="dialog" aria-modal="true" aria-labelledby="category-form-title" onMouseDown={(event) => event.stopPropagation()}>
-            <div className="modal-header">
-              <div>
-                <h2 id="category-form-title">Thêm danh mục</h2>
-                <p>Ví dụ: Tin dự án, Căn hộ nổi bật, Chính sách bán hàng, Tư vấn mua nhà.</p>
-              </div>
-              <button className="icon-button" type="button" aria-label="Đóng form" onClick={() => setCategoryModalOpen(false)}><X size={18} /></button>
-            </div>
-            <form className="category-form" onSubmit={(event) => { event.preventDefault(); createCategoryMutation.mutate({ name: categoryName.trim() }); }}>
-              <label>
-                <span>Tên danh mục</span>
-                <input value={categoryName} onChange={(event) => setCategoryName(event.target.value)} required />
-              </label>
-              <div className="modal-actions">
-                <button className="secondary-button" type="button" onClick={() => setCategoryModalOpen(false)}>Hủy</button>
-                <button className="primary-button" type="submit" disabled={createCategoryMutation.isPending}>{createCategoryMutation.isPending ? "Đang lưu..." : "Lưu danh mục"}</button>
+                <button className="primary-button" type="submit" disabled={saving}>{saving ? "Đang lưu..." : "Lưu bài viết"}</button>
               </div>
             </form>
           </section>

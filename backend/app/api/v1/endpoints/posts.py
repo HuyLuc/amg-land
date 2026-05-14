@@ -7,7 +7,6 @@ router = APIRouter()
 def list_posts(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_current_user),
-    category: str | None = None,
     keyword: str | None = None,
     status: PostStatus | None = None,
     project_id: uuid.UUID | None = None,
@@ -17,8 +16,6 @@ def list_posts(
 ) -> dict:
     is_staff = current_user is not None and current_user.role in {UserRole.admin, UserRole.editor}
     query = select(Post)
-    if category:
-        query = query.join(Category).where(or_(Category.slug == category, Category.name.ilike(f"%{category}%")))
     if keyword:
         query = query.where(Post.title.ilike(f"%{keyword}%"))
     if status:
@@ -47,8 +44,6 @@ def get_post(slug: str, db: Session = Depends(get_db), current_user: User | None
 
 @router.post("/posts", response_model=PostOut, status_code=201, tags=["posts"])
 def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depends(get_db)) -> Post:
-    if db.get(Category, payload.category_id) is None:
-        raise HTTPException(status_code=404, detail="Category not found")
     if payload.project_id and db.get(Project, payload.project_id) is None:
         raise HTTPException(status_code=404, detail="Project not found")
     if payload.apartment_id:
@@ -66,7 +61,6 @@ def create_post(payload: PostCreate, current_user: StaffUser, db: Session = Depe
         slug=unique_slug(db, Post, payload.title),
         excerpt=payload.excerpt,
         content=payload.content,
-        category_id=payload.category_id,
         thumbnail=payload.thumbnail,
         project_id=payload.project_id,
         apartment_id=payload.apartment_id,
@@ -88,8 +82,6 @@ def update_post(post_id: uuid.UUID, payload: PostUpdate, _: StaffUser, db: Sessi
     values = payload.model_dump(exclude_unset=True)
     project_id = values.get("project_id", post.project_id)
     apartment_id = values.get("apartment_id", post.apartment_id)
-    if values.get("category_id") and db.get(Category, values["category_id"]) is None:
-        raise HTTPException(status_code=404, detail="Category not found")
     if project_id and db.get(Project, project_id) is None:
         raise HTTPException(status_code=404, detail="Project not found")
     if apartment_id:

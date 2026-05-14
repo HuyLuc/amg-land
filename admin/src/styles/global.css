@@ -2236,7 +2236,7 @@ td select {
 
 .posts-filter-grid {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) 190px 240px 180px auto;
+  grid-template-columns: minmax(280px, 1fr) 240px 180px auto;
   gap: 12px;
   align-items: end;
 }

@@ -22,8 +22,6 @@ from app.api.v1.schemas import (
     ApartmentOut,
     ApartmentUpdate,
     ChatMessageRequest,
-    CategoryCreate,
-    CategoryOut,
     ContactCreate,
     ContactOut,
     ContactPage,
@@ -64,7 +62,7 @@ from app.models.auth_token import PasswordResetToken, RefreshToken
 from app.models.chat_session import ChatSession
 from app.models.contact_request import ContactRequest, ContactStatus
 from app.models.floor_plan import FloorPlan
-from app.models.post import Category, Post, PostStatus
+from app.models.post import Post, PostStatus
 from app.models.project import Project, ProjectImage, ProjectStatus
 from app.models.user import User, UserRole
 

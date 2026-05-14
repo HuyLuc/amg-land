@@ -17,7 +17,7 @@ from app.models.auth_token import PasswordResetToken, RefreshToken
 from app.models.chat_session import ChatSession
 from app.models.contact_request import ContactRequest, ContactStatus
 from app.models.floor_plan import FloorPlan
-from app.models.post import Category, Post, PostStatus
+from app.models.post import Post, PostStatus
 from app.models.project import Project, ProjectImage, ProjectStatus
 from app.models.user import User, UserRole
 
@@ -40,7 +40,6 @@ def clear_database(db: Session) -> None:
         Post,
         Project,
         Amenity,
-        Category,
         User,
     ]:
         db.execute(delete(model))
@@ -95,18 +94,6 @@ def seed_users(db: Session) -> dict[str, User]:
     for user in users.values():
         db.refresh(user)
     return users
-
-
-def seed_categories(db: Session) -> dict[str, Category]:
-    categories = {
-        "market": Category(name="Tin thị trường", slug="tin-thi-truong", description="Cập nhật thị trường bất động sản"),
-        "analysis": Category(name="Phân tích", slug="phan-tich", description="Góc nhìn chuyên sâu về dự án và xu hướng"),
-        "feng_shui": Category(name="Phong thủy", slug="phong-thuy", description="Tư vấn phong thủy nhà ở"),
-        "project_news": Category(name="Tin dự án", slug="tin-du-an", description="Tin tức mới từ các dự án AMG Land"),
-    }
-    db.add_all(categories.values())
-    db.commit()
-    return categories
 
 
 def seed_amenities(db: Session) -> dict[str, Amenity]:
@@ -260,7 +247,7 @@ def seed_apartments(db: Session, projects: list[Project]) -> list[Apartment]:
     return apartments
 
 
-def seed_posts(db: Session, users: dict[str, User], categories: dict[str, Category]) -> None:
+def seed_posts(db: Session, users: dict[str, User]) -> None:
     now = datetime.now(timezone.utc)
     posts = [
         ("Thị trường căn hộ Hà Nội giữ nhịp tăng ổn định", "market", "published", 12),
@@ -270,14 +257,13 @@ def seed_posts(db: Session, users: dict[str, User], categories: dict[str, Catego
         ("Kinh nghiệm đọc bảng giá và chính sách bán hàng", "analysis", "draft", 2),
         ("Xu hướng căn hộ xanh tại khu Tây Hà Nội", "market", "archived", 35),
     ]
-    for title, category_key, status, days_ago in posts:
+    for title, image_key, status, days_ago in posts:
         db.add(
             Post(
                 title=title,
                 slug=title.lower().replace(" ", "-").replace("đ", "d"),
                 content=f"<p>{title}. Nội dung demo phục vụ kiểm thử CMS AMG Land.</p>",
-                thumbnail=f"http://localhost:9000/amg-land-media/demo/posts/{category_key}.jpg",
-                category_id=categories[category_key].id,
+                thumbnail=f"http://localhost:9000/amg-land-media/demo/posts/{image_key}.jpg",
                 author_id=users["content"].id,
                 status=PostStatus(status),
                 published_at=now - timedelta(days=days_ago) if status == "published" else None,
@@ -384,11 +370,10 @@ def run_seed(reset: bool) -> None:
             clear_database(db)
 
         users = seed_users(db)
-        categories = seed_categories(db)
         amenities = seed_amenities(db)
         projects = seed_projects(db, users, amenities)
         apartments = seed_apartments(db, projects)
-        seed_posts(db, users, categories)
+        seed_posts(db, users)
         seed_contacts(db, users, projects, apartments)
         seed_analytics(db, projects, apartments)
         seed_activity_logs(db, users)

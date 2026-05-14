@@ -33,7 +33,6 @@ export type Project = {
 export type Post = {
   id: string;
   title: string;
-  category: string;
   excerpt: string;
   image: string;
   date: string;

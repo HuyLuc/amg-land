@@ -19,7 +19,6 @@ from app.models.auth_token import PasswordResetToken, RefreshToken
 from app.models.chat_session import ChatSession
 from app.models.contact_request import ContactRequest
 from app.models.floor_plan import FloorPlan
-from app.models.post import Category
 from app.models.post import Post
 from app.models.project import Project, ProjectImage
 from app.models.user import User, UserRole
@@ -43,7 +42,6 @@ def cleanup_smoke_artifacts() -> None:
             )
         )
         smoke_project_ids = list(db.scalars(select(Project.id).where(Project.name.like("Project %"))))
-        smoke_category_ids = list(db.scalars(select(Category.id).where(Category.name.like("Category %"))))
         smoke_amenity_ids = list(db.scalars(select(Amenity.id).where(Amenity.name.like("Amenity %"))))
 
         db.execute(delete(ContactRequest).where(or_(ContactRequest.full_name == "Lead User", ContactRequest.email == "lead@example.com")))
@@ -59,8 +57,6 @@ def cleanup_smoke_artifacts() -> None:
             db.execute(delete(Project).where(Project.id.in_(smoke_project_ids)))
 
         db.execute(delete(Post).where(Post.title.like("Post %")))
-        if smoke_category_ids:
-            db.execute(delete(Category).where(Category.id.in_(smoke_category_ids)))
         if smoke_amenity_ids:
             db.execute(delete(ProjectAmenity).where(ProjectAmenity.amenity_id.in_(smoke_amenity_ids)))
             db.execute(delete(Amenity).where(Amenity.id.in_(smoke_amenity_ids)))
@@ -194,15 +190,6 @@ def test_full_api_smoke_flow() -> None:
     assert update_project_response.json()["slug"] == project["slug"]
     assert client.get(f"/api/v1/projects/{project['slug']}").status_code == 200
 
-    category_response = client.post(
-        "/api/v1/categories",
-        json={"name": f"Category {uuid.uuid4().hex[:8]}", "description": "Smoke category"},
-        headers=headers,
-    )
-    assert category_response.status_code == 201, category_response.text
-    category = category_response.json()
-    assert client.get("/api/v1/categories").status_code == 200
-
     amenity_response = client.post(
         "/api/v1/amenities",
         json={"name": f"Amenity {uuid.uuid4().hex[:8]}", "icon": "star", "category": "internal"},
@@ -294,7 +281,6 @@ def test_full_api_smoke_flow() -> None:
             "title": f"Post {uuid.uuid4().hex[:8]}",
             "excerpt": "Post linked to project and apartment",
             "content": "<p>Body</p>",
-            "category_id": category["id"],
             "project_id": project["id"],
             "apartment_id": apartment["id"],
             "status": "published",
@@ -324,5 +310,4 @@ def test_full_api_smoke_flow() -> None:
     assert client.delete(f"/api/v1/projects/{project['id']}/amenities/{amenity['id']}", headers=headers).status_code == 200
     assert client.delete(f"/api/v1/apartments/{apartment['id']}", headers=headers).status_code == 200
     assert client.delete(f"/api/v1/projects/{project['id']}", headers=headers).status_code == 200
-    assert client.delete(f"/api/v1/categories/{category['id']}", headers=headers).status_code == 200
     assert client.post("/api/v1/auth/logout", json={"refresh_token": refresh_token}, headers=headers).status_code == 200

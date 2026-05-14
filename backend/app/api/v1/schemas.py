@@ -230,18 +230,6 @@ class AmenityOut(ORMModel):
     description: str | None = None
 
 
-class CategoryCreate(BaseModel):
-    name: str
-    description: str | None = None
-
-
-class CategoryOut(ORMModel):
-    id: UUID
-    name: str
-    slug: str
-    description: str | None = None
-
-
 class FloorPlanCreate(BaseModel):
     floor_number: int = Field(gt=0)
     image_url: str
@@ -271,7 +259,6 @@ class PostCreate(BaseModel):
     title: str
     excerpt: str | None = Field(default=None, max_length=500)
     content: str
-    category_id: UUID
     thumbnail: str | None = None
     project_id: UUID | None = None
     apartment_id: UUID | None = None
@@ -284,7 +271,6 @@ class PostUpdate(BaseModel):
     title: str | None = None
     excerpt: str | None = Field(default=None, max_length=500)
     content: str | None = None
-    category_id: UUID | None = None
     thumbnail: str | None = None
     project_id: UUID | None = None
     apartment_id: UUID | None = None
@@ -299,7 +285,6 @@ class PostOut(ORMModel):
     excerpt: str | None = None
     content: str | None = None
     thumbnail: str | None = None
-    category_id: UUID
     project_id: UUID | None = None
     apartment_id: UUID | None = None
     author_id: UUID
