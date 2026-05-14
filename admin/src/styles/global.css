@@ -2136,6 +2136,23 @@ td select {
   font-weight: 800;
 }
 
+.account-form label span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.account-form label small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.required-mark {
+  color: var(--danger);
+  font-style: normal;
+}
+
 .account-form input {
   width: 100%;
   height: 42px;

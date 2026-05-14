@@ -183,7 +183,7 @@ export function UsersPage(): JSX.Element {
     const payload = {
       email: form.email.trim(),
       full_name: form.full_name.trim(),
-      phone: form.phone.trim() || null,
+      phone: form.phone.trim(),
       role: form.role,
       is_active: form.is_active,
     };
@@ -366,20 +366,28 @@ export function UsersPage(): JSX.Element {
             <form className="account-form" onSubmit={handleSubmit}>
               <div className="form-grid two-columns">
                 <label>
-                  <span>Họ tên</span>
+                  <span>
+                    Họ tên <em className="required-mark">*</em>
+                  </span>
                   <input value={form.full_name} onChange={(event) => setForm((current) => ({ ...current, full_name: event.target.value }))} required />
                 </label>
                 <label>
-                  <span>Email</span>
+                  <span>
+                    Email <em className="required-mark">*</em>
+                  </span>
                   <input type="email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} required />
                 </label>
                 <label>
-                  <span>Số điện thoại</span>
-                  <input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="VD: 0912345678" />
+                  <span>
+                    Số điện thoại <em className="required-mark">*</em>
+                  </span>
+                  <input value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} placeholder="VD: 0912345678" required />
                 </label>
-                <SelectMenu label="Vai trò" value={form.role} options={formRoleOptions} onChange={(value) => setForm((current) => ({ ...current, role: value as UserRole }))} />
+                <SelectMenu label="Vai trò *" value={form.role} options={formRoleOptions} onChange={(value) => setForm((current) => ({ ...current, role: value as UserRole }))} />
                 <label>
-                  <span>{editingUser ? "Mật khẩu mới" : "Mật khẩu"}</span>
+                  <span>
+                    {editingUser ? "Mật khẩu mới" : "Mật khẩu"} {!editingUser ? <em className="required-mark">*</em> : <small>Không bắt buộc</small>}
+                  </span>
                   <input
                     type="password"
                     value={form.password}
