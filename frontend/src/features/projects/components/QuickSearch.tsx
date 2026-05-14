@@ -25,7 +25,7 @@ export function QuickSearch({
 }: QuickSearchProps) {
   return (
     <section className="relative z-20 mx-auto -mt-10 max-w-7xl px-5 lg:px-8">
-      <div className="premium-panel relative grid gap-4 overflow-hidden rounded p-4 md:grid-cols-[1fr_1fr_1fr_auto]">
+      <div className="premium-panel relative grid gap-4 rounded p-4 md:grid-cols-[1fr_1fr_1fr_auto]">
         <span className="absolute inset-x-0 top-0 h-1 bg-brand-900" />
         <SelectField icon={<MapPin size={18} />} label="Khu vực" onChange={onDistrictChange} options={districts} value={district} />
         <SelectField icon={<SlidersHorizontal size={18} />} label="Ngân sách" onChange={onBudgetChange} options={budgetOptions} value={budget} />
