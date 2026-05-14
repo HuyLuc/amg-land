@@ -9,6 +9,11 @@ type RegisterPayload = {
   password: string;
 };
 
+type LoginPayload = {
+  email: string;
+  password: string;
+};
+
 type AuthResponse = {
   access_token: string;
   refresh_token?: string | null;
@@ -22,6 +27,14 @@ type AuthResponse = {
 };
 
 function getApiErrorMessage(status: number, detail: unknown) {
+  if (status === 401 && detail === "Invalid credentials") {
+    return "Email hoặc mật khẩu không đúng.";
+  }
+
+  if (status === 423) {
+    return "Tài khoản đang bị tạm khóa. Vui lòng thử lại sau.";
+  }
+
   if (status === 400 && detail === "Email already registered") {
     return "Email này đã được đăng ký.";
   }
@@ -37,6 +50,28 @@ function getApiErrorMessage(status: number, detail: unknown) {
   return "Không thể tạo tài khoản lúc này. Vui lòng thử lại.";
 }
 
+function toAuthUser(authData: AuthResponse, fallback: { email: string; phone?: string; fullName?: string }): AuthUser {
+  return {
+    id: authData.user_info.id,
+    name: authData.user_info.full_name ?? fallback.fullName ?? fallback.email,
+    email: authData.user_info.email ?? fallback.email,
+    phone: authData.user_info.phone ?? fallback.phone ?? "Chưa cập nhật",
+    role: authData.user_info.role === "customer" ? "Khách hàng" : "Nhà đầu tư",
+    accessToken: authData.access_token,
+    refreshToken: authData.refresh_token ?? null,
+  };
+}
+
+async function parseAuthResponse(response: Response) {
+  const data = (await response.json().catch(() => null)) as AuthResponse | { detail?: unknown } | null;
+
+  if (!response.ok) {
+    throw new Error(getApiErrorMessage(response.status, data && "detail" in data ? data.detail : undefined));
+  }
+
+  return data as AuthResponse;
+}
+
 export async function registerCustomer(payload: RegisterPayload): Promise<AuthUser> {
   const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: "POST",
@@ -46,20 +81,19 @@ export async function registerCustomer(payload: RegisterPayload): Promise<AuthUs
     body: JSON.stringify(payload),
   });
 
-  const data = (await response.json().catch(() => null)) as AuthResponse | { detail?: unknown } | null;
+  const authData = await parseAuthResponse(response);
+  return toAuthUser(authData, { email: payload.email, phone: payload.phone, fullName: payload.full_name });
+}
 
-  if (!response.ok) {
-    throw new Error(getApiErrorMessage(response.status, data && "detail" in data ? data.detail : undefined));
-  }
+export async function loginCustomer(payload: LoginPayload): Promise<AuthUser> {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 
-  const authData = data as AuthResponse;
-  return {
-    id: authData.user_info.id,
-    name: authData.user_info.full_name ?? payload.full_name,
-    email: authData.user_info.email ?? payload.email,
-    phone: authData.user_info.phone ?? payload.phone,
-    role: "Khách hàng",
-    accessToken: authData.access_token,
-    refreshToken: authData.refresh_token ?? null,
-  };
+  const authData = await parseAuthResponse(response);
+  return toAuthUser(authData, { email: payload.email });
 }
