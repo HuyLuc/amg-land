@@ -1,5 +1,5 @@
-import { useMemo, useState, type FormEvent } from "react";
-import { Send } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Check, ChevronDown, Send } from "lucide-react";
 import { TextInput } from "../../../components/ui/TextInput";
 import { createContact } from "../api";
 import type { ContactContext } from "../../../pages/ContactPage";
@@ -19,6 +19,8 @@ export function ContactForm({ context, projects = [] }: ContactFormProps) {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [projectMenuOpen, setProjectMenuOpen] = useState(false);
+  const projectMenuRef = useRef<HTMLDivElement | null>(null);
 
   const defaultMessage = useMemo(() => {
     if (context?.apartment && context.project) {
@@ -31,6 +33,18 @@ export function ContactForm({ context, projects = [] }: ContactFormProps) {
   }, [context]);
 
   const selectedProject = context?.project ?? projects.find((project) => project.id === selectedProjectId) ?? null;
+  const projectOptions = [{ id: "", name: "Chưa chọn dự án" }, ...projects];
+
+  useEffect(() => {
+    function handlePointerDown(event: MouseEvent) {
+      if (projectMenuRef.current && !projectMenuRef.current.contains(event.target as Node)) {
+        setProjectMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, []);
 
   const submitContact = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -85,21 +99,39 @@ export function ContactForm({ context, projects = [] }: ContactFormProps) {
             />
           </label>
         ) : (
-          <label className="block">
+          <div className="relative block" ref={projectMenuRef}>
             <span className="text-sm font-semibold text-slate-700">Dự án quan tâm</span>
-            <select
-              className="mt-2 h-12 w-full rounded border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition focus:border-brand-500"
-              onChange={(event) => setSelectedProjectId(event.target.value)}
-              value={selectedProjectId}
+            <button
+              className={`mt-2 flex h-12 w-full items-center justify-between rounded border bg-slate-50 px-4 text-left text-sm outline-none transition ${
+                projectMenuOpen ? "border-brand-500 ring-2 ring-brand-100" : "border-slate-200 hover:border-brand-300"
+              }`}
+              onClick={() => setProjectMenuOpen((current) => !current)}
+              type="button"
             >
-              <option value="">Chưa chọn dự án</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </select>
-          </label>
+              <span className={selectedProject ? "font-semibold text-slate-900" : "text-slate-500"}>{selectedProject?.name ?? "Chưa chọn dự án"}</span>
+              <ChevronDown className={`text-slate-500 transition ${projectMenuOpen ? "rotate-180" : ""}`} size={17} />
+            </button>
+            {projectMenuOpen ? (
+              <div className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded border border-slate-200 bg-white p-1 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+                {projectOptions.map((project) => (
+                  <button
+                    className={`flex w-full items-center justify-between rounded px-3 py-2.5 text-left text-sm font-semibold transition ${
+                      project.id === selectedProjectId ? "bg-brand-900 text-white" : "text-slate-700 hover:bg-brand-50 hover:text-brand-900"
+                    }`}
+                    key={project.id || "empty"}
+                    onClick={() => {
+                      setSelectedProjectId(project.id);
+                      setProjectMenuOpen(false);
+                    }}
+                    type="button"
+                  >
+                    <span>{project.name}</span>
+                    {project.id === selectedProjectId ? <Check size={16} /> : null}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         )}
       </div>
       <label className="mt-4 block">
