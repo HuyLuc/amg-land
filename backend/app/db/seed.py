@@ -15,6 +15,7 @@ from app.models.analytics_event import AnalyticsEvent
 from app.models.apartment import Apartment, ApartmentStatus, Direction
 from app.models.auth_token import PasswordResetToken, RefreshToken
 from app.models.chat_session import ChatSession
+from app.models.community import CommunityComment, CommunityPost, CommunityPostBookmark, CommunityPostLike
 from app.models.contact_request import ContactRequest, ContactStatus
 from app.models.floor_plan import FloorPlan
 from app.models.post import Post, PostStatus
@@ -27,6 +28,10 @@ SEED_PASSWORD = "Demo@12345"
 
 def clear_database(db: Session) -> None:
     for model in [
+        CommunityPostBookmark,
+        CommunityPostLike,
+        CommunityComment,
+        CommunityPost,
         AnalyticsEvent,
         ActivityLog,
         PasswordResetToken,
@@ -382,6 +387,11 @@ def run_seed(reset: bool) -> None:
     print("Seed completed.")
     print(f"Login: {settings.admin_email or 'quanly@amgland.vn'}")
     print(f"Password: {settings.admin_password or SEED_PASSWORD}")
+    print("Internal demo accounts:")
+    print(f"- Admin: {settings.admin_email or 'quanly@amgland.vn'} / {settings.admin_password or SEED_PASSWORD}")
+    print(f"- Consultant: linh.tran@amgland.vn / {SEED_PASSWORD}")
+    print(f"- Consultant: hoang.pham@amgland.vn / {SEED_PASSWORD}")
+    print(f"- Content: mai.do@amgland.vn / {SEED_PASSWORD}")
 
 
 def main() -> None:
