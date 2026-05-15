@@ -1,11 +1,11 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db
-from app.api.v1.schemas import ProfileOut
+from app.api.v1.schemas import ProfileOut, ProfileUpdate, ProfileUserOut
 from app.models.activity_log import ActivityLog
 from app.models.community import CommunityPost, CommunityPostBookmark
 from app.models.contact_request import ContactRequest, ContactStatus
@@ -65,6 +65,27 @@ def activity_label(log: ActivityLog) -> str:
     if log.action in ACTIVITY_LABELS:
         return ACTIVITY_LABELS[log.action]
     return "Tài khoản đã có cập nhật mới"
+
+
+@router.patch("/profile/me", response_model=ProfileUserOut, tags=["profile"])
+def update_profile(payload: ProfileUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> User:
+    full_name = payload.full_name.strip()
+    phone = payload.phone.strip()
+
+    if len(full_name) < 2 or len(phone) < 8:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid profile information")
+
+    phone_owner = db.scalar(select(User).where(User.phone == phone, User.id != current_user.id))
+
+    if phone_owner is not None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Phone already registered")
+
+    current_user.full_name = full_name
+    current_user.phone = phone
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    return current_user
 
 
 @router.get("/profile/me", response_model=ProfileOut, tags=["profile"])

@@ -160,6 +160,17 @@ export function App() {
     navigate("profile");
   };
 
+  const updateStoredUser = (patch: Partial<Pick<AuthUser, "name" | "phone">>) => {
+    setUser((current) => {
+      if (!current) {
+        return current;
+      }
+      const nextUser = { ...current, ...patch };
+      window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(nextUser));
+      return nextUser;
+    });
+  };
+
   const logout = () => {
     setUser(null);
     window.localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -344,7 +355,7 @@ export function App() {
         {page === "contact" && <ContactPage context={contactContext} projects={projects} user={user} />}
         {page === "login" && <LoginPage onLogin={completeAuth} onNavigate={navigate} />}
         {page === "register" && <RegisterPage onRegister={completeAuth} onNavigate={navigate} />}
-        {page === "profile" && <ProfilePage user={user} projects={projects} onLogout={logout} onNavigate={navigate} onOpenProject={openProject} />}
+        {page === "profile" && <ProfilePage user={user} projects={projects} onLogout={logout} onNavigate={navigate} onOpenProject={openProject} onUserUpdate={updateStoredUser} />}
       </PageTransition>
 
       <Chatbot open={chatOpen} onToggle={() => setChatOpen((current) => !current)} />

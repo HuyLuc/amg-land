@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -6,17 +6,21 @@ import {
   Heart,
   LogOut,
   Mail,
+  Pencil,
   Phone,
   ShieldCheck,
   UserRound,
+  X,
 } from "lucide-react";
 import type { Page } from "../app/types";
 import type { AuthUser } from "../features/auth/types";
 import {
   fetchCustomerProfile,
+  updateCustomerProfile,
   type CustomerProfile,
   type ProfileConsultation,
   type ProfileSavedCommunityPost,
+  type ProfileUser,
 } from "../features/profile/api";
 import { formatPrice } from "../features/projects/utils/projectFormatters";
 import type { Project } from "../types/domain";
@@ -27,6 +31,7 @@ type ProfilePageProps = {
   onLogout: () => void;
   onNavigate: (page: Page) => void;
   onOpenProject: (project: Project) => void;
+  onUserUpdate: (patch: Partial<Pick<AuthUser, "name" | "phone">>) => void;
 };
 
 const consultationStatusLabel: Record<ProfileConsultation["status"], string> = {
@@ -55,10 +60,12 @@ function roleLabel(role: string) {
   return role;
 }
 
-export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProject }: ProfilePageProps) {
+export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProject, onUserUpdate }: ProfilePageProps) {
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [toast, setToast] = useState("");
 
   useEffect(() => {
     if (!user?.accessToken) {
@@ -118,9 +125,17 @@ export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProjec
     onNavigate("projects");
   };
 
+  const handleProfileUpdated = (updatedUser: ProfileUser) => {
+    setProfile((current) => (current ? { ...current, user: updatedUser } : current));
+    onUserUpdate({ name: updatedUser.fullName, phone: updatedUser.phone ?? "Chưa cập nhật" });
+    setToast("Đã cập nhật thông tin cá nhân.");
+    window.setTimeout(() => setToast(""), 2500);
+  };
+
   return (
     <section className="section-wrap">
       {error ? <div className="mb-5 rounded border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div> : null}
+      {toast ? <div className="mb-5 rounded border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">{toast}</div> : null}
 
       <div className="grid gap-6 lg:grid-cols-[340px_1fr]">
         <aside className="h-fit overflow-hidden rounded bg-white shadow-soft">
@@ -137,7 +152,15 @@ export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProjec
             <ProfileLine icon={<Phone size={17} />} label="Điện thoại" value={displayPhone} />
             <ProfileLine icon={<ShieldCheck size={17} />} label="Trạng thái" value={profileUser?.isActive === false ? "Tạm khóa" : "Đang hoạt động"} />
             <button
-              className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded border border-slate-200 px-4 font-semibold text-slate-700 transition hover:border-brand-900 hover:text-brand-900"
+              className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded bg-brand-50 px-4 font-semibold text-brand-900 transition hover:bg-brand-100"
+              onClick={() => setEditing(true)}
+              type="button"
+            >
+              <Pencil size={17} />
+              Sửa thông tin
+            </button>
+            <button
+              className="inline-flex h-11 items-center justify-center gap-2 rounded border border-slate-200 px-4 font-semibold text-slate-700 transition hover:border-brand-900 hover:text-brand-900"
               onClick={onLogout}
               type="button"
             >
@@ -231,7 +254,132 @@ export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProjec
           </div>
         </div>
       </div>
+
+      {editing ? (
+        <EditProfileModal
+          accessToken={user.accessToken}
+          email={displayEmail}
+          initialName={displayName}
+          initialPhone={displayPhone === "Chưa cập nhật" ? "" : displayPhone}
+          onClose={() => setEditing(false)}
+          onUpdated={handleProfileUpdated}
+        />
+      ) : null}
     </section>
+  );
+}
+
+function EditProfileModal({
+  accessToken,
+  email,
+  initialName,
+  initialPhone,
+  onClose,
+  onUpdated,
+}: {
+  accessToken?: string;
+  email: string;
+  initialName: string;
+  initialPhone: string;
+  onClose: () => void;
+  onUpdated: (user: ProfileUser) => void;
+}) {
+  const [fullName, setFullName] = useState(initialName);
+  const [phone, setPhone] = useState(initialPhone);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!accessToken) {
+      setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      return;
+    }
+
+    const nextName = fullName.trim();
+    const nextPhone = phone.trim();
+    if (nextName.length < 2) {
+      setError("Họ tên cần có ít nhất 2 ký tự.");
+      return;
+    }
+    if (nextPhone.length < 8) {
+      setError("Số điện thoại cần có ít nhất 8 ký tự.");
+      return;
+    }
+
+    setSaving(true);
+    setError("");
+    try {
+      const updatedUser = await updateCustomerProfile(accessToken, { fullName: nextName, phone: nextPhone });
+      onUpdated(updatedUser);
+      onClose();
+    } catch (updateError) {
+      setError(updateError instanceof Error ? updateError.message : "Không thể cập nhật hồ sơ lúc này.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 px-4 py-6">
+      <form className="w-full max-w-xl overflow-hidden rounded bg-white shadow-2xl" onSubmit={handleSubmit}>
+        <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-6">
+          <div>
+            <h2 className="text-xl font-bold text-slate-950">Sửa thông tin cá nhân</h2>
+            <p className="mt-1 text-sm text-slate-600">Tạm thời chỉ cho sửa họ tên và số điện thoại.</p>
+          </div>
+          <button className="grid h-10 w-10 place-items-center rounded border border-slate-200 text-brand-900 transition hover:bg-slate-50" onClick={onClose} type="button" aria-label="Đóng">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="grid gap-5 p-6">
+          {error ? <div className="rounded border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700">{error}</div> : null}
+
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
+            Họ tên <span className="sr-only">bắt buộc</span>
+            <input
+              className="h-12 rounded border border-slate-200 px-4 text-base font-medium text-slate-900 outline-none transition focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10"
+              maxLength={100}
+              minLength={2}
+              onChange={(event) => setFullName(event.target.value)}
+              required
+              value={fullName}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-slate-700">
+            Số điện thoại <span className="sr-only">bắt buộc</span>
+            <input
+              className="h-12 rounded border border-slate-200 px-4 text-base font-medium text-slate-900 outline-none transition focus:border-brand-900 focus:ring-4 focus:ring-brand-900/10"
+              maxLength={20}
+              minLength={8}
+              onChange={(event) => setPhone(event.target.value)}
+              required
+              value={phone}
+            />
+          </label>
+
+          <label className="grid gap-2 text-sm font-semibold text-slate-500">
+            Email
+            <input
+              className="h-12 rounded border border-slate-200 bg-slate-50 px-4 text-base font-medium text-slate-500"
+              disabled
+              value={email}
+            />
+          </label>
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-slate-200 p-6">
+          <button className="btn-secondary" disabled={saving} onClick={onClose} type="button">
+            Hủy
+          </button>
+          <button className="btn-primary" disabled={saving} type="submit">
+            {saving ? "Đang lưu..." : "Lưu thay đổi"}
+          </button>
+        </div>
+      </form>
+    </div>
   );
 }
 

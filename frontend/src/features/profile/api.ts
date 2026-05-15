@@ -40,17 +40,19 @@ export type ProfileSavedCommunityPost = {
   authorName: string;
 };
 
+export type ProfileUser = {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  isActive: boolean;
+  createdAt: string;
+  lastLogin: string | null;
+};
+
 export type CustomerProfile = {
-  user: {
-    id: string;
-    fullName: string;
-    email: string;
-    phone: string | null;
-    role: string;
-    isActive: boolean;
-    createdAt: string;
-    lastLogin: string | null;
-  };
+  user: ProfileUser;
   stats: {
     interestedProjects: number;
     consultationRequests: number;
@@ -62,17 +64,19 @@ export type CustomerProfile = {
   savedCommunityPosts: ProfileSavedCommunityPost[];
 };
 
+type ApiProfileUser = {
+  id: string;
+  full_name: string;
+  email: string;
+  phone?: string | null;
+  role: string;
+  is_active: boolean;
+  created_at: string;
+  last_login?: string | null;
+};
+
 type ApiProfile = {
-  user: {
-    id: string;
-    full_name: string;
-    email: string;
-    phone?: string | null;
-    role: string;
-    is_active: boolean;
-    created_at: string;
-    last_login?: string | null;
-  };
+  user: ApiProfileUser;
   stats: {
     interested_projects: number;
     consultation_requests: number;
@@ -120,18 +124,38 @@ const projectStatusLabel: Record<ApiProfile["interested_projects"][number]["stat
   draft: "Sắp mở bán",
 };
 
+function mapProfileUser(user: ApiProfileUser): ProfileUser {
+  return {
+    id: user.id,
+    fullName: user.full_name,
+    email: user.email,
+    phone: user.phone ?? null,
+    role: user.role,
+    isActive: user.is_active,
+    createdAt: user.created_at,
+    lastLogin: user.last_login ?? null,
+  };
+}
+
+function getProfileErrorMessage(status: number, detail: unknown) {
+  if (status === 400 && detail === "Phone already registered") {
+    return "Số điện thoại này đã được dùng cho tài khoản khác.";
+  }
+
+  if (status === 422) {
+    return "Thông tin chưa hợp lệ. Vui lòng kiểm tra lại họ tên và số điện thoại.";
+  }
+
+  if (typeof detail === "string" && detail.trim()) {
+    return detail;
+  }
+
+  return "Không thể cập nhật hồ sơ lúc này.";
+}
+
 function mapProfile(data: ApiProfile): CustomerProfile {
   return {
-    user: {
-      id: data.user.id,
-      fullName: data.user.full_name,
-      email: data.user.email,
-      phone: data.user.phone ?? null,
-      role: data.user.role,
-      isActive: data.user.is_active,
-      createdAt: data.user.created_at,
-      lastLogin: data.user.last_login ?? null,
-    },
+    user: mapProfileUser(data.user),
     stats: {
       interestedProjects: data.stats.interested_projects,
       consultationRequests: data.stats.consultation_requests,
@@ -188,4 +212,29 @@ export async function fetchCustomerProfile(accessToken: string): Promise<Custome
   }
 
   return mapProfile(data as ApiProfile);
+}
+
+export async function updateCustomerProfile(
+  accessToken: string,
+  payload: { fullName: string; phone: string },
+): Promise<ProfileUser> {
+  const response = await fetch(`${API_BASE_URL}/profile/me`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      full_name: payload.fullName,
+      phone: payload.phone,
+    }),
+  });
+  const data = (await response.json().catch(() => null)) as ApiProfileUser | { detail?: unknown } | null;
+
+  if (!response.ok) {
+    const detail = data && "detail" in data ? data.detail : null;
+    throw new Error(getProfileErrorMessage(response.status, detail));
+  }
+
+  return mapProfileUser(data as ApiProfileUser);
 }

@@ -83,6 +83,11 @@ class ProfileUserOut(BaseModel):
     last_login: datetime | None = None
 
 
+class ProfileUpdate(BaseModel):
+    full_name: str = Field(min_length=2, max_length=100)
+    phone: str = Field(min_length=8, max_length=20, pattern=r"^[0-9+()\-\s]+$")
+
+
 class ProfileStatsOut(BaseModel):
     interested_projects: int
     consultation_requests: int
