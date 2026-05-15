@@ -130,6 +130,8 @@ URL:
 http://localhost:5174
 ```
 
+Neu cong `5174` dang bi chiem, Vite se bao loi va dung lai de ban giai phong dung cong thay vi tu dong nhay sang cong khac.
+
 Web noi bo dung API mac dinh:
 
 ```text
@@ -157,6 +159,8 @@ URL:
 ```text
 http://localhost:5173
 ```
+
+Neu cong `5173` dang bi chiem, Vite se bao loi va dung lai de ban giai phong dung cong thay vi tu dong nhay sang cong khac.
 
 Neu can doi API URL, tao file `frontend/.env.local`:
 
