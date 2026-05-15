@@ -1,7 +1,7 @@
 import uuid
 
 from sqlalchemy import ForeignKey, Integer, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID as PG_UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -16,6 +16,7 @@ class CommunityPost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     content: Mapped[str] = mapped_column(Text)
     category: Mapped[str] = mapped_column(String(50), index=True)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    images: Mapped[list[str]] = mapped_column(JSONB, default=list)
     shares: Mapped[int] = mapped_column(Integer, default=0)
 
     author = relationship("User", back_populates="community_posts")

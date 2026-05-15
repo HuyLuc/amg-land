@@ -37,6 +37,7 @@ type ApiCommunityPost = {
   content: string;
   category: string;
   image_url?: string | null;
+  images?: string[];
   created_at: string;
   likes: number;
   shares: number;
@@ -94,6 +95,7 @@ function mapComment(comment: ApiCommunityComment): CommunityComment {
 }
 
 function mapPost(post: ApiCommunityPost): CommunityPost {
+  const images = post.images?.length ? post.images : post.image_url ? [post.image_url] : [];
   return {
     id: post.id,
     author: mapAuthor(post.author),
@@ -101,7 +103,8 @@ function mapPost(post: ApiCommunityPost): CommunityPost {
     content: post.content,
     category: post.category,
     createdAt: formatDate(post.created_at),
-    image: post.image_url ?? null,
+    image: images[0] ?? null,
+    images,
     liked: post.liked,
     bookmarked: post.bookmarked,
     likes: post.likes,
@@ -148,15 +151,15 @@ export async function deleteCommunityPost(postId: string, token: string): Promis
   });
 }
 
-export async function uploadCommunityImage(file: File, token: string): Promise<string> {
+export async function uploadCommunityImages(files: File[], token: string): Promise<string[]> {
   const formData = new FormData();
-  formData.append("files", file);
+  files.forEach((file) => formData.append("files", file));
   const uploaded = await fetchJson<Array<{ image_url: string }>>("/community/images", {
     method: "POST",
     headers: authHeaders(token),
     body: formData,
   });
-  return uploaded[0]?.image_url ?? "";
+  return uploaded.map((item) => item.image_url).filter(Boolean);
 }
 
 export async function addCommunityComment(postId: string, content: string, token: string): Promise<CommunityPost> {

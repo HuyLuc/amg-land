@@ -1,5 +1,5 @@
-import { MessageSquareText, Newspaper, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { Compass, Lightbulb, LockKeyhole, PenLine, Tags } from "lucide-react";
+import { useEffect, useState } from "react";
 import type { Page } from "../app/types";
 import { CommunityPostCard } from "../features/community/components/CommunityPostCard";
 import { PostComposer } from "../features/community/components/PostComposer";
@@ -11,7 +11,7 @@ import {
   toggleCommunityBookmark,
   toggleCommunityLike,
   updateCommunityPost,
-  uploadCommunityImage,
+  uploadCommunityImages,
 } from "../features/community/api";
 import type { CommunityPost, CommunityPostPayload } from "../features/community/types";
 import type { AuthUser } from "../features/auth/types";
@@ -42,10 +42,6 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
 
   const token = user?.accessToken ?? null;
   const hasMorePosts = posts.length < totalPosts;
-
-  const totalInteractions = useMemo(() => {
-    return posts.reduce((total, post) => total + post.likes + post.comments.length, 0);
-  }, [posts]);
 
   const replacePost = (updatedPost: CommunityPost) => {
     setPosts((current) => current.map((post) => (post.id === updatedPost.id ? updatedPost : post)));
@@ -164,18 +160,18 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
     }
   };
 
-  const uploadImage = async (file: File) => {
+  const uploadImages = async (files: File[]) => {
     if (!token) {
       requireLogin();
-      return "";
+      return [];
     }
     setImageUploading(true);
     setNotice("");
     try {
-      return await uploadCommunityImage(file, token);
+      return await uploadCommunityImages(files, token);
     } catch (uploadError) {
       setNotice(uploadError instanceof Error ? uploadError.message : "Không thể tải ảnh cộng đồng.");
-      return "";
+      return [];
     } finally {
       setImageUploading(false);
     }
@@ -231,7 +227,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
 
   return (
     <section className="section-wrap">
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div>
           <div className="section-heading">
             <h1>Cộng đồng AMG Land</h1>
@@ -242,7 +238,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
           {error ? <div className="mb-4 rounded border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">{error}</div> : null}
 
           <div className="grid gap-6">
-            <PostComposer user={user} loading={saving} imageUploading={imageUploading} onCreatePost={createPost} onUploadImage={uploadImage} onLogin={() => onNavigate("login")} />
+            <PostComposer user={user} loading={saving} imageUploading={imageUploading} onCreatePost={createPost} onUploadImages={uploadImages} onLogin={() => onNavigate("login")} />
             <div className="flex flex-wrap items-center gap-2">
               <button
                 className={`rounded border px-4 py-2 text-sm font-semibold transition ${filter === "all" ? "border-brand-900 bg-brand-900 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-brand-300"}`}
@@ -294,23 +290,9 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
           </div>
         </div>
 
-        <aside className="space-y-5 lg:sticky lg:top-24 lg:h-fit">
-          <div className="premium-panel rounded p-5">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded bg-brand-900 text-white">
-                <Users size={20} />
-              </span>
-              <div>
-                <h2 className="font-semibold text-slate-950">Tổng quan cộng đồng</h2>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-3">
-              <StatRow icon={<Newspaper size={17} />} label="Bài đăng" value={`${totalPosts}`} />
-              <StatRow icon={<MessageSquareText size={17} />} label="Tương tác" value={`${totalInteractions}`} />
-            </div>
-          </div>
-        </aside>
+        <CommunityAside user={user} onLogin={() => onNavigate("login")} onShowMine={() => token ? setFilter("mine") : requireLogin()} />
       </div>
+
       {editingPost ? (
         <EditPostModal
           post={editingPost}
@@ -318,7 +300,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
           imageUploading={imageUploading}
           onClose={() => setEditingPost(null)}
           onSave={updatePost}
-          onUploadImage={uploadImage}
+          onUploadImages={uploadImages}
         />
       ) : null}
       {deletingPost ? (
@@ -333,15 +315,76 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
   );
 }
 
-function StatRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function CommunityAside({ onLogin, onShowMine, user }: { onLogin: () => void; onShowMine: () => void; user: AuthUser | null }) {
   return (
-    <div className="flex items-center justify-between rounded border border-slate-200 px-4 py-3">
-      <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
-        <span className="text-brand-900">{icon}</span>
-        {label}
-      </span>
-      <span className="text-sm font-bold text-brand-900">{value}</span>
-    </div>
+    <aside className="space-y-5 lg:sticky lg:top-24 lg:h-fit">
+      <div className="rounded bg-brand-900 p-5 text-white shadow-lift">
+        <div className="flex items-center gap-3">
+          <span className="grid h-11 w-11 place-items-center rounded bg-white/10">
+            <Compass size={20} />
+          </span>
+          <div>
+            <h2 className="font-semibold">Góc cộng đồng</h2>
+            <p className="mt-1 text-sm text-brand-100">Trao đổi kinh nghiệm và câu hỏi thực tế.</p>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-2">
+          {user ? (
+            <button className="h-11 rounded bg-white px-4 text-sm font-bold text-brand-900 transition hover:bg-brand-50" onClick={onShowMine} type="button">
+              Xem bài của tôi
+            </button>
+          ) : (
+            <button className="h-11 rounded bg-white px-4 text-sm font-bold text-brand-900 transition hover:bg-brand-50" onClick={onLogin} type="button">
+              Đăng nhập để tham gia
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="premium-panel rounded p-5">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded bg-brand-50 text-brand-900">
+            <Tags size={19} />
+          </span>
+          <h2 className="font-semibold text-slate-950">Chủ đề thường gặp</h2>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {categoryOptions.map((category) => (
+            <span className="rounded border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700" key={category}>
+              {category}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="premium-panel rounded p-5">
+        <div className="flex items-center gap-3">
+          <span className="grid h-10 w-10 place-items-center rounded bg-brand-50 text-brand-900">
+            <Lightbulb size={19} />
+          </span>
+          <h2 className="font-semibold text-slate-950">Gợi ý đăng bài</h2>
+        </div>
+        <div className="mt-4 grid gap-3 text-sm leading-6 text-slate-600">
+          <p>Đặt tiêu đề rõ ý để người khác dễ phản hồi.</p>
+          <p>Thêm ảnh minh họa nếu muốn chia sẻ mặt bằng, nội thất hoặc thông tin dự án.</p>
+          <p>Với câu hỏi tư vấn riêng, nên dùng trang Liên hệ để đội ngũ AMG Land xử lý nhanh hơn.</p>
+        </div>
+      </div>
+
+      {!user ? (
+        <div className="rounded border border-slate-200 bg-white p-5 shadow-soft">
+          <div className="flex items-center gap-3">
+            <span className="grid h-10 w-10 place-items-center rounded bg-slate-100 text-brand-900">
+              <LockKeyhole size={18} />
+            </span>
+            <div>
+              <h2 className="font-semibold text-slate-950">Cần tài khoản</h2>
+              <p className="mt-1 text-sm text-slate-600">Đăng nhập để đăng bài, bình luận và quản lý bài viết của bạn.</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </aside>
   );
 }
 
@@ -349,21 +392,21 @@ function EditPostModal({
   imageUploading,
   onClose,
   onSave,
-  onUploadImage,
+  onUploadImages,
   post,
   saving,
 }: {
   imageUploading?: boolean;
   onClose: () => void;
   onSave: (postId: string, payload: CommunityPostPayload) => Promise<void>;
-  onUploadImage: (file: File) => Promise<string>;
+  onUploadImages: (files: File[]) => Promise<string[]>;
   post: CommunityPost;
   saving?: boolean;
 }) {
   const [title, setTitle] = useState(post.title);
   const [content, setContent] = useState(post.content);
   const [category, setCategory] = useState(post.category);
-  const [imageUrl, setImageUrl] = useState(post.image ?? "");
+  const [images, setImages] = useState<string[]>(post.images.length ? post.images : post.image ? [post.image] : []);
 
   const titleValid = title.trim().length >= 5;
   const contentValid = content.trim().length >= 10;
@@ -398,28 +441,35 @@ function EditPostModal({
               ))}
             </select>
             <label className="flex h-12 cursor-pointer items-center rounded border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-600">
-              {imageUploading ? "Đang tải ảnh..." : imageUrl ? "Đổi ảnh minh họa" : "Chọn ảnh minh họa"}
+              {imageUploading ? "Đang tải ảnh..." : images.length ? `Đã chọn ${images.length} ảnh` : "Chọn ảnh minh họa"}
               <input
                 accept="image/jpeg,image/png,image/webp"
                 className="hidden"
                 disabled={imageUploading}
+                multiple
                 type="file"
                 onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    setImageUrl(await onUploadImage(file));
-                    event.currentTarget.value = "";
+                  const input = event.currentTarget;
+                  const files = Array.from(event.target.files ?? []);
+                  if (files.length) {
+                    const uploadedUrls = await onUploadImages(files);
+                    setImages((current) => [...current, ...uploadedUrls].slice(0, 12));
+                    input.value = "";
                   }
                 }}
               />
             </label>
           </div>
-          {imageUrl ? (
-            <div className="relative overflow-hidden rounded border border-slate-200">
-              <img alt="" className="h-44 w-full object-cover" src={imageUrl} />
-              <button className="absolute right-3 top-3 rounded bg-white/95 px-3 py-1 text-xs font-bold text-red-600 shadow-soft" onClick={() => setImageUrl("")} type="button">
-                Bỏ ảnh
-              </button>
+          {images.length ? (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+              {images.map((imageUrl) => (
+                <div className="relative overflow-hidden rounded border border-slate-200" key={imageUrl}>
+                  <img alt="" className="h-28 w-full object-cover" src={imageUrl} />
+                  <button className="absolute right-2 top-2 rounded bg-white/95 px-2 py-1 text-xs font-bold text-red-600 shadow-soft" onClick={() => setImages((current) => current.filter((item) => item !== imageUrl))} type="button">
+                    Bỏ
+                  </button>
+                </div>
+              ))}
             </div>
           ) : null}
         </div>
@@ -430,7 +480,7 @@ function EditPostModal({
           <button
             className="btn-primary h-11 px-5 disabled:cursor-not-allowed disabled:opacity-50"
             disabled={!canSave}
-            onClick={() => onSave(post.id, { title: title.trim(), content: content.trim(), category, image_url: imageUrl || null })}
+            onClick={() => onSave(post.id, { title: title.trim(), content: content.trim(), category, images, image_url: images[0] ?? null })}
             type="button"
           >
             {saving ? "Đang lưu..." : "Lưu bài viết"}

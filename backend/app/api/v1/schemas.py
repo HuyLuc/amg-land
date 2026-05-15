@@ -439,6 +439,7 @@ class CommunityPostCreate(BaseModel):
     content: str = Field(min_length=10, max_length=4000)
     category: str = Field(min_length=2, max_length=50)
     image_url: str | None = Field(default=None, max_length=500)
+    images: list[str] = Field(default_factory=list, max_length=12)
 
 
 class CommunityPostUpdate(BaseModel):
@@ -446,6 +447,7 @@ class CommunityPostUpdate(BaseModel):
     content: str | None = Field(default=None, min_length=10, max_length=4000)
     category: str | None = Field(default=None, min_length=2, max_length=50)
     image_url: str | None = Field(default=None, max_length=500)
+    images: list[str] | None = Field(default=None, max_length=12)
 
 
 class CommunityCommentCreate(BaseModel):
@@ -473,6 +475,7 @@ class CommunityPostOut(BaseModel):
     content: str
     category: str
     image_url: str | None = None
+    images: list[str] = Field(default_factory=list)
     created_at: datetime
     likes: int
     shares: int

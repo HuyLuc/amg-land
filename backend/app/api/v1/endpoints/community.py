@@ -35,6 +35,9 @@ def serialize_community_post(db: Session, post: CommunityPost, current_user: Use
     if current_user is not None:
         liked = db.get(CommunityPostLike, {"post_id": post.id, "user_id": current_user.id}) is not None
         bookmarked = db.get(CommunityPostBookmark, {"post_id": post.id, "user_id": current_user.id}) is not None
+    images = list(post.images or [])
+    if not images and post.image_url:
+        images = [post.image_url]
     return {
         "id": post.id,
         "author": author_payload(post.author),
@@ -42,6 +45,7 @@ def serialize_community_post(db: Session, post: CommunityPost, current_user: Use
         "content": post.content,
         "category": post.category,
         "image_url": post.image_url,
+        "images": images,
         "created_at": post.created_at,
         "likes": db.scalar(select(func.count()).select_from(CommunityPostLike).where(CommunityPostLike.post_id == post.id)) or 0,
         "shares": post.shares,
@@ -82,12 +86,16 @@ def list_community_posts(
 
 @router.post("/community/posts", response_model=CommunityPostOut, status_code=201, tags=["community"])
 def create_community_post(payload: CommunityPostCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    images = [image.strip() for image in payload.images if image.strip()]
+    if not images and payload.image_url:
+        images = [payload.image_url.strip()]
     post = CommunityPost(
         author_id=current_user.id,
         title=payload.title.strip(),
         content=payload.content.strip(),
         category=payload.category.strip(),
-        image_url=payload.image_url.strip() if payload.image_url else None,
+        image_url=images[0] if images else None,
+        images=images,
     )
     db.add(post)
     commit_or_400(db)
@@ -103,6 +111,13 @@ def update_community_post(post_id: uuid.UUID, payload: CommunityPostUpdate, curr
     ensure_can_manage_community_post(post, current_user)
 
     values = payload.model_dump(exclude_unset=True)
+    if "images" in values and values["images"] is not None:
+        values["images"] = [image.strip() for image in values["images"] if image.strip()]
+        values["image_url"] = values["images"][0] if values["images"] else None
+    elif "image_url" in values:
+        image_url = values["image_url"].strip() if values["image_url"] else None
+        values["image_url"] = image_url
+        values["images"] = [image_url] if image_url else []
     for key, value in values.items():
         if isinstance(value, str):
             value = value.strip()
