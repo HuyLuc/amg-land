@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { companyInfo } from "../app/company";
 import { ContactForm } from "../features/contacts/components/ContactForm";
+import type { AuthUser } from "../features/auth/types";
 import type { Apartment, Project } from "../types/domain";
 
 export type ContactContext = {
@@ -12,9 +13,10 @@ export type ContactContext = {
 type ContactPageProps = {
   context?: ContactContext | null;
   projects?: Project[];
+  user?: AuthUser | null;
 };
 
-export function ContactPage({ context, projects = [] }: ContactPageProps) {
+export function ContactPage({ context, projects = [], user = null }: ContactPageProps) {
   return (
     <section className="section-wrap">
       <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
@@ -45,7 +47,7 @@ export function ContactPage({ context, projects = [] }: ContactPageProps) {
           </p>
         </div>
 
-        <ContactForm context={context} projects={projects} />
+        <ContactForm context={context} projects={projects} user={user} />
       </div>
     </section>
   );
