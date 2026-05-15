@@ -154,11 +154,3 @@ export async function toggleCommunityBookmark(postId: string, token: string): Pr
   });
   return mapPost(post);
 }
-
-export async function shareCommunityPost(postId: string, token?: string | null): Promise<CommunityPost> {
-  const post = await fetchJson<ApiCommunityPost>(`/community/posts/${postId}/share`, {
-    method: "POST",
-    headers: authHeaders(token),
-  });
-  return mapPost(post);
-}

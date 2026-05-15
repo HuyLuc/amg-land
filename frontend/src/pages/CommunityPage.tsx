@@ -7,7 +7,6 @@ import {
   addCommunityComment,
   createCommunityPost,
   fetchCommunityPosts,
-  shareCommunityPost,
   toggleCommunityBookmark,
   toggleCommunityLike,
   uploadCommunityImage,
@@ -32,7 +31,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
   const token = user?.accessToken ?? null;
 
   const totalInteractions = useMemo(() => {
-    return posts.reduce((total, post) => total + post.likes + post.shares + post.comments.length, 0);
+    return posts.reduce((total, post) => total + post.likes + post.comments.length, 0);
   }, [posts]);
 
   const replacePost = (updatedPost: CommunityPost) => {
@@ -147,18 +146,6 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
     }
   };
 
-  const sharePost = async (postId: string) => {
-    setBusyPostId(postId);
-    setNotice("");
-    try {
-      replacePost(await shareCommunityPost(postId, token));
-    } catch (shareError) {
-      setNotice(shareError instanceof Error ? shareError.message : "Không thể chia sẻ bài viết.");
-    } finally {
-      setBusyPostId(null);
-    }
-  };
-
   return (
     <section className="section-wrap">
       <div className="grid gap-8 lg:grid-cols-[1fr_360px]">
@@ -185,7 +172,6 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
                 onBookmark={toggleBookmark}
                 onLike={toggleLike}
                 onRequireLogin={requireLogin}
-                onShare={sharePost}
               />
             ))}
           </div>

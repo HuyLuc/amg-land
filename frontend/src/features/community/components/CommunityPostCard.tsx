@@ -1,4 +1,4 @@
-import { Bookmark, Heart, MessageCircle, Send, Share2 } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, Send } from "lucide-react";
 import { useState } from "react";
 import type { CommunityPost } from "../types";
 
@@ -9,11 +9,10 @@ type CommunityPostCardProps = {
   onAddComment: (postId: string, content: string) => Promise<void>;
   onBookmark: (postId: string) => Promise<void>;
   onLike: (postId: string) => Promise<void>;
-  onShare: (postId: string) => Promise<void>;
   onRequireLogin: () => void;
 };
 
-export function CommunityPostCard({ post, busy, canInteract, onAddComment, onBookmark, onLike, onShare, onRequireLogin }: CommunityPostCardProps) {
+export function CommunityPostCard({ post, busy, canInteract, onAddComment, onBookmark, onLike, onRequireLogin }: CommunityPostCardProps) {
   const [comment, setComment] = useState("");
   const [expandedComments, setExpandedComments] = useState(post.comments.length <= 1);
 
@@ -63,13 +62,12 @@ export function CommunityPostCard({ post, busy, canInteract, onAddComment, onBoo
       <div className="px-5 py-4">
         <div className="flex items-center justify-between border-b border-slate-200 pb-3 text-sm text-slate-600">
           <span>{post.likes} lượt thích</span>
-          <span>{post.comments.length} bình luận · {post.shares} chia sẻ</span>
+          <span>{post.comments.length} bình luận</span>
         </div>
 
-        <div className="grid grid-cols-4 gap-2 border-b border-slate-200 py-3">
+        <div className="grid grid-cols-3 gap-2 border-b border-slate-200 py-3">
           <ActionButton active={post.liked} disabled={busy} icon={<Heart size={18} />} label="Thích" onClick={() => canInteract ? onLike(post.id) : onRequireLogin()} />
           <ActionButton icon={<MessageCircle size={18} />} label="Bình luận" onClick={() => canInteract ? setExpandedComments(true) : onRequireLogin()} />
-          <ActionButton disabled={busy} icon={<Share2 size={18} />} label="Chia sẻ" onClick={() => onShare(post.id)} />
           <ActionButton active={post.bookmarked} disabled={busy} icon={<Bookmark size={18} />} label="Lưu" onClick={() => canInteract ? onBookmark(post.id) : onRequireLogin()} />
         </div>
 
