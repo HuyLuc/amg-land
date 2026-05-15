@@ -339,8 +339,8 @@ export function ProjectDetailPage(): JSX.Element {
                 <figure key={image.id} className="project-image-card" onClick={() => setPreviewImage(image)}>
                   <img src={image.image_url} alt="Ảnh dự án" />
                   <figcaption onClick={(event) => event.stopPropagation()}>
-                    <div>
-                      <strong>{image.caption || "Gallery"}</strong>
+                    <div className="image-card-meta">
+                      <strong title={image.caption || "Gallery"}>{image.caption || "Gallery"}</strong>
                       <span>Ảnh dự án</span>
                     </div>
                     {canManageProjects ? <div className="image-card-actions">

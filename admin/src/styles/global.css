@@ -3279,9 +3279,21 @@ td select {
   cursor: default;
 }
 
+.image-card-meta {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .image-grid figcaption strong,
 .image-grid figcaption span {
   display: block;
+}
+
+.image-card-meta strong,
+.image-card-meta span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .image-grid figcaption span {
