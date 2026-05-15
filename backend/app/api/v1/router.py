@@ -12,6 +12,7 @@ from app.api.v1.endpoints import posts
 from app.api.v1.endpoints import contacts
 from app.api.v1.endpoints import analytics
 from app.api.v1.endpoints import stats
+from app.api.v1.endpoints import profile
 
 
 api_router = APIRouter()
@@ -28,3 +29,4 @@ api_router.include_router(posts.router)
 api_router.include_router(contacts.router)
 api_router.include_router(analytics.router)
 api_router.include_router(stats.router)
+api_router.include_router(profile.router)

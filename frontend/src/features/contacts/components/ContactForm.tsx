@@ -3,23 +3,28 @@ import { Check, ChevronDown, Send } from "lucide-react";
 import { TextInput } from "../../../components/ui/TextInput";
 import { createContact } from "../api";
 import type { ContactContext } from "../../../pages/ContactPage";
+import { fetchProjectOptions, type ProjectOption } from "../../projects/api";
+import type { AuthUser } from "../../auth/types";
 import type { Project } from "../../../types/domain";
 
 type ContactFormProps = {
   context?: ContactContext | null;
   projects?: Project[];
+  user?: AuthUser | null;
 };
 
-export function ContactForm({ context, projects = [] }: ContactFormProps) {
-  const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+export function ContactForm({ context, projects = [], user = null }: ContactFormProps) {
+  const [fullName, setFullName] = useState(user?.name ?? "");
+  const [phone, setPhone] = useState(user?.phone && user.phone !== "Chưa cập nhật" ? user.phone : "");
+  const [email, setEmail] = useState(user?.email ?? "");
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [projectMenuOpen, setProjectMenuOpen] = useState(false);
+  const [projectOptionsFromApi, setProjectOptionsFromApi] = useState<ProjectOption[]>([]);
+  const [projectOptionsLoading, setProjectOptionsLoading] = useState(false);
   const projectMenuRef = useRef<HTMLDivElement | null>(null);
 
   const defaultMessage = useMemo(() => {
@@ -32,8 +37,9 @@ export function ContactForm({ context, projects = [] }: ContactFormProps) {
     return "";
   }, [context]);
 
-  const selectedProject = context?.project ?? projects.find((project) => project.id === selectedProjectId) ?? null;
-  const projectOptions = [{ id: "", name: "Chưa chọn dự án" }, ...projects];
+  const availableProjects = projects.length > 0 ? projects : projectOptionsFromApi;
+  const selectedProject = context?.project ?? availableProjects.find((project) => project.id === selectedProjectId) ?? null;
+  const projectOptions = [{ id: "", name: "Chưa chọn dự án" }, ...availableProjects];
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -45,6 +51,41 @@ export function ContactForm({ context, projects = [] }: ContactFormProps) {
     document.addEventListener("mousedown", handlePointerDown);
     return () => document.removeEventListener("mousedown", handlePointerDown);
   }, []);
+
+  useEffect(() => {
+    if (context?.project || projects.length > 0) {
+      return;
+    }
+
+    let mounted = true;
+    setProjectOptionsLoading(true);
+
+    fetchProjectOptions()
+      .then((items) => {
+        if (!mounted) return;
+        setProjectOptionsFromApi(items);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setProjectOptionsFromApi([]);
+      })
+      .finally(() => {
+        if (mounted) setProjectOptionsLoading(false);
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [context?.project, projects.length]);
+
+  useEffect(() => {
+    if (!user) {
+      return;
+    }
+    setFullName((current) => current || user.name || "");
+    setPhone((current) => current || (user.phone && user.phone !== "Chưa cập nhật" ? user.phone : ""));
+    setEmail((current) => current || user.email || "");
+  }, [user]);
 
   const submitContact = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -62,9 +103,10 @@ export function ContactForm({ context, projects = [] }: ContactFormProps) {
         message: message.trim() || defaultMessage || null,
       });
       setFormSuccess("Đã gửi yêu cầu tư vấn. AMG Land sẽ liên hệ lại trong thời gian sớm nhất.");
-      setFullName("");
-      setPhone("");
-      setEmail("");
+      setFullName(user?.name ?? "");
+      setPhone(user?.phone && user.phone !== "Chưa cập nhật" ? user.phone : "");
+      setEmail(user?.email ?? "");
+      setSelectedProjectId("");
       setMessage("");
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Không thể gửi yêu cầu tư vấn lúc này.");
@@ -113,6 +155,8 @@ export function ContactForm({ context, projects = [] }: ContactFormProps) {
             </button>
             {projectMenuOpen ? (
               <div className="absolute z-30 mt-2 max-h-64 w-full overflow-auto rounded border border-slate-200 bg-white p-1 shadow-[0_18px_45px_rgba(15,23,42,0.16)]">
+                {projectOptionsLoading ? <div className="px-3 py-2.5 text-sm font-semibold text-slate-500">Đang tải dự án...</div> : null}
+                {!projectOptionsLoading && projectOptions.length === 1 ? <div className="px-3 py-2.5 text-sm font-semibold text-slate-500">Chưa có dự án đang mở bán.</div> : null}
                 {projectOptions.map((project) => (
                   <button
                     className={`flex w-full items-center justify-between rounded px-3 py-2.5 text-left text-sm font-semibold transition ${

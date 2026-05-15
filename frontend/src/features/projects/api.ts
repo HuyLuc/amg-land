@@ -28,6 +28,11 @@ type ApiProjectDetail = {
   images: Array<{ id: string; image_url: string; caption?: string | null; sort_order: number; is_thumbnail: boolean }>;
 };
 
+export type ProjectOption = {
+  id: string;
+  name: string;
+};
+
 type ApiApartment = {
   id: string;
   code: string;
@@ -130,6 +135,14 @@ async function fetchProject(project: ApiProject): Promise<Project> {
 export async function fetchProjects(): Promise<Project[]> {
   const page = await fetchJson<ApiPage<ApiProject>>("/projects?status=active&limit=100");
   return Promise.all(page.items.map(fetchProject));
+}
+
+export async function fetchProjectOptions(): Promise<ProjectOption[]> {
+  const page = await fetchJson<ApiPage<ApiProject>>("/projects?status=active&limit=100");
+  return page.items.map((project) => ({
+    id: project.id,
+    name: project.name,
+  }));
 }
 
 export async function fetchApartmentMedia(apartmentId: string): Promise<ApartmentMedia[]> {

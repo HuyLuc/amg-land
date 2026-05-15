@@ -341,10 +341,10 @@ export function App() {
           </section>
         )}
         {page === "community" && <CommunityPage user={user} onNavigate={navigate} />}
-        {page === "contact" && <ContactPage context={contactContext} projects={projects} />}
+        {page === "contact" && <ContactPage context={contactContext} projects={projects} user={user} />}
         {page === "login" && <LoginPage onLogin={completeAuth} onNavigate={navigate} />}
         {page === "register" && <RegisterPage onRegister={completeAuth} onNavigate={navigate} />}
-        {page === "profile" && <ProfilePage user={user} onLogout={logout} onNavigate={navigate} />}
+        {page === "profile" && <ProfilePage user={user} projects={projects} onLogout={logout} onNavigate={navigate} onOpenProject={openProject} />}
       </PageTransition>
 
       <Chatbot open={chatOpen} onToggle={() => setChatOpen((current) => !current)} />

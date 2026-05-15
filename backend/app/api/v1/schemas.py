@@ -72,6 +72,59 @@ class CommunityPostPage(BaseModel):
     limit: int
 
 
+class ProfileUserOut(BaseModel):
+    id: UUID
+    full_name: str
+    email: EmailStr
+    phone: str | None = None
+    role: UserRole
+    is_active: bool
+    created_at: datetime
+    last_login: datetime | None = None
+
+
+class ProfileStatsOut(BaseModel):
+    interested_projects: int
+    consultation_requests: int
+    unread_notifications: int
+
+
+class ProfileProjectOut(BaseModel):
+    id: UUID
+    name: str
+    slug: str
+    location: str
+    district: str
+    city: str
+    price_from: int
+    status: ProjectStatus
+    image_url: str | None = None
+
+
+class ProfileConsultationOut(BaseModel):
+    id: UUID
+    project_name: str | None = None
+    project_slug: str | None = None
+    apartment_code: str | None = None
+    message: str | None = None
+    status: ContactStatus
+    created_at: datetime
+
+
+class ProfileActivityOut(BaseModel):
+    id: str
+    label: str
+    created_at: datetime
+
+
+class ProfileOut(BaseModel):
+    user: ProfileUserOut
+    stats: ProfileStatsOut
+    interested_projects: list[ProfileProjectOut] = Field(default_factory=list)
+    consultations: list[ProfileConsultationOut] = Field(default_factory=list)
+    activities: list[ProfileActivityOut] = Field(default_factory=list)
+
+
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
