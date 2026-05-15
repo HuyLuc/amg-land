@@ -9,6 +9,13 @@ type ApiPage<T> = {
   limit: number;
 };
 
+export type CommunityPostPage = {
+  items: CommunityPost[];
+  total: number;
+  page: number;
+  limit: number;
+};
+
 type ApiCommunityAuthor = {
   id: string | null;
   name: string;
@@ -103,11 +110,16 @@ function mapPost(post: ApiCommunityPost): CommunityPost {
   };
 }
 
-export async function fetchCommunityPosts(token?: string | null): Promise<CommunityPost[]> {
-  const page = await fetchJson<ApiPage<ApiCommunityPost>>("/community/posts?limit=30", {
+export async function fetchCommunityPosts(token?: string | null, pageNumber = 1, limit = 10): Promise<CommunityPostPage> {
+  const page = await fetchJson<ApiPage<ApiCommunityPost>>(`/community/posts?page=${pageNumber}&limit=${limit}`, {
     headers: authHeaders(token),
   });
-  return page.items.map(mapPost);
+  return {
+    items: page.items.map(mapPost),
+    total: page.total,
+    page: page.page,
+    limit: page.limit,
+  };
 }
 
 export async function createCommunityPost(payload: CommunityPostPayload, token: string): Promise<CommunityPost> {

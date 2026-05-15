@@ -19,9 +19,14 @@ type CommunityPageProps = {
   onNavigate: (page: Page) => void;
 };
 
+const PAGE_SIZE = 10;
+
 export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
   const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [saving, setSaving] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
   const [busyPostId, setBusyPostId] = useState<string | null>(null);
@@ -29,6 +34,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
   const [notice, setNotice] = useState("");
 
   const token = user?.accessToken ?? null;
+  const hasMorePosts = posts.length < totalPosts;
 
   const totalInteractions = useMemo(() => {
     return posts.reduce((total, post) => total + post.likes + post.comments.length, 0);
@@ -45,10 +51,13 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    fetchCommunityPosts(token)
-      .then((items) => {
+    setCurrentPage(1);
+
+    fetchCommunityPosts(token, 1, PAGE_SIZE)
+      .then((page) => {
         if (!mounted) return;
-        setPosts(items);
+        setPosts(page.items);
+        setTotalPosts(page.total);
         setError("");
       })
       .catch((fetchError) => {
@@ -64,6 +73,30 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
     };
   }, [token]);
 
+  const loadMorePosts = async () => {
+    if (loadingMore || !hasMorePosts) {
+      return;
+    }
+
+    const nextPage = currentPage + 1;
+    setLoadingMore(true);
+    setNotice("");
+    try {
+      const page = await fetchCommunityPosts(token, nextPage, PAGE_SIZE);
+      setPosts((current) => {
+        const existingIds = new Set(current.map((post) => post.id));
+        const nextItems = page.items.filter((post) => !existingIds.has(post.id));
+        return [...current, ...nextItems];
+      });
+      setTotalPosts(page.total);
+      setCurrentPage(page.page);
+    } catch (loadError) {
+      setNotice(loadError instanceof Error ? loadError.message : "Không thể tải thêm bài viết.");
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   const createPost = async (payload: CommunityPostPayload) => {
     if (!token) {
       requireLogin();
@@ -74,6 +107,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
     try {
       const post = await createCommunityPost(payload, token);
       setPosts((current) => [post, ...current]);
+      setTotalPosts((current) => current + 1);
     } catch (createError) {
       setNotice(createError instanceof Error ? createError.message : "Không thể đăng bài.");
     } finally {
@@ -174,6 +208,20 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
                 onRequireLogin={requireLogin}
               />
             ))}
+            {!loading && posts.length > 0 ? (
+              <div className="flex flex-col items-center gap-3 rounded bg-white p-4 shadow-soft">
+                <p className="text-sm font-medium text-slate-600">
+                  Đang hiển thị {posts.length} / {totalPosts} bài viết
+                </p>
+                {hasMorePosts ? (
+                  <button className="btn-secondary h-11 px-6 disabled:cursor-not-allowed disabled:opacity-60" disabled={loadingMore} onClick={loadMorePosts} type="button">
+                    {loadingMore ? "Đang tải..." : "Xem thêm bài viết"}
+                  </button>
+                ) : (
+                  <p className="text-sm font-semibold text-brand-900">Đã hiển thị tất cả bài viết.</p>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -188,12 +236,11 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
               </div>
             </div>
             <div className="mt-5 grid gap-3">
-              <StatRow icon={<Newspaper size={17} />} label="Bài đăng" value={`${posts.length}`} />
+              <StatRow icon={<Newspaper size={17} />} label="Bài đăng" value={`${totalPosts}`} />
               <StatRow icon={<MessageSquareText size={17} />} label="Tương tác" value={`${totalInteractions}`} />
               <StatRow icon={<Flame size={17} />} label="Chủ đề nổi bật" value={posts[0]?.category ?? "Đang cập nhật"} />
             </div>
           </div>
-
         </aside>
       </div>
     </section>
