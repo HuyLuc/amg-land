@@ -3,6 +3,7 @@ import { FormEvent, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { login } from "@/features/auth/authApi";
+import { ApiError } from "@/services/apiClient";
 import { isInternalUser, saveAuth } from "@/services/authStorage";
 import { getDefaultPath } from "@/services/permissions";
 
@@ -28,7 +29,15 @@ export function LoginPage(): JSX.Element {
       saveAuth(response.access_token, response.refresh_token, response.user_info);
       navigate(getDefaultPath(response.user_info.role), { replace: true });
     } catch (err) {
-      setError("Email hoặc mật khẩu không đúng.");
+      if (err instanceof ApiError) {
+        if (err.status === 401) {
+          setError("Email hoặc mật khẩu không đúng.");
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError("Không thể kết nối tới API. Hãy kiểm tra URL đang mở và cấu hình CORS local.");
+      }
     } finally {
       setSubmitting(false);
     }
