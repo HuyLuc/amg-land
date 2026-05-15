@@ -30,6 +30,16 @@ export type ProfileActivity = {
   createdAt: string;
 };
 
+export type ProfileSavedCommunityPost = {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  images: string[];
+  createdAt: string;
+  authorName: string;
+};
+
 export type CustomerProfile = {
   user: {
     id: string;
@@ -49,6 +59,7 @@ export type CustomerProfile = {
   interestedProjects: ProfileProject[];
   consultations: ProfileConsultation[];
   activities: ProfileActivity[];
+  savedCommunityPosts: ProfileSavedCommunityPost[];
 };
 
 type ApiProfile = {
@@ -91,6 +102,15 @@ type ApiProfile = {
     id: string;
     label: string;
     created_at: string;
+  }>;
+  saved_community_posts?: Array<{
+    id: string;
+    title: string;
+    content: string;
+    category: string;
+    images?: string[];
+    created_at: string;
+    author_name: string;
   }>;
 };
 
@@ -141,6 +161,15 @@ function mapProfile(data: ApiProfile): CustomerProfile {
       id: item.id,
       label: item.label,
       createdAt: item.created_at,
+    })),
+    savedCommunityPosts: (data.saved_community_posts ?? []).map((item) => ({
+      id: item.id,
+      title: item.title,
+      content: item.content,
+      category: item.category,
+      images: item.images ?? [],
+      createdAt: item.created_at,
+      authorName: item.author_name,
     })),
   };
 }

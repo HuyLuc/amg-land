@@ -1,8 +1,23 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { ArrowRight, Bell, CalendarDays, Heart, LogOut, Mail, Phone, ShieldCheck, UserRound } from "lucide-react";
+import {
+  ArrowRight,
+  Bookmark,
+  CalendarDays,
+  Heart,
+  LogOut,
+  Mail,
+  Phone,
+  ShieldCheck,
+  UserRound,
+} from "lucide-react";
 import type { Page } from "../app/types";
 import type { AuthUser } from "../features/auth/types";
-import { fetchCustomerProfile, type CustomerProfile, type ProfileConsultation } from "../features/profile/api";
+import {
+  fetchCustomerProfile,
+  type CustomerProfile,
+  type ProfileConsultation,
+  type ProfileSavedCommunityPost,
+} from "../features/profile/api";
 import { formatPrice } from "../features/projects/utils/projectFormatters";
 import type { Project } from "../types/domain";
 
@@ -79,7 +94,7 @@ export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProjec
         <div className="mx-auto max-w-xl rounded bg-white p-8 text-center shadow-soft">
           <UserRound className="mx-auto text-brand-900" size={42} />
           <h1 className="font-display mt-5 text-4xl font-bold text-brand-900">Bạn chưa đăng nhập</h1>
-          <p className="mt-3 text-slate-600">Đăng nhập để xem hồ sơ, dự án quan tâm và yêu cầu tư vấn cá nhân.</p>
+          <p className="mt-3 text-slate-600">Đăng nhập để xem hồ sơ, dự án quan tâm và bài viết đã lưu.</p>
           <button className="btn-primary mx-auto mt-6" onClick={() => onNavigate("login")} type="button">
             Đăng nhập ngay
             <ArrowRight size={17} />
@@ -121,7 +136,11 @@ export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProjec
             <ProfileLine icon={<Mail size={17} />} label="Email" value={displayEmail} />
             <ProfileLine icon={<Phone size={17} />} label="Điện thoại" value={displayPhone} />
             <ProfileLine icon={<ShieldCheck size={17} />} label="Trạng thái" value={profileUser?.isActive === false ? "Tạm khóa" : "Đang hoạt động"} />
-            <button className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded border border-slate-200 px-4 font-semibold text-slate-700 transition hover:border-brand-900 hover:text-brand-900" onClick={onLogout} type="button">
+            <button
+              className="mt-2 inline-flex h-11 items-center justify-center gap-2 rounded border border-slate-200 px-4 font-semibold text-slate-700 transition hover:border-brand-900 hover:text-brand-900"
+              onClick={onLogout}
+              type="button"
+            >
               <LogOut size={17} />
               Đăng xuất
             </button>
@@ -132,8 +151,10 @@ export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProjec
           <div className="grid gap-4 md:grid-cols-3">
             <ProfileStat icon={<Heart size={20} />} label="Dự án quan tâm" value={loading ? "..." : String(profile?.stats.interestedProjects ?? 0)} />
             <ProfileStat icon={<CalendarDays size={20} />} label="Yêu cầu tư vấn" value={loading ? "..." : String(profile?.stats.consultationRequests ?? 0)} />
-            <ProfileStat icon={<Bell size={20} />} label="Thông báo mới" value={loading ? "..." : String(profile?.stats.unreadNotifications ?? 0)} />
+            <ProfileStat icon={<Bookmark size={20} />} label="Bài viết đã lưu" value={loading ? "..." : String(profile?.savedCommunityPosts.length ?? 0)} />
           </div>
+
+          <SavedPostsSection loading={loading} posts={profile?.savedCommunityPosts ?? []} onNavigateCommunity={() => onNavigate("community")} />
 
           <section className="rounded bg-white p-6 shadow-soft">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -209,6 +230,49 @@ export function ProfilePage({ user, projects, onLogout, onNavigate, onOpenProjec
             </section>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function SavedPostsSection({ loading, onNavigateCommunity, posts }: { loading: boolean; onNavigateCommunity: () => void; posts: ProfileSavedCommunityPost[] }) {
+  return (
+    <section className="rounded bg-white p-6 shadow-soft">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-3xl font-bold text-brand-900">Bài viết đã lưu</h2>
+          <p className="mt-2 text-sm text-slate-600">Các bài cộng đồng bạn đã lưu để xem lại.</p>
+        </div>
+        <button className="btn-secondary" onClick={onNavigateCommunity} type="button">
+          Vào cộng đồng
+          <ArrowRight size={17} />
+        </button>
+      </div>
+
+      <div className="mt-6 grid gap-4">
+        {loading ? <EmptyState text="Đang tải bài viết đã lưu..." /> : null}
+        {!loading && posts.length === 0 ? <EmptyState text="Bạn chưa lưu bài viết cộng đồng nào." /> : null}
+        {posts.map((post) => (
+          <article className="grid gap-4 rounded border border-slate-200 p-4 transition hover:border-brand-200 hover:bg-brand-50/30 md:grid-cols-[128px_1fr_auto] md:items-center" key={post.id}>
+            {post.images[0] ? (
+              <img alt={post.title} className="h-24 w-full rounded object-cover md:w-32" src={post.images[0]} />
+            ) : (
+              <div className="grid h-24 w-full place-items-center rounded bg-brand-50 text-sm font-semibold text-brand-900 md:w-32">{post.category}</div>
+            )}
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-900">{post.category}</span>
+                <span className="text-xs font-medium text-slate-500">{formatDate(post.createdAt)}</span>
+              </div>
+              <h3 className="mt-2 font-semibold text-slate-950">{post.title}</h3>
+              <p className="mt-1 line-clamp-2 text-sm leading-6 text-slate-600">{post.content}</p>
+              <p className="mt-2 text-xs font-semibold text-slate-500">Tác giả: {post.authorName}</p>
+            </div>
+            <button className="text-sm font-semibold text-brand-900 transition hover:text-gold-500" onClick={onNavigateCommunity} type="button">
+              Xem bài
+            </button>
+          </article>
+        ))}
       </div>
     </section>
   );

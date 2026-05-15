@@ -117,12 +117,23 @@ class ProfileActivityOut(BaseModel):
     created_at: datetime
 
 
+class ProfileSavedCommunityPostOut(BaseModel):
+    id: UUID
+    title: str
+    content: str
+    category: str
+    images: list[str] = Field(default_factory=list)
+    created_at: datetime
+    author_name: str
+
+
 class ProfileOut(BaseModel):
     user: ProfileUserOut
     stats: ProfileStatsOut
     interested_projects: list[ProfileProjectOut] = Field(default_factory=list)
     consultations: list[ProfileConsultationOut] = Field(default_factory=list)
     activities: list[ProfileActivityOut] = Field(default_factory=list)
+    saved_community_posts: list[ProfileSavedCommunityPostOut] = Field(default_factory=list)
 
 
 class LoginRequest(BaseModel):

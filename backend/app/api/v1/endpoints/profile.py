@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
 from app.api.v1.schemas import ProfileOut
 from app.models.activity_log import ActivityLog
+from app.models.community import CommunityPost, CommunityPostBookmark
 from app.models.contact_request import ContactRequest, ContactStatus
 from app.models.project import Project, ProjectImage
 from app.models.user import User
@@ -140,6 +141,28 @@ def get_profile(current_user: User = Depends(get_current_user), db: Session = De
     ]
     activities = sorted(contact_activities + account_activities, key=lambda item: item["created_at"], reverse=True)[:5]
 
+    saved_posts = list(
+        db.scalars(
+            select(CommunityPost)
+            .join(CommunityPostBookmark, CommunityPostBookmark.post_id == CommunityPost.id)
+            .where(CommunityPostBookmark.user_id == current_user.id)
+            .order_by(CommunityPost.created_at.desc())
+            .limit(10)
+        )
+    )
+    saved_community_posts = [
+        {
+            "id": post.id,
+            "title": post.title,
+            "content": post.content,
+            "category": post.category,
+            "images": list(post.images or ([post.image_url] if post.image_url else [])),
+            "created_at": post.created_at,
+            "author_name": post.author.full_name if post.author else "Thành viên AMG Land",
+        }
+        for post in saved_posts
+    ]
+
     return {
         "user": {
             "id": current_user.id,
@@ -159,4 +182,5 @@ def get_profile(current_user: User = Depends(get_current_user), db: Session = De
         "interested_projects": interested_projects,
         "consultations": consultations,
         "activities": activities,
+        "saved_community_posts": saved_community_posts,
     }
