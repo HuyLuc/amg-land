@@ -1,4 +1,4 @@
-import { Flame, MessageSquareText, Newspaper, ShieldCheck, Users } from "lucide-react";
+import { Flame, MessageSquareText, Newspaper, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Page } from "../app/types";
 import { CommunityPostCard } from "../features/community/components/CommunityPostCard";
@@ -185,7 +185,6 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
               </span>
               <div>
                 <h2 className="font-semibold text-slate-950">Tổng quan cộng đồng</h2>
-                <p className="text-sm text-slate-600">Dữ liệu đang lưu trực tiếp trong hệ thống</p>
               </div>
             </div>
             <div className="mt-5 grid gap-3">
@@ -195,17 +194,6 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
             </div>
           </div>
 
-          <div className="rounded bg-brand-900 p-5 text-white shadow-lift">
-            <div className="flex items-center gap-3">
-              <ShieldCheck className="text-gold-400" size={22} />
-              <h2 className="font-semibold">Quy tắc đăng bài</h2>
-            </div>
-            <ul className="mt-4 grid gap-3 text-sm leading-6 text-brand-100">
-              <li>Chia sẻ thông tin rõ nguồn hoặc trải nghiệm thực tế.</li>
-              <li>Không đăng số điện thoại khách hàng nếu chưa có đồng ý.</li>
-              <li>Bình luận lịch sự, tập trung vào nhu cầu và giải pháp.</li>
-            </ul>
-          </div>
         </aside>
       </div>
     </section>
