@@ -1,4 +1,4 @@
-import { Flame, MessageSquareText, Newspaper, Users } from "lucide-react";
+import { MessageSquareText, Newspaper, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import type { Page } from "../app/types";
 import { CommunityPostCard } from "../features/community/components/CommunityPostCard";
@@ -307,7 +307,6 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
             <div className="mt-5 grid gap-3">
               <StatRow icon={<Newspaper size={17} />} label="Bài đăng" value={`${totalPosts}`} />
               <StatRow icon={<MessageSquareText size={17} />} label="Tương tác" value={`${totalInteractions}`} />
-              <StatRow icon={<Flame size={17} />} label="Chủ đề nổi bật" value={posts[0]?.category ?? "Đang cập nhật"} />
             </div>
           </div>
         </aside>
