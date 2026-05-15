@@ -15,6 +15,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    healthcheck:
+      disable: true
     restart: "no"
 
   backend:
@@ -96,7 +98,7 @@ services:
       MINIO_BUCKET: ${MINIO_BUCKET:-amg-land-media}
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD}; do sleep 2; done;
+      until mc alias set local http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD} >/dev/null 2>&1; do sleep 2; done;
       mc mb --ignore-existing local/$${MINIO_BUCKET};
       mc anonymous set download local/$${MINIO_BUCKET};
       "
