@@ -110,8 +110,9 @@ function mapPost(post: ApiCommunityPost): CommunityPost {
   };
 }
 
-export async function fetchCommunityPosts(token?: string | null, pageNumber = 1, limit = 10): Promise<CommunityPostPage> {
-  const page = await fetchJson<ApiPage<ApiCommunityPost>>(`/community/posts?page=${pageNumber}&limit=${limit}`, {
+export async function fetchCommunityPosts(token?: string | null, pageNumber = 1, limit = 10, mine = false): Promise<CommunityPostPage> {
+  const mineQuery = mine ? "&mine=true" : "";
+  const page = await fetchJson<ApiPage<ApiCommunityPost>>(`/community/posts?page=${pageNumber}&limit=${limit}${mineQuery}`, {
     headers: authHeaders(token),
   });
   return {
@@ -129,6 +130,22 @@ export async function createCommunityPost(payload: CommunityPostPayload, token: 
     body: JSON.stringify(payload),
   });
   return mapPost(post);
+}
+
+export async function updateCommunityPost(postId: string, payload: CommunityPostPayload, token: string): Promise<CommunityPost> {
+  const post = await fetchJson<ApiCommunityPost>(`/community/posts/${postId}`, {
+    method: "PATCH",
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  });
+  return mapPost(post);
+}
+
+export async function deleteCommunityPost(postId: string, token: string): Promise<void> {
+  await fetchJson<{ message: string }>(`/community/posts/${postId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
+  });
 }
 
 export async function uploadCommunityImage(file: File, token: string): Promise<string> {

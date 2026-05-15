@@ -1,4 +1,4 @@
-import { Bookmark, Heart, MessageCircle, Send } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, Pencil, Send, Trash2 } from "lucide-react";
 import { useState } from "react";
 import type { CommunityPost } from "../types";
 
@@ -6,13 +6,16 @@ type CommunityPostCardProps = {
   post: CommunityPost;
   busy?: boolean;
   canInteract: boolean;
+  canManage?: boolean;
   onAddComment: (postId: string, content: string) => Promise<void>;
   onBookmark: (postId: string) => Promise<void>;
+  onEdit?: (post: CommunityPost) => void;
+  onDelete?: (post: CommunityPost) => void;
   onLike: (postId: string) => Promise<void>;
   onRequireLogin: () => void;
 };
 
-export function CommunityPostCard({ post, busy, canInteract, onAddComment, onBookmark, onLike, onRequireLogin }: CommunityPostCardProps) {
+export function CommunityPostCard({ post, busy, canInteract, canManage, onAddComment, onBookmark, onEdit, onDelete, onLike, onRequireLogin }: CommunityPostCardProps) {
   const [comment, setComment] = useState("");
   const [expandedComments, setExpandedComments] = useState(post.comments.length <= 1);
 
@@ -42,9 +45,21 @@ export function CommunityPostCard({ post, busy, canInteract, onAddComment, onBoo
               <p className="text-sm text-slate-600">{post.author.role} · {post.createdAt}</p>
             </div>
           </div>
-          <span className="rounded bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-900 ring-1 ring-brand-100">
-            {post.category}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-900 ring-1 ring-brand-100">
+              {post.category}
+            </span>
+            {canManage ? (
+              <div className="flex items-center gap-1">
+                <IconButton disabled={busy} label="Sửa bài viết" onClick={() => onEdit?.(post)}>
+                  <Pencil size={16} />
+                </IconButton>
+                <IconButton danger disabled={busy} label="Xóa bài viết" onClick={() => onDelete?.(post)}>
+                  <Trash2 size={16} />
+                </IconButton>
+              </div>
+            ) : null}
+          </div>
         </div>
 
         <div className="mt-5">
@@ -109,6 +124,23 @@ export function CommunityPostCard({ post, busy, canInteract, onAddComment, onBoo
         </div>
       </div>
     </article>
+  );
+}
+
+function IconButton({ children, danger, disabled, label, onClick }: { children: React.ReactNode; danger?: boolean; disabled?: boolean; label: string; onClick: () => void }) {
+  return (
+    <button
+      aria-label={label}
+      className={`grid h-9 w-9 place-items-center rounded border bg-white transition disabled:cursor-not-allowed disabled:opacity-50 ${
+        danger ? "border-red-200 text-red-600 hover:bg-red-50" : "border-slate-200 text-brand-900 hover:bg-brand-50"
+      }`}
+      disabled={disabled}
+      onClick={onClick}
+      title={label}
+      type="button"
+    >
+      {children}
+    </button>
   );
 }
 

@@ -51,17 +51,30 @@ def serialize_community_post(db: Session, post: CommunityPost, current_user: Use
     }
 
 
+def ensure_can_manage_community_post(post: CommunityPost, current_user: User) -> None:
+    if current_user.role == UserRole.admin:
+        return
+    if post.author_id == current_user.id:
+        return
+    raise HTTPException(status_code=403, detail="You can only manage your own community posts")
+
+
 @router.get("/community/posts", response_model=CommunityPostPage, tags=["community"])
 def list_community_posts(
     db: Session = Depends(get_db),
     current_user: User | None = Depends(get_optional_current_user),
     category: str | None = None,
+    mine: bool = False,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=50),
 ) -> dict:
     query = select(CommunityPost)
     if category:
         query = query.where(CommunityPost.category == category)
+    if mine:
+        if current_user is None:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        query = query.where(CommunityPost.author_id == current_user.id)
     total = db.scalar(select(func.count()).select_from(query.subquery())) or 0
     posts = list(db.scalars(query.order_by(CommunityPost.created_at.desc()).offset((page - 1) * limit).limit(limit)))
     return page_response([serialize_community_post(db, post, current_user) for post in posts], total, page, limit)
@@ -80,6 +93,36 @@ def create_community_post(payload: CommunityPostCreate, current_user: User = Dep
     commit_or_400(db)
     db.refresh(post)
     return serialize_community_post(db, post, current_user)
+
+
+@router.patch("/community/posts/{post_id}", response_model=CommunityPostOut, tags=["community"])
+def update_community_post(post_id: uuid.UUID, payload: CommunityPostUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    post = db.get(CommunityPost, post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Community post not found")
+    ensure_can_manage_community_post(post, current_user)
+
+    values = payload.model_dump(exclude_unset=True)
+    for key, value in values.items():
+        if isinstance(value, str):
+            value = value.strip()
+        setattr(post, key, value)
+
+    commit_or_400(db)
+    db.refresh(post)
+    return serialize_community_post(db, post, current_user)
+
+
+@router.delete("/community/posts/{post_id}", response_model=dict, tags=["community"])
+def delete_community_post(post_id: uuid.UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    post = db.get(CommunityPost, post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Community post not found")
+    ensure_can_manage_community_post(post, current_user)
+
+    db.delete(post)
+    db.commit()
+    return {"message": "Deleted"}
 
 
 @router.post("/community/images", status_code=201, tags=["community"])
@@ -128,17 +171,6 @@ def toggle_community_bookmark(post_id: uuid.UUID, current_user: User = Depends(g
         db.delete(bookmark)
     else:
         db.add(CommunityPostBookmark(post_id=post.id, user_id=current_user.id))
-    commit_or_400(db)
-    db.refresh(post)
-    return serialize_community_post(db, post, current_user)
-
-
-@router.post("/community/posts/{post_id}/share", response_model=CommunityPostOut, tags=["community"])
-def share_community_post(post_id: uuid.UUID, db: Session = Depends(get_db), current_user: User | None = Depends(get_optional_current_user)) -> dict:
-    post = db.get(CommunityPost, post_id)
-    if post is None:
-        raise HTTPException(status_code=404, detail="Community post not found")
-    post.shares += 1
     commit_or_400(db)
     db.refresh(post)
     return serialize_community_post(db, post, current_user)

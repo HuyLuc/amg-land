@@ -441,6 +441,13 @@ class CommunityPostCreate(BaseModel):
     image_url: str | None = Field(default=None, max_length=500)
 
 
+class CommunityPostUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=5, max_length=180)
+    content: str | None = Field(default=None, min_length=10, max_length=4000)
+    category: str | None = Field(default=None, min_length=2, max_length=50)
+    image_url: str | None = Field(default=None, max_length=500)
+
+
 class CommunityCommentCreate(BaseModel):
     content: str = Field(min_length=1, max_length=1000)
 

@@ -30,6 +30,7 @@ from app.api.v1.schemas import (
     CommunityPostCreate,
     CommunityPostOut,
     CommunityPostPage,
+    CommunityPostUpdate,
     FengShuiRequest,
     FloorPlanCreate,
     FloorPlanOut,
