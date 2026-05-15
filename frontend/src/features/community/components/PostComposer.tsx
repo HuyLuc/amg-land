@@ -1,4 +1,4 @@
-import { Check, ChevronDown, ImagePlus, PenLine, Send, Tag } from "lucide-react";
+import { Check, ChevronDown, ImagePlus, PenLine, Send, Tag, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { AuthUser } from "../../auth/types";
 import type { CommunityPostPayload } from "../types";
@@ -8,17 +8,17 @@ type PostComposerProps = {
   loading?: boolean;
   imageUploading?: boolean;
   onCreatePost: (post: CommunityPostPayload) => Promise<void>;
-  onUploadImage: (file: File) => Promise<string>;
+  onUploadImages: (files: File[]) => Promise<string[]>;
   onLogin: () => void;
 };
 
 const categoryOptions = ["Tin dự án", "Hỏi đáp", "Thị trường", "Phong thủy", "Kinh nghiệm"];
 
-export function PostComposer({ user, loading, imageUploading, onCreatePost, onUploadImage, onLogin }: PostComposerProps) {
+export function PostComposer({ user, loading, imageUploading, onCreatePost, onUploadImages, onLogin }: PostComposerProps) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState(categoryOptions[0]);
-  const [imageUrl, setImageUrl] = useState("");
+  const [images, setImages] = useState<string[]>([]);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -43,12 +43,19 @@ export function PostComposer({ user, loading, imageUploading, onCreatePost, onUp
       title: title.trim(),
       content: content.trim(),
       category,
-      image_url: imageUrl || null,
+      images,
+      image_url: images[0] ?? null,
     });
     setTitle("");
     setContent("");
-    setImageUrl("");
+    setImages([]);
     setCategory(categoryOptions[0]);
+  };
+
+  const uploadSelectedImages = async (files: FileList | null) => {
+    if (!files?.length) return;
+    const uploadedUrls = await onUploadImages(Array.from(files));
+    setImages((current) => [...current, ...uploadedUrls].slice(0, 12));
   };
 
   return (
@@ -126,31 +133,33 @@ export function PostComposer({ user, loading, imageUploading, onCreatePost, onUp
             <label className="flex h-12 cursor-pointer items-center gap-3 rounded border border-slate-300 bg-white px-4">
               <ImagePlus className="text-brand-900" size={18} />
               <span className="flex-1 truncate text-sm font-semibold text-slate-600">
-                {imageUploading ? "Đang tải ảnh..." : imageUrl ? "Đã chọn ảnh minh họa" : "Chọn ảnh minh họa"}
+                {imageUploading ? "Đang tải ảnh..." : images.length ? `Đã chọn ${images.length} ảnh` : "Chọn ảnh minh họa"}
               </span>
               <input
                 className="hidden"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
+                multiple
                 disabled={imageUploading}
                 onChange={async (event) => {
-                  const file = event.target.files?.[0];
-                  if (file) {
-                    const uploadedUrl = await onUploadImage(file);
-                    setImageUrl(uploadedUrl);
-                    event.currentTarget.value = "";
-                  }
+                  const input = event.currentTarget;
+                  await uploadSelectedImages(event.target.files);
+                  input.value = "";
                 }}
               />
             </label>
           </div>
 
-          {imageUrl ? (
-            <div className="relative overflow-hidden rounded border border-slate-200">
-              <img alt="" className="h-48 w-full object-cover" src={imageUrl} />
-              <button className="absolute right-3 top-3 rounded bg-white/95 px-3 py-1 text-xs font-bold text-red-600 shadow-soft" type="button" onClick={() => setImageUrl("")}>
-                Bỏ ảnh
-              </button>
+          {images.length ? (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+              {images.map((imageUrl) => (
+                <div className="relative overflow-hidden rounded border border-slate-200" key={imageUrl}>
+                  <img alt="" className="h-28 w-full object-cover" src={imageUrl} />
+                  <button className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded bg-white/95 text-red-600 shadow-soft" type="button" onClick={() => setImages((current) => current.filter((item) => item !== imageUrl))}>
+                    <X size={15} />
+                  </button>
+                </div>
+              ))}
             </div>
           ) : null}
 

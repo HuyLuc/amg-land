@@ -20,6 +20,7 @@ export type CommunityPost = {
   category: string;
   createdAt: string;
   image?: string | null;
+  images: string[];
   liked: boolean;
   bookmarked: boolean;
   likes: number;
@@ -32,4 +33,5 @@ export type CommunityPostPayload = {
   content: string;
   category: string;
   image_url?: string | null;
+  images?: string[];
 };

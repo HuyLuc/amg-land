@@ -1,4 +1,4 @@
-import { Bookmark, Heart, MessageCircle, Pencil, Send, Trash2 } from "lucide-react";
+import { Bookmark, ChevronLeft, ChevronRight, Heart, MessageCircle, Pencil, Send, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import type { CommunityPost } from "../types";
 
@@ -18,6 +18,7 @@ type CommunityPostCardProps = {
 export function CommunityPostCard({ post, busy, canInteract, canManage, onAddComment, onBookmark, onEdit, onDelete, onLike, onRequireLogin }: CommunityPostCardProps) {
   const [comment, setComment] = useState("");
   const [expandedComments, setExpandedComments] = useState(post.comments.length <= 1);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const submitComment = async () => {
     if (!comment.trim()) return;
@@ -30,6 +31,7 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
     setExpandedComments(true);
   };
 
+  const images = post.images.length ? post.images : post.image ? [post.image] : [];
   const visibleComments = expandedComments ? post.comments : post.comments.slice(0, 1);
 
   return (
@@ -68,11 +70,7 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
         </div>
       </div>
 
-      {post.image ? (
-        <div className="image-sheen group h-72 overflow-hidden border-y border-slate-200">
-          <img alt={post.title} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" src={post.image} />
-        </div>
-      ) : null}
+      {images.length ? <PostImageGrid images={images} title={post.title} onOpen={setLightboxIndex} /> : null}
 
       <div className="px-5 py-4">
         <div className="flex items-center justify-between border-b border-slate-200 pb-3 text-sm text-slate-600">
@@ -123,7 +121,59 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
           </button>
         </div>
       </div>
+
+      {lightboxIndex !== null ? (
+        <ImageLightbox
+          images={images}
+          index={lightboxIndex}
+          title={post.title}
+          onClose={() => setLightboxIndex(null)}
+          onMove={(nextIndex) => setLightboxIndex(nextIndex)}
+        />
+      ) : null}
     </article>
+  );
+}
+
+function PostImageGrid({ images, onOpen, title }: { images: string[]; onOpen: (index: number) => void; title: string }) {
+  const visibleImages = images.slice(0, 4);
+  return (
+    <div className={`grid gap-1 border-y border-slate-200 ${images.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+      {visibleImages.map((image, index) => (
+        <button className="group relative h-56 overflow-hidden bg-slate-100 text-left" key={`${image}-${index}`} onClick={() => onOpen(index)} type="button">
+          <img alt={`${title} ${index + 1}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" src={image} />
+          {index === 3 && images.length > 4 ? (
+            <span className="absolute inset-0 grid place-items-center bg-slate-950/55 text-2xl font-bold text-white">+{images.length - 4}</span>
+          ) : null}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function ImageLightbox({ images, index, onClose, onMove, title }: { images: string[]; index: number; onClose: () => void; onMove: (index: number) => void; title: string }) {
+  const previousIndex = (index - 1 + images.length) % images.length;
+  const nextIndex = (index + 1) % images.length;
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/85 p-4">
+      <button aria-label="Đóng ảnh" className="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded bg-white/10 text-white transition hover:bg-white/20" onClick={onClose} type="button">
+        <X size={22} />
+      </button>
+      {images.length > 1 ? (
+        <>
+          <button aria-label="Ảnh trước" className="absolute left-5 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded bg-white/10 text-white transition hover:bg-white/20" onClick={() => onMove(previousIndex)} type="button">
+            <ChevronLeft size={24} />
+          </button>
+          <button aria-label="Ảnh sau" className="absolute right-5 top-1/2 grid h-11 w-11 -translate-y-1/2 place-items-center rounded bg-white/10 text-white transition hover:bg-white/20" onClick={() => onMove(nextIndex)} type="button">
+            <ChevronRight size={24} />
+          </button>
+        </>
+      ) : null}
+      <div className="max-h-[86vh] max-w-5xl">
+        <img alt={title} className="max-h-[82vh] w-auto rounded object-contain shadow-[0_24px_80px_rgba(0,0,0,0.35)]" src={images[index]} />
+        <p className="mt-3 text-center text-sm font-semibold text-white/80">{index + 1} / {images.length}</p>
+      </div>
+    </div>
   );
 }
 
@@ -144,19 +194,7 @@ function IconButton({ children, danger, disabled, label, onClick }: { children: 
   );
 }
 
-function ActionButton({
-  active,
-  disabled,
-  icon,
-  label,
-  onClick,
-}: {
-  active?: boolean;
-  disabled?: boolean;
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-}) {
+function ActionButton({ active, disabled, icon, label, onClick }: { active?: boolean; disabled?: boolean; icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <button
       className={`inline-flex items-center justify-center gap-2 rounded px-3 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
