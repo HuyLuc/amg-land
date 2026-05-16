@@ -30,10 +30,13 @@ class CommunityComment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     post_id: Mapped[uuid.UUID] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("community_posts.id", ondelete="CASCADE"), index=True)
     author_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    parent_id: Mapped[uuid.UUID | None] = mapped_column(PG_UUID(as_uuid=True), ForeignKey("community_comments.id", ondelete="CASCADE"), nullable=True, index=True)
     content: Mapped[str] = mapped_column(Text)
 
     post = relationship("CommunityPost", back_populates="comments")
     author = relationship("User", back_populates="community_comments")
+    parent = relationship("CommunityComment", remote_side="CommunityComment.id", back_populates="replies")
+    replies = relationship("CommunityComment", back_populates="parent", cascade="all, delete-orphan")
 
 
 class CommunityPostLike(Base):

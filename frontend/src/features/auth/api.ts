@@ -57,6 +57,7 @@ function toAuthUser(authData: AuthResponse, fallback: { email: string; phone?: s
     email: authData.user_info.email ?? fallback.email,
     phone: authData.user_info.phone ?? fallback.phone ?? "Chưa cập nhật",
     role: authData.user_info.role === "customer" ? "Khách hàng" : "Nhà đầu tư",
+    backendRole: authData.user_info.role,
     accessToken: authData.access_token,
     refreshToken: authData.refresh_token ?? null,
   };

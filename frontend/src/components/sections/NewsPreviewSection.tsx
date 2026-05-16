@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchPosts } from "../../features/posts/api";
+import { fetchExternalNews } from "../../features/posts/api";
 import { NewsCard } from "../../features/posts/components/NewsCard";
 import type { Post } from "../../types/domain";
 
@@ -16,10 +16,10 @@ export function NewsPreviewSection({ onNavigateNews, onOpenPost }: NewsPreviewSe
   useEffect(() => {
     let mounted = true;
 
-    fetchPosts(3)
-      .then((items) => {
+    fetchExternalNews({ limit: 3 })
+      .then((result) => {
         if (!mounted) return;
-        setPosts(items);
+        setPosts(result.items);
         setError("");
       })
       .catch((fetchError) => {
@@ -47,10 +47,10 @@ export function NewsPreviewSection({ onNavigateNews, onOpenPost }: NewsPreviewSe
         <div className="grid gap-6 md:grid-cols-3">
           {posts.map((post) => (
             <NewsCard key={post.id} post={post} onOpen={onOpenPost} />
-          ))}
+          ))} 
         </div>
       ) : null}
-      {!loading && !error && posts.length === 0 ? <div className="surface-card rounded p-6 text-center text-slate-600">Chưa có bài viết đã đăng.</div> : null}
+      {!loading && !error && posts.length === 0 ? <div className="surface-card rounded p-6 text-center text-slate-600">Chưa có tin tức phù hợp từ nguồn bên ngoài.</div> : null}
       <div className="mt-8 text-center">
         <button className="btn-secondary" onClick={onNavigateNews} type="button">
           Xem tất cả tin tức

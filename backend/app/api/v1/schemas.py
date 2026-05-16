@@ -58,6 +58,13 @@ class PostPage(BaseModel):
     limit: int
 
 
+class ExternalNewsPage(BaseModel):
+    items: list["ExternalNewsArticleOut"]
+    total: int
+    page: int
+    limit: int
+
+
 class ContactPage(BaseModel):
     items: list["ContactOut"]
     total: int
@@ -418,6 +425,18 @@ class PostOut(ORMModel):
     linked_amenities: list[PostLinkedAmenityOut] = Field(default_factory=list)
 
 
+class ExternalNewsArticleOut(BaseModel):
+    id: str
+    title: str
+    excerpt: str
+    content: str | None = None
+    image_url: str | None = None
+    published_at: datetime | None = None
+    source_name: str
+    source_url: str | None = None
+    article_url: str
+
+
 class ContactCreate(BaseModel):
     full_name: str
     phone: str = Field(min_length=8, max_length=15, pattern=r"^[0-9+()\-\s]+$")
@@ -468,6 +487,7 @@ class CommunityPostUpdate(BaseModel):
 
 class CommunityCommentCreate(BaseModel):
     content: str = Field(min_length=1, max_length=1000)
+    parent_id: UUID | None = None
 
 
 class CommunityAuthorOut(BaseModel):
@@ -479,9 +499,11 @@ class CommunityAuthorOut(BaseModel):
 
 class CommunityCommentOut(BaseModel):
     id: UUID
+    parent_id: UUID | None = None
     author: CommunityAuthorOut
     content: str
     created_at: datetime
+    replies: list["CommunityCommentOut"] = Field(default_factory=list)
 
 
 class CommunityPostOut(BaseModel):

@@ -394,6 +394,11 @@ MAX_FAILED_LOGIN_ATTEMPTS=5
 ACCOUNT_LOCK_MINUTES=15
 ```
 
+Tin tuc ben ngoai:
+
+- Trang `Tin tuc` tren frontend tu dong lay danh sach bai viet tu Google News RSS feed, gioi han ket qua theo ngon ngu tieng Viet va khu vuc Ha Noi cho nhom tu khoa bat dong san.
+- Backend expose endpoint `GET /api/v1/news/external` de frontend hien thi feed nay.
+
 Trong `APP_ENV=production`, backend yeu cau `JWT_SECRET_KEY` phai duoc cau hinh ro rang.
 
 Bien CORS local:

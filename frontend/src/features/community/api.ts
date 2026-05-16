@@ -25,9 +25,11 @@ type ApiCommunityAuthor = {
 
 type ApiCommunityComment = {
   id: string;
+  parent_id?: string | null;
   author: ApiCommunityAuthor;
   content: string;
   created_at: string;
+  replies?: ApiCommunityComment[];
 };
 
 type ApiCommunityPost = {
@@ -88,9 +90,11 @@ function mapAuthor(author: ApiCommunityAuthor): CommunityAuthor {
 function mapComment(comment: ApiCommunityComment): CommunityComment {
   return {
     id: comment.id,
+    parentId: comment.parent_id ?? null,
     author: mapAuthor(comment.author),
     content: comment.content,
     createdAt: formatDate(comment.created_at),
+    replies: (comment.replies ?? []).map(mapComment),
   };
 }
 
@@ -162,11 +166,19 @@ export async function uploadCommunityImages(files: File[], token: string): Promi
   return uploaded.map((item) => item.image_url).filter(Boolean);
 }
 
-export async function addCommunityComment(postId: string, content: string, token: string): Promise<CommunityPost> {
+export async function addCommunityComment(postId: string, content: string, token: string, parentId?: string | null): Promise<CommunityPost> {
   const post = await fetchJson<ApiCommunityPost>(`/community/posts/${postId}/comments`, {
     method: "POST",
     headers: authHeaders(token),
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, parent_id: parentId ?? null }),
+  });
+  return mapPost(post);
+}
+
+export async function deleteCommunityComment(postId: string, commentId: string, token: string): Promise<CommunityPost> {
+  const post = await fetchJson<ApiCommunityPost>(`/community/posts/${postId}/comments/${commentId}`, {
+    method: "DELETE",
+    headers: authHeaders(token),
   });
   return mapPost(post);
 }

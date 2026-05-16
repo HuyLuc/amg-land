@@ -20,6 +20,18 @@ type ApiPost = {
   created_at: string;
 };
 
+type ApiExternalNewsArticle = {
+  id: string;
+  title: string;
+  excerpt: string;
+  content?: string | null;
+  image_url?: string | null;
+  published_at?: string | null;
+  source_name: string;
+  source_url?: string | null;
+  article_url: string;
+};
+
 async function fetchJson<T>(path: string): Promise<T> {
   const response = await fetch(`${API_BASE_URL}${path}`);
   const data = await response.json().catch(() => null);
@@ -71,4 +83,38 @@ export async function fetchPosts(limit = 20): Promise<Post[]> {
 export async function fetchPost(slug: string): Promise<Post> {
   const post = await fetchJson<ApiPost>(`/posts/${slug}`);
   return mapPost(post);
+}
+
+function mapExternalArticle(article: ApiExternalNewsArticle): Post {
+  return {
+    id: article.id,
+    title: article.title,
+    excerpt: article.excerpt?.trim() || "Đang cập nhật mô tả bài viết.",
+    content: article.content ?? "",
+    images: article.image_url ? [article.image_url] : [],
+    date: formatPostDate(article.published_at),
+    sourceName: article.source_name,
+    sourceUrl: article.source_url ?? undefined,
+    externalUrl: article.article_url,
+    isExternal: true,
+  };
+}
+
+export type ExternalNewsFilters = {
+  page?: number;
+  limit?: number;
+};
+
+export async function fetchExternalNews(filters: ExternalNewsFilters = {}): Promise<{ items: Post[]; total: number; page: number; limit: number }> {
+  const params = new URLSearchParams();
+  if (filters.page) params.set("page", String(filters.page));
+  if (filters.limit) params.set("limit", String(filters.limit));
+
+  const page = await fetchJson<ApiPage<ApiExternalNewsArticle>>(`/news/external?${params.toString()}`);
+  return {
+    items: page.items.map(mapExternalArticle),
+    total: page.total,
+    page: page.page,
+    limit: page.limit,
+  };
 }

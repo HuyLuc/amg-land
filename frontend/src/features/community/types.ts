@@ -7,9 +7,11 @@ export type CommunityAuthor = {
 
 export type CommunityComment = {
   id: string;
+  parentId?: string | null;
   author: CommunityAuthor;
   content: string;
   createdAt: string;
+  replies: CommunityComment[];
 };
 
 export type CommunityPost = {

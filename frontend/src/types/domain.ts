@@ -50,4 +50,8 @@ export type Post = {
   content?: string;
   images: string[];
   date: string;
+  sourceName?: string;
+  sourceUrl?: string;
+  externalUrl?: string;
+  isExternal?: boolean;
 };

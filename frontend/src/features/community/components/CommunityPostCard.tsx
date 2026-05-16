@@ -1,24 +1,43 @@
 import { Bookmark, ChevronLeft, ChevronRight, Heart, MessageCircle, Pencil, Send, Trash2, X } from "lucide-react";
 import { useState } from "react";
-import type { CommunityPost } from "../types";
+import type { CommunityComment, CommunityPost } from "../types";
 
 type CommunityPostCardProps = {
   post: CommunityPost;
   busy?: boolean;
   canInteract: boolean;
   canManage?: boolean;
-  onAddComment: (postId: string, content: string) => Promise<void>;
+  currentUserId?: string;
+  isAdmin?: boolean;
+  onAddComment: (postId: string, content: string, parentId?: string | null) => Promise<void>;
   onBookmark: (postId: string) => Promise<void>;
+  onDeleteComment: (postId: string, commentId: string) => Promise<void>;
   onEdit?: (post: CommunityPost) => void;
   onDelete?: (post: CommunityPost) => void;
   onLike: (postId: string) => Promise<void>;
   onRequireLogin: () => void;
 };
 
-export function CommunityPostCard({ post, busy, canInteract, canManage, onAddComment, onBookmark, onEdit, onDelete, onLike, onRequireLogin }: CommunityPostCardProps) {
+export function CommunityPostCard({
+  post,
+  busy,
+  canInteract,
+  canManage,
+  currentUserId,
+  isAdmin,
+  onAddComment,
+  onBookmark,
+  onDeleteComment,
+  onEdit,
+  onDelete,
+  onLike,
+  onRequireLogin,
+}: CommunityPostCardProps) {
   const [comment, setComment] = useState("");
   const [expandedComments, setExpandedComments] = useState(post.comments.length <= 1);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [replyingToId, setReplyingToId] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
 
   const submitComment = async () => {
     if (!comment.trim()) return;
@@ -31,8 +50,21 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
     setExpandedComments(true);
   };
 
+  const submitReply = async (parentId: string) => {
+    if (!replyContent.trim()) return;
+    if (!canInteract) {
+      onRequireLogin();
+      return;
+    }
+    await onAddComment(post.id, replyContent.trim(), parentId);
+    setReplyContent("");
+    setReplyingToId(null);
+    setExpandedComments(true);
+  };
+
   const images = post.images.length ? post.images : post.image ? [post.image] : [];
   const visibleComments = expandedComments ? post.comments : post.comments.slice(0, 1);
+  const totalComments = countComments(post.comments);
 
   return (
     <article className="surface-card overflow-hidden rounded">
@@ -75,7 +107,7 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
       <div className="px-5 py-4">
         <div className="flex items-center justify-between border-b border-slate-200 pb-3 text-sm text-slate-600">
           <span>{post.likes} lượt thích</span>
-          <span>{post.comments.length} bình luận</span>
+          <span>{totalComments} bình luận</span>
         </div>
 
         <div className="grid grid-cols-3 gap-2 border-b border-slate-200 py-3">
@@ -87,15 +119,32 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
         {post.comments.length > 0 ? (
           <div className="mt-4 grid gap-3">
             {visibleComments.map((item) => (
-              <div className="rounded bg-slate-50 px-4 py-3" key={item.id}>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold text-slate-950">{item.author.name}</span>
-                  <span className="text-xs text-slate-500">{item.createdAt}</span>
-                </div>
-                <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700">{item.content}</p>
-              </div>
+              <CommentThread
+                key={item.id}
+                busy={busy}
+                canInteract={canInteract}
+                comment={item}
+                currentUserId={currentUserId}
+                isAdmin={isAdmin}
+                postId={post.id}
+                replyingToId={replyingToId}
+                replyContent={replyContent}
+                onDeleteComment={onDeleteComment}
+                onReplyChange={setReplyContent}
+                onReplyToggle={(commentId) => {
+                  if (!canInteract) {
+                    onRequireLogin();
+                    return;
+                  }
+                  setExpandedComments(true);
+                  setReplyingToId((current) => (current === commentId ? null : commentId));
+                  setReplyContent("");
+                }}
+                onRequireLogin={onRequireLogin}
+                onSubmitReply={submitReply}
+              />
             ))}
-            {!expandedComments && post.comments.length > 1 ? (
+            {!expandedComments && totalComments > 1 ? (
               <button className="w-fit text-sm font-semibold text-brand-900" onClick={() => setExpandedComments(true)} type="button">
                 Xem thêm bình luận
               </button>
@@ -111,12 +160,14 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
               if (!canInteract) onRequireLogin();
             }}
             onKeyDown={(event) => {
-              if (event.key === "Enter") submitComment();
+              if (event.key === "Enter") {
+                void submitComment();
+              }
             }}
             placeholder={canInteract ? "Viết bình luận..." : "Đăng nhập để bình luận..."}
             value={comment}
           />
-          <button className="grid h-11 w-11 place-items-center rounded bg-brand-900 text-white transition hover:bg-brand-700 disabled:opacity-50" disabled={busy || !comment.trim()} onClick={submitComment} type="button">
+          <button className="grid h-11 w-11 place-items-center rounded bg-brand-900 text-white transition hover:bg-brand-700 disabled:opacity-50" disabled={busy || !comment.trim()} onClick={() => void submitComment()} type="button">
             <Send size={17} />
           </button>
         </div>
@@ -132,6 +183,123 @@ export function CommunityPostCard({ post, busy, canInteract, canManage, onAddCom
         />
       ) : null}
     </article>
+  );
+}
+
+function countComments(comments: CommunityComment[]): number {
+  return comments.reduce((total, comment) => total + 1 + countComments(comment.replies), 0);
+}
+
+type CommentThreadProps = {
+  busy?: boolean;
+  canInteract: boolean;
+  comment: CommunityComment;
+  currentUserId?: string;
+  isAdmin?: boolean;
+  postId: string;
+  replyingToId: string | null;
+  replyContent: string;
+  onDeleteComment: (postId: string, commentId: string) => Promise<void>;
+  onReplyChange: (value: string) => void;
+  onReplyToggle: (commentId: string) => void;
+  onRequireLogin: () => void;
+  onSubmitReply: (parentId: string) => Promise<void>;
+};
+
+function CommentThread({
+  busy,
+  canInteract,
+  comment,
+  currentUserId,
+  isAdmin,
+  postId,
+  replyingToId,
+  replyContent,
+  onDeleteComment,
+  onReplyChange,
+  onReplyToggle,
+  onRequireLogin,
+  onSubmitReply,
+}: CommentThreadProps) {
+  const isReplying = replyingToId === comment.id;
+  const canDelete = Boolean((currentUserId && comment.author.id === currentUserId) || isAdmin);
+
+  return (
+    <div className="grid gap-3">
+      <div className="rounded bg-slate-50 px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-slate-950">{comment.author.name}</span>
+          <span className="text-xs text-slate-500">{comment.createdAt}</span>
+        </div>
+        <p className="mt-1 whitespace-pre-line text-sm leading-6 text-slate-700">{comment.content}</p>
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            className="text-xs font-semibold text-brand-900 transition hover:text-brand-700"
+            onClick={() => (canInteract ? onReplyToggle(comment.id) : onRequireLogin())}
+            type="button"
+          >
+            Trả lời
+          </button>
+          {canDelete ? (
+            <button
+              className="text-xs font-semibold text-red-600 transition hover:text-red-700 disabled:opacity-50"
+              disabled={busy}
+              onClick={() => void onDeleteComment(postId, comment.id)}
+              type="button"
+            >
+              Xóa
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {isReplying ? (
+        <div className="ml-4 flex gap-3">
+          <input
+            className="h-10 flex-1 rounded border border-slate-300 bg-white px-3 text-sm outline-none transition focus:border-brand-700 focus:ring-4 focus:ring-brand-100"
+            onChange={(event) => onReplyChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                void onSubmitReply(comment.id);
+              }
+            }}
+            placeholder="Viết phản hồi..."
+            value={replyContent}
+          />
+          <button
+            className="grid h-10 w-10 place-items-center rounded bg-brand-900 text-white transition hover:bg-brand-700 disabled:opacity-50"
+            disabled={busy || !replyContent.trim()}
+            onClick={() => void onSubmitReply(comment.id)}
+            type="button"
+          >
+            <Send size={16} />
+          </button>
+        </div>
+      ) : null}
+
+      {comment.replies.length ? (
+        <div className="ml-4 grid gap-3 border-l border-slate-200 pl-4">
+          {comment.replies.map((reply) => (
+            <CommentThread
+              key={reply.id}
+              busy={busy}
+              canInteract={canInteract}
+              comment={reply}
+              currentUserId={currentUserId}
+              isAdmin={isAdmin}
+              postId={postId}
+              replyingToId={replyingToId}
+              replyContent={replyContent}
+              onDeleteComment={onDeleteComment}
+              onReplyChange={onReplyChange}
+              onReplyToggle={onReplyToggle}
+              onRequireLogin={onRequireLogin}
+              onSubmitReply={onSubmitReply}
+            />
+          ))}
+        </div>
+      ) : null}
+    </div>
   );
 }
 

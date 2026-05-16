@@ -26,6 +26,8 @@ from app.api.v1.schemas import (
     ContactOut,
     ContactPage,
     ContactUpdate,
+    ExternalNewsArticleOut,
+    ExternalNewsPage,
     CommunityCommentCreate,
     CommunityPostCreate,
     CommunityPostOut,

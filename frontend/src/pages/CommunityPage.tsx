@@ -7,6 +7,7 @@ import {
   addCommunityComment,
   createCommunityPost,
   deleteCommunityPost,
+  deleteCommunityComment,
   fetchCommunityPosts,
   toggleCommunityBookmark,
   toggleCommunityLike,
@@ -177,7 +178,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
     }
   };
 
-  const addComment = async (postId: string, content: string) => {
+  const addComment = async (postId: string, content: string, parentId?: string | null) => {
     if (!token) {
       requireLogin();
       return;
@@ -185,7 +186,7 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
     setBusyPostId(postId);
     setNotice("");
     try {
-      replacePost(await addCommunityComment(postId, content, token));
+      replacePost(await addCommunityComment(postId, content, token, parentId));
     } catch (commentError) {
       setNotice(commentError instanceof Error ? commentError.message : "Không thể gửi bình luận.");
     } finally {
@@ -220,6 +221,22 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
       replacePost(await toggleCommunityBookmark(postId, token));
     } catch (bookmarkError) {
       setNotice(bookmarkError instanceof Error ? bookmarkError.message : "Không thể lưu bài viết.");
+    } finally {
+      setBusyPostId(null);
+    }
+  };
+
+  const removeComment = async (postId: string, commentId: string) => {
+    if (!token) {
+      requireLogin();
+      return;
+    }
+    setBusyPostId(postId);
+    setNotice("");
+    try {
+      replacePost(await deleteCommunityComment(postId, commentId, token));
+    } catch (deleteError) {
+      setNotice(deleteError instanceof Error ? deleteError.message : "Không thể xóa bình luận.");
     } finally {
       setBusyPostId(null);
     }
@@ -265,8 +282,11 @@ export function CommunityPage({ user, onNavigate }: CommunityPageProps) {
                 busy={busyPostId === post.id}
                 canInteract={Boolean(token)}
                 canManage={Boolean(user?.id && post.author.id === user.id)}
+                currentUserId={user?.id}
+                isAdmin={user?.backendRole === "admin"}
                 onAddComment={addComment}
                 onBookmark={toggleBookmark}
+                onDeleteComment={removeComment}
                 onDelete={setDeletingPost}
                 onEdit={setEditingPost}
                 onLike={toggleLike}

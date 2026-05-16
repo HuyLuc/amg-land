@@ -20,12 +20,14 @@ def author_payload(user: User | None) -> dict:
     return {"id": user.id, "name": user.full_name, "role": ROLE_LABELS.get(user.role, "Thành viên AMG Land"), "avatar": initials[:2]}
 
 
-def serialize_comment(comment: CommunityComment) -> dict:
+def serialize_comment(comment: CommunityComment, replies_by_parent: dict[uuid.UUID, list[CommunityComment]]) -> dict:
     return {
         "id": comment.id,
+        "parent_id": comment.parent_id,
         "author": author_payload(comment.author),
         "content": comment.content,
         "created_at": comment.created_at,
+        "replies": [serialize_comment(reply, replies_by_parent) for reply in replies_by_parent.get(comment.id, [])],
     }
 
 
@@ -38,6 +40,15 @@ def serialize_community_post(db: Session, post: CommunityPost, current_user: Use
     images = list(post.images or [])
     if not images and post.image_url:
         images = [post.image_url]
+    ordered_comments = sorted(post.comments, key=lambda item: item.created_at)
+    replies_by_parent: dict[uuid.UUID, list[CommunityComment]] = {}
+    root_comments: list[CommunityComment] = []
+    comment_ids = {comment.id for comment in ordered_comments}
+    for comment in ordered_comments:
+        if comment.parent_id and comment.parent_id in comment_ids:
+            replies_by_parent.setdefault(comment.parent_id, []).append(comment)
+        else:
+            root_comments.append(comment)
     return {
         "id": post.id,
         "author": author_payload(post.author),
@@ -51,7 +62,7 @@ def serialize_community_post(db: Session, post: CommunityPost, current_user: Use
         "shares": post.shares,
         "liked": liked,
         "bookmarked": bookmarked,
-        "comments": [serialize_comment(comment) for comment in sorted(post.comments, key=lambda item: item.created_at)],
+        "comments": [serialize_comment(comment, replies_by_parent) for comment in root_comments],
     }
 
 
@@ -61,6 +72,14 @@ def ensure_can_manage_community_post(post: CommunityPost, current_user: User) ->
     if post.author_id == current_user.id:
         return
     raise HTTPException(status_code=403, detail="You can only manage your own community posts")
+
+
+def ensure_can_delete_community_comment(comment: CommunityComment, current_user: User) -> None:
+    if current_user.role == UserRole.admin:
+        return
+    if comment.author_id == current_user.id:
+        return
+    raise HTTPException(status_code=403, detail="You can only delete your own comments")
 
 
 @router.get("/community/posts", response_model=CommunityPostPage, tags=["community"])
@@ -154,9 +173,36 @@ def create_community_comment(post_id: uuid.UUID, payload: CommunityCommentCreate
     post = db.get(CommunityPost, post_id)
     if post is None:
         raise HTTPException(status_code=404, detail="Community post not found")
-    comment = CommunityComment(post_id=post.id, author_id=current_user.id, content=payload.content.strip())
+    parent_comment = None
+    if payload.parent_id is not None:
+        parent_comment = db.get(CommunityComment, payload.parent_id)
+        if parent_comment is None or parent_comment.post_id != post.id:
+            raise HTTPException(status_code=400, detail="Parent comment not found in this post")
+    comment = CommunityComment(
+        post_id=post.id,
+        author_id=current_user.id,
+        parent_id=parent_comment.id if parent_comment is not None else None,
+        content=payload.content.strip(),
+    )
     db.add(comment)
     commit_or_400(db)
+    db.refresh(post)
+    return serialize_community_post(db, post, current_user)
+
+
+@router.delete("/community/posts/{post_id}/comments/{comment_id}", response_model=CommunityPostOut, tags=["community"])
+def delete_community_comment(post_id: uuid.UUID, comment_id: uuid.UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    post = db.get(CommunityPost, post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Community post not found")
+
+    comment = db.get(CommunityComment, comment_id)
+    if comment is None or comment.post_id != post.id:
+        raise HTTPException(status_code=404, detail="Community comment not found")
+
+    ensure_can_delete_community_comment(comment, current_user)
+    db.delete(comment)
+    db.commit()
     db.refresh(post)
     return serialize_community_post(db, post, current_user)
 
