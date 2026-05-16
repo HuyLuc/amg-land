@@ -7,6 +7,8 @@ from urllib.parse import urlparse
 class Settings:
     app_env: str
     database_url: str
+    gemini_api_key: str | None
+    support_hotline: str
     jwt_secret_key: str
     jwt_algorithm: str
     access_token_expire_minutes: int
@@ -54,6 +56,8 @@ def get_settings() -> Settings:
     return Settings(
         app_env=app_env,
         database_url=os.getenv("DATABASE_URL", "postgresql+psycopg://amg_land:amg_land_password@localhost:5432/amg_land"),
+        gemini_api_key=os.getenv("GEMINI_API_KEY"),
+        support_hotline=os.getenv("SUPPORT_HOTLINE", "0942319933"),
         jwt_secret_key=jwt_secret_key,
         jwt_algorithm=os.getenv("JWT_ALGORITHM", "HS256"),
         access_token_expire_minutes=int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60")),

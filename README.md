@@ -80,6 +80,8 @@ ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=change-this-password
 ADMIN_FULL_NAME=AMG Admin
 JWT_SECRET_KEY=change-this-local-secret
+GEMINI_API_KEY=your-gemini-api-key
+SUPPORT_HOTLINE=0942319933
 ```
 
 Build va chay backend stack:
@@ -389,10 +391,18 @@ Bien auth quan trong:
 
 ```text
 JWT_SECRET_KEY=change-this-local-secret
+GEMINI_API_KEY=your-gemini-api-key
+SUPPORT_HOTLINE=0942319933
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 MAX_FAILED_LOGIN_ATTEMPTS=5
 ACCOUNT_LOCK_MINUTES=15
 ```
+
+Chatbot tu van:
+
+- Chatbot web co the ket hop Gemini qua model `gemini-2.5-flash`.
+- Backend doc `GEMINI_API_KEY` tu moi truong de goi Gemini Developer API.
+- `SUPPORT_HOTLINE` dung de chen vao cau tra loi khi khach hoi cac noi dung can tu van sau nhu phap ly, vay von, hop dong, chien luoc dau tu.
 
 Tin tuc ben ngoai:
 
